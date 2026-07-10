@@ -1,9 +1,9 @@
 // Supabase Client Library
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// Initialize Supabase Client
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'your_project_url';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your_anon_key';
+// Initialize Supabase Client dengan URL & Key Asli
+const SUPABASE_URL = 'https://cprpizbcfvmwnumhkkwh.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwcnBpemJjZnZtd251bWhra3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2Nzg3MjIsImV4cCI6MjA5OTI1NDcyMn0.teTEiRY0wA4FKrEN3xGYW8kZ79UTt3y4_m-XNpXGgWo';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
