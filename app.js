@@ -27,7 +27,6 @@ function hitungTierDanBintang(totalStars) {
         starsInTier = totalStars - 10;
     } else {
         tierName = "Rising Star";
-        // Untuk Rising Star, bintang berjalan terus di atas 15
         starsInTier = totalStars - 15; 
     }
 
@@ -48,11 +47,6 @@ function buatHtmlBintangTier(infoTier) {
         const sisaSlotKosong = 5 - infoTier.starsInTier;
         for (let i = 0; i < sisaSlotKosong; i++) {
             htmlBintang += `<i class="fa-regular fa-star text-slate-500 text-[10px] opacity-60"></i>`;
-        }
-    } else {
-        // Khusus Rising Star jika bintangnya lebih dari 5, sisa penambahannya bisa ditampilkan text "+X" jika mau
-        if (infoTier.starsInTier > 5) {
-            // Opsional: batasi render ikon maksimal 5 saja, lalu beri penanda text
         }
     }
     
@@ -88,7 +82,6 @@ async function ambilDanTampilkanRanking() {
         if (siswa && siswa.length >= 1) {
             const info = hitungTierDanBintang(siswa[0].stars);
             document.getElementById('p1-name').innerText = siswa[0].name;
-            // Menampilkan nama tier & deretan ikon bintang di bawah nama podium
             document.getElementById('p1-stars').innerHTML = `
                 <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
                 ${buatHtmlBintangTier(info)}
@@ -202,7 +195,7 @@ async function ambilDanTampilkanRanking() {
     }
 }
 
-// Fungsi internal untuk membuat daftar list kelola siswa di dalam panel admin
+// Fungsi internal untuk daftar kelola admin
 function renderAdminStudentList(siswaArray) {
     const adminStudentList = document.getElementById('adminStudentList');
     if (!adminStudentList) return;
@@ -252,7 +245,69 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. FUNGSI MELIHAT DETAIL PROFIL SISWA (SISTEM TIER ML)
+// 4. KODE BARU: FUNGSI PROSES PRESTASI & PENALTI (TAMBAH/KURANG BINTANG)
+// =======================================================
+window.handleTransaction = async function(event) {
+    event.preventDefault();
+
+    const studentId = document.getElementById('transactionStudentSelect').value;
+    const type = document.getElementById('transactionType').value; // 'prestasi' atau 'penalti'
+    const amount = parseInt(document.getElementById('transactionAmount').value) || 0;
+    const notes = document.getElementById('transactionNotes').value;
+
+    if (!studentId) {
+        alert('Silakan pilih siswa terlebih dahulu!');
+        return;
+    }
+    if (!type) {
+        alert('Silakan pilih jenis transaksi (Prestasi / Penalti)!');
+        return;
+    }
+
+    try {
+        // 1. Ambil data jumlah bintang siswa saat ini dari database
+        const { data: studentData, error: fetchError } = await supabase
+            .from('students')
+            .select('stars')
+            .eq('id', studentId)
+            .single();
+
+        if (fetchError) throw fetchError;
+
+        // 2. Hitung jumlah kalkulasi bintang baru
+        let currentStars = studentData.stars;
+        let newStars = type === 'prestasi' ? currentStars + amount : currentStars - amount;
+        
+        // Jaga agar bintang tidak minus di bawah 0
+        if (newStars < 0) newStars = 0;
+
+        // 3. Update data bintang siswa tersebut di tabel 'students'
+        const { error: updateError } = await supabase
+            .from('students')
+            .update({ stars: newStars })
+            .eq('id', studentId);
+
+        if (updateError) throw updateError;
+
+        // 4. Catat riwayat log transaksi ke tabel 'transactions'
+        await supabase
+            .from('transactions')
+            .insert([{ student_id: studentId, type, amount, notes }]);
+
+        alert('Transaksi berhasil diproses! Bintang siswa telah diperbarui.');
+        document.getElementById('transactionForm').reset();
+        closeTransactionModal();
+        
+        // Refresh data ranking utama secara otomatis
+        ambilDanTampilkanRanking();
+
+    } catch (err) {
+        alert('Gagal memproses transaksi: ' + err.message);
+    }
+}
+
+// =======================================================
+// 5. FUNGSI MELIHAT DETAIL PROFIL SISWA
 // =======================================================
 window.viewUserDetail = function(rankNumber) {
     const indexSiswa = rankNumber - 1;
@@ -298,7 +353,7 @@ window.closeUserDetailModal = function() {
 }
 
 // =======================================================
-// 5. FUNGSI PENGATUR MODE (USER / ADMIN)
+// 6. FUNGSI PENGATUR MODE (USER / ADMIN)
 // =======================================================
 window.setRole = function(role) {
     currentRole = role;
@@ -318,7 +373,7 @@ window.setRole = function(role) {
 }
 
 // =======================================================
-// 6. FUNGSI MODAL DI PANEL ADMIN
+// 7. FUNGSI MODAL DI PANEL ADMIN
 // =======================================================
 window.openAddStudentModal = function() {
     document.getElementById('addStudentModal').classList.remove('hidden');
@@ -334,7 +389,7 @@ window.closeTransactionModal = function() {
 }
 
 // =======================================================
-// 7. FUNGSI PROSES SIMPAN DATA KE SUPABASE
+// 8. FUNGSI PROSES SIMPAN DATA SISWA BARU KE SUPABASE
 // =======================================================
 window.handleAddStudent = async function(event) {
     event.preventDefault();
