@@ -6,7 +6,7 @@ let currentRole = 'user';
 let localStudentsData = [];
 
 // =======================================================
-// KODE BARU: LOGIKA KONVERSI TOTAL BINTANG KE SISTEM TIER ML
+// 1. LOGIKA KONVERSI TOTAL BINTANG KE SISTEM TIER ML
 // =======================================================
 function hitungTierDanBintang(totalStars) {
     let tierName = "Belum Ada Tier";
@@ -34,8 +34,34 @@ function hitungTierDanBintang(totalStars) {
     return { tierName, starsInTier };
 }
 
+// Fungsi bantu untuk membuat deretan 5 ikon bintang (penuh vs transparan)
+function buatHtmlBintangTier(infoTier) {
+    let htmlBintang = '<div class="flex items-center gap-0.5 justify-center mt-0.5">';
+    
+    // 1. Gambar bintang yang menyala kuning penuh
+    for (let i = 0; i < infoTier.starsInTier; i++) {
+        htmlBintang += `<i class="fa-solid fa-star text-yellow-400 text-[10px] animate-pulse"></i>`;
+    }
+    
+    // 2. Jika bukan Rising Star, sisa slot kosongnya diberi bintang transparan/garis tepi (fa-regular)
+    if (infoTier.tierName !== "Rising Star") {
+        const sisaSlotKosong = 5 - infoTier.starsInTier;
+        for (let i = 0; i < sisaSlotKosong; i++) {
+            htmlBintang += `<i class="fa-regular fa-star text-slate-500 text-[10px] opacity-60"></i>`;
+        }
+    } else {
+        // Khusus Rising Star jika bintangnya lebih dari 5, sisa penambahannya bisa ditampilkan text "+X" jika mau
+        if (infoTier.starsInTier > 5) {
+            // Opsional: batasi render ikon maksimal 5 saja, lalu beri penanda text
+        }
+    }
+    
+    htmlBintang += '</div>';
+    return htmlBintang;
+}
+
 // =======================================================
-// 1. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING
+// 2. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING + TIER
 // =======================================================
 async function ambilDanTampilkanRanking() {
     const statusText = document.getElementById('dbStatusText');
@@ -58,28 +84,46 @@ async function ambilDanTampilkanRanking() {
         
         localStudentsData = siswa || [];
 
-        // --- UPDATE PODIUM JUARA 1, 2, 3 ---
+        // --- UPDATE PODIUM JUARA 1 ---
         if (siswa && siswa.length >= 1) {
+            const info = hitungTierDanBintang(siswa[0].stars);
             document.getElementById('p1-name').innerText = siswa[0].name;
-            document.getElementById('p1-stars').innerText = siswa[0].stars;
+            // Menampilkan nama tier & deretan ikon bintang di bawah nama podium
+            document.getElementById('p1-stars').innerHTML = `
+                <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
+                ${buatHtmlBintangTier(info)}
+                <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[0].stars}</span>
+            `;
             if (siswa[0].avatar) document.getElementById('p1-avatar').src = siswa[0].avatar;
         } else {
             document.getElementById('p1-name').innerText = 'Belum Ada';
             document.getElementById('p1-stars').innerText = '0';
         }
 
+        // --- UPDATE PODIUM JUARA 2 ---
         if (siswa && siswa.length >= 2) {
+            const info = hitungTierDanBintang(siswa[1].stars);
             document.getElementById('p2-name').innerText = siswa[1].name;
-            document.getElementById('p2-stars').innerText = siswa[1].stars;
+            document.getElementById('p2-stars').innerHTML = `
+                <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
+                ${buatHtmlBintangTier(info)}
+                <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[1].stars}</span>
+            `;
             if (siswa[1].avatar) document.getElementById('p2-avatar').src = siswa[1].avatar;
         } else {
             document.getElementById('p2-name').innerText = 'Belum Ada';
             document.getElementById('p2-stars').innerText = '0';
         }
 
+        // --- UPDATE PODIUM JUARA 3 ---
         if (siswa && siswa.length >= 3) {
+            const info = hitungTierDanBintang(siswa[2].stars);
             document.getElementById('p3-name').innerText = siswa[2].name;
-            document.getElementById('p3-stars').innerText = siswa[2].stars;
+            document.getElementById('p3-stars').innerHTML = `
+                <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
+                ${buatHtmlBintangTier(info)}
+                <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[2].stars}</span>
+            `;
             if (siswa[2].avatar) document.getElementById('p3-avatar').src = siswa[2].avatar;
         } else {
             document.getElementById('p3-name').innerText = 'Belum Ada';
@@ -107,9 +151,10 @@ async function ambilDanTampilkanRanking() {
         if (leaderboardList) {
             leaderboardList.innerHTML = '';
             if (siswa.length === 0) {
-                leaderboardList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Database kosong. Silakan masuk Mode Admin untuk menambah siswa.</p>`;
+                leaderboardList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Database kosong.</p>`;
             } else {
                 siswa.forEach((itemSiswa, index) => {
+                    const info = hitungTierDanBintang(itemSiswa.stars);
                     const row = document.createElement('div');
                     row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl cursor-pointer hover:border-brand-500/40 transition-all';
                     row.onclick = () => window.viewUserDetail(index + 1);
@@ -118,10 +163,16 @@ async function ambilDanTampilkanRanking() {
                         <div class="flex items-center gap-3">
                             <span class="font-bold text-xs text-slate-500 w-5">#${index + 1}</span>
                             <img src="${itemSiswa.avatar || 'https://picsum.photos/seed/' + index + '/100/100'}" class="w-8 h-8 rounded-full object-cover">
-                            <span class="text-xs font-semibold text-slate-200">${itemSiswa.name}</span>
+                            <div>
+                                <span class="text-xs font-semibold text-slate-200 block">${itemSiswa.name}</span>
+                                <span class="text-[9px] text-purple-400 font-medium block">${info.tierName}</span>
+                            </div>
                         </div>
-                        <div class="text-yellow-400 font-bold text-xs">
-                            <i class="fa-solid fa-star"></i> ${itemSiswa.stars}
+                        <div class="text-right">
+                            <div class="text-yellow-400 font-bold text-xs">
+                                <i class="fa-solid fa-star text-[10px]"></i> ${itemSiswa.stars}
+                            </div>
+                            ${buatHtmlBintangTier(info)}
                         </div>
                     `;
                     leaderboardList.appendChild(row);
@@ -179,7 +230,7 @@ function renderAdminStudentList(siswaArray) {
 }
 
 // =======================================================
-// 2. FUNGSI UNTUK MENGHAPUS DATA SISWA DARI SUPABASE
+// 3. FUNGSI UNTUK MENGHAPUS DATA SISWA DARI SUPABASE
 // =======================================================
 window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
     const konfirmasi = confirm(`Apakah Anda yakin ingin menghapus siswa bernama "${namaSiswa}"?`);
@@ -201,7 +252,7 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 3. FUNGSI BARU: MELIHAT DETAIL PROFIL SISWA (SISTEM TIER ML)
+// 4. FUNGSI MELIHAT DETAIL PROFIL SISWA (SISTEM TIER ML)
 // =======================================================
 window.viewUserDetail = function(rankNumber) {
     const indexSiswa = rankNumber - 1;
@@ -209,7 +260,6 @@ window.viewUserDetail = function(rankNumber) {
 
     if (!dataSiswa) return;
 
-    // Hitung info tier berdasarkan total bintang database
     const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
     document.getElementById('modalName').innerText = dataSiswa.name;
@@ -222,24 +272,20 @@ window.viewUserDetail = function(rankNumber) {
         document.getElementById('modalAvatar').src = 'https://picsum.photos/seed/' + indexSiswa + '/150/150';
     }
 
-    // Ubah nama tier di text modal
     document.getElementById('modalTierName').innerText = infoTier.tierName;
 
-    // Gambar maksimal 5 ikon bintang sesuai sisa bintang di tier-nya
     const starIconsContainer = document.getElementById('modalStarIcons');
     if (starIconsContainer) {
         starIconsContainer.innerHTML = '';
         
-        // 1. Gambar bintang yang menyala kuning
         for (let i = 0; i < infoTier.starsInTier; i++) {
             starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
         }
         
-        // 2. Jika bukan tier tertinggi (Rising Star), sisa slot kosongnya diberi bintang abu-abu gelap biar pas 5 buah
         if (infoTier.tierName !== "Rising Star") {
             const sisaSlotKosong = 5 - infoTier.starsInTier;
             for (let i = 0; i < sisaSlotKosong; i++) {
-                starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-slate-700 text-xs opacity-40"></i>`;
+                starIconsContainer.innerHTML += `<i class="fa-regular fa-star text-slate-700 text-xs opacity-60"></i>`;
             }
         }
     }
@@ -252,7 +298,7 @@ window.closeUserDetailModal = function() {
 }
 
 // =======================================================
-// 4. FUNGSI PENGATUR MODE (USER / ADMIN)
+// 5. FUNGSI PENGATUR MODE (USER / ADMIN)
 // =======================================================
 window.setRole = function(role) {
     currentRole = role;
@@ -272,7 +318,7 @@ window.setRole = function(role) {
 }
 
 // =======================================================
-// 5. FUNGSI MODAL DI PANEL ADMIN
+// 6. FUNGSI MODAL DI PANEL ADMIN
 // =======================================================
 window.openAddStudentModal = function() {
     document.getElementById('addStudentModal').classList.remove('hidden');
@@ -288,7 +334,7 @@ window.closeTransactionModal = function() {
 }
 
 // =======================================================
-// 6. FUNGSI PROSES SIMPAN DATA KE SUPABASE
+// 7. FUNGSI PROSES SIMPAN DATA KE SUPABASE
 // =======================================================
 window.handleAddStudent = async function(event) {
     event.preventDefault();
