@@ -2,6 +2,8 @@ import { supabase } from './supabase-client.js';
 
 // Variabel untuk menyimpan data role aktif (default: user/siswa)
 let currentRole = 'user';
+// Menyimpan salinan data siswa yang berhasil diambil dari database
+let localStudentsData = [];
 
 // =======================================================
 // 1. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING
@@ -22,6 +24,9 @@ async function ambilDanTampilkanRanking() {
         if (statusIndicator) statusIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500';
 
         console.log('Data Siswa Berhasil Diambil:', siswa);
+        
+        // Simpan data siswa ke variabel lokal agar bisa dibaca oleh fungsi detail profil
+        localStudentsData = siswa || [];
 
         // --- UPDATE PODIUM JUARA 1, 2, 3 ---
         if (siswa && siswa.length >= 1) {
@@ -30,6 +35,7 @@ async function ambilDanTampilkanRanking() {
             if (siswa[0].avatar) document.getElementById('p1-avatar').src = siswa[0].avatar;
         } else {
             document.getElementById('p1-name').innerText = 'Belum Ada';
+            document.getElementById('p1-stars').innerText = '0';
         }
 
         if (siswa && siswa.length >= 2) {
@@ -38,6 +44,7 @@ async function ambilDanTampilkanRanking() {
             if (siswa[1].avatar) document.getElementById('p2-avatar').src = siswa[1].avatar;
         } else {
             document.getElementById('p2-name').innerText = 'Belum Ada';
+            document.getElementById('p2-stars').innerText = '0';
         }
 
         if (siswa && siswa.length >= 3) {
@@ -46,20 +53,25 @@ async function ambilDanTampilkanRanking() {
             if (siswa[2].avatar) document.getElementById('p3-avatar').src = siswa[2].avatar;
         } else {
             document.getElementById('p3-name').innerText = 'Belum Ada';
+            document.getElementById('p3-stars').innerText = '0';
         }
 
         // --- UPDATE RUNNER UP RANK 4 & 5 ---
         if (siswa && siswa.length >= 4) {
             document.getElementById('p4-name').innerText = siswa[3].name;
             document.getElementById('p4-stars').innerText = siswa[3].stars;
+            if (siswa[3].avatar) document.getElementById('p4-avatar').src = siswa[3].avatar;
         } else {
             document.getElementById('p4-name').innerText = '-';
+            document.getElementById('p4-stars').innerText = '0';
         }
         if (siswa && siswa.length >= 5) {
             document.getElementById('p5-name').innerText = siswa[4].name;
             document.getElementById('p5-stars').innerText = siswa[4].stars;
+            if (siswa[4].avatar) document.getElementById('p5-avatar').src = siswa[4].avatar;
         } else {
             document.getElementById('p5-name').innerText = '-';
+            document.getElementById('p5-stars').innerText = '0';
         }
 
         // --- UPDATE KLASEMEN UMUM (RANK 6+) ---
@@ -71,7 +83,10 @@ async function ambilDanTampilkanRanking() {
             } else {
                 siswa.forEach((itemSiswa, index) => {
                     const row = document.createElement('div');
-                    row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl';
+                    row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl cursor-pointer hover:border-brand-500/40 transition-all';
+                    // Berikan fungsi klik untuk baris klasemen umum juga
+                    row.onclick = () => window.viewUserDetail(index + 1);
+                    
                     row.innerHTML = `
                         <div class="flex items-center gap-3">
                             <span class="font-bold text-xs text-slate-500 w-5">#${index + 1}</span>
@@ -107,7 +122,61 @@ async function ambilDanTampilkanRanking() {
 }
 
 // =======================================================
-// 2. FUNGSI PENGATUR MODE (USER / ADMIN)
+// 2. FUNGSI UNTUK MELIHAT DETAIL PROFIL SISWA (YANG ERROR)
+// =======================================================
+window.viewUserDetail = function(rankNumber) {
+    // Kurangi 1 karena array dimulai dari angka 0
+    const indexSiswa = rankNumber - 1;
+    const dataSiswa = localStudentsData[indexSiswa];
+
+    if (!dataSiswa) {
+        console.log("Data siswa pada peringkat ini tidak ditemukan.");
+        return;
+    }
+
+    // Mengisi data ke elemen-elemen di dalam modal detail profil
+    document.getElementById('modalName').innerText = dataSiswa.name;
+    document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
+    document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> ${dataSiswa.stars} Bintang`;
+    
+    if (dataSiswa.avatar) {
+        document.getElementById('modalAvatar').src = dataSiswa.avatar;
+    } else {
+        document.getElementById('modalAvatar').src = 'https://picsum.photos/seed/' + indexSiswa + '/150/150';
+    }
+
+    // Mengatur Tier secara dinamis berdasarkan jumlah bintang siswa
+    let tierName = "Star Beginner";
+    if (dataSiswa.stars >= 50) tierName = "Star Legend";
+    else if (dataSiswa.stars >= 30) tierName = "Star Diamond";
+    else if (dataSiswa.stars >= 15) tierName = "Star Platinum";
+    document.getElementById('modalTierName').innerText = tierName;
+
+    // Gambar ikon bintang kecil-kecil di dalam kotak progres modal
+    const starIconsContainer = document.getElementById('modalStarIcons');
+    if (starIconsContainer) {
+        starIconsContainer.innerHTML = '';
+        // Batasi maksimal render 10 bintang agar kotak tidak kepenuhan meluap
+        const jumlahBintangRender = Math.min(dataSiswa.stars, 10);
+        for (let i = 0; i < jumlahBintangRender; i++) {
+            starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
+        }
+        if (dataSiswa.stars > 10) {
+            starIconsContainer.innerHTML += `<span class="text-xs text-slate-400 font-bold ml-1">+${dataSiswa.stars - 10} lainnya</span>`;
+        }
+    }
+
+    // Tampilkan modal ke layar dengan menghapus class 'hidden'
+    document.getElementById('userDetailModal').classList.remove('hidden');
+}
+
+// Fungsi untuk menutup jendela detail profil siswa
+window.closeUserDetailModal = function() {
+    document.getElementById('userDetailModal').classList.add('hidden');
+}
+
+// =======================================================
+// 3. FUNGSI PENGATUR MODE (USER / ADMIN)
 // =======================================================
 window.setRole = function(role) {
     currentRole = role;
@@ -116,22 +185,18 @@ window.setRole = function(role) {
     const adminPanel = document.getElementById('adminPanel');
 
     if (role === 'admin') {
-        // Nyalakan gaya tombol Admin Aktif
         btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
         btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-        // Tampilkan panel kontrol admin
         if (adminPanel) adminPanel.classList.remove('hidden');
     } else {
-        // Nyalakan gaya tombol Siswa Aktif
         btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
         btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-        // Sembunyikan panel kontrol admin
         if (adminPanel) adminPanel.classList.add('hidden');
     }
 }
 
 // =======================================================
-// 3. FUNGSI MODAL DI PANEL ADMIN
+// 4. FUNGSI MODAL DI PANEL ADMIN
 // =======================================================
 window.openAddStudentModal = function() {
     document.getElementById('addStudentModal').classList.remove('hidden');
@@ -147,7 +212,7 @@ window.closeTransactionModal = function() {
 }
 
 // =======================================================
-// 4. FUNGSI PROSES SIMPAN DATA KE SUPABASE
+// 5. FUNGSI PROSES SIMPAN DATA KE SUPABASE
 // =======================================================
 window.handleAddStudent = async function(event) {
     event.preventDefault();
@@ -165,7 +230,6 @@ window.handleAddStudent = async function(event) {
         document.getElementById('addStudentForm').reset();
         closeAddStudentModal();
         
-        // Refresh data tampilan papan ranking
         ambilDanTampilkanRanking();
     } catch (err) {
         alert('Gagal menambah siswa: ' + err.message);
