@@ -241,7 +241,7 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. PROSES TRANSAKSI PRESTASI / PENALTI + INSULATOR AMAN LOG
+// 4. PROSES TRANSAKSI PRESTASI / PENALTI (SINKRON SUPABASE)
 // =======================================================
 window.handleTransaction = async function(event) {
     event.preventDefault();
@@ -289,22 +289,21 @@ window.handleTransaction = async function(event) {
 
         if (updateError) throw updateError;
 
-        // 3. LOGIC AMAN UNTUK RIWAYAT: Coba input dengan berbagai variasi nama kolom agar anti-gagal (400 Bad Request)
-        const payloadLog = {
-            student_id: studentId,
-            type: type,
-            amount: amount
-        };
-        
-        // Sesuaikan deskripsi/notes ke kolom database
-        payloadLog.notes = notes;
-        payloadLog.description = notes;
-        payloadLog.keterangan = notes;
+        // 3. MASUKKAN LOG SESUAI KOLOM DI SUPABASE KAMU (stars & description)
+        const { error: insertError } = await supabase
+            .from('transactions')
+            .insert([
+                { 
+                    student_id: studentId, 
+                    type: type, 
+                    stars: amount,          
+                    description: notes      
+                }
+            ]);
 
-        // Kirim riwayat log ke database
-        await supabase.from('transactions').insert([payloadLog]);
+        if (insertError) throw insertError;
 
-        alert('Transaksi berhasil diproses! Bintang siswa telah diperbarui.');
+        alert('Transaksi berhasil diproses! Bintang dan riwayat telah diperbarui.');
         document.getElementById('transactionForm').reset();
         window.setTransactionType('achievement');
 
@@ -315,12 +314,13 @@ window.handleTransaction = async function(event) {
         ambilDanTampilkanRanking();
 
     } catch (err) {
+        console.error(err);
         alert('Gagal memproses transaksi: ' + err.message);
     }
 }
 
 // =======================================================
-// 5. UPDATE UTAMA: FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
+// 5. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
     const indexSiswa = rankNumber - 1;
@@ -366,7 +366,7 @@ window.viewUserDetail = async function(rankNumber) {
         riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
         
         try {
-            // Ambil data transaksi khusus siswa ini dari Supabase, diurutkan dari yang paling baru
+            // Ambil data transaksi khusus siswa ini dari Supabase
             const { data: logs, error: logsError } = await supabase
                 .from('transactions')
                 .select('*')
@@ -384,21 +384,21 @@ window.viewUserDetail = async function(rankNumber) {
                     const itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
                     
-                    // Cek jika tipenya penalti atau prestasi
                     const isPenalty = log.type === 'penalti' || log.type === 'penalty';
                     const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
                     const sign = isPenalty ? '-' : '+';
                     const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
                     
-                    // Fleksibilitas membaca isi teks catatan
-                    const isiCatatan = log.notes || log.description || log.keterangan || 'Tanpa keterangan';
+                    // Membaca kolom 'description' dan 'stars' sesuai isi tabel Supabase kamu
+                    const isiCatatan = log.description || 'Tanpa keterangan';
+                    const jumlahBintang = log.stars || 0;
                     
                     itemLog.innerHTML = `
                         <div class="flex items-center gap-2">
                             ${icon}
                             <span class="text-slate-300 font-medium">${isiCatatan}</span>
                         </div>
-                        <span class="font-bold ${textClass}">${sign}${log.amount} Bintang</span>
+                        <span class="font-bold ${textClass}">${sign}${jumlahBintang} Bintang</span>
                     `;
                     riwayatContainer.appendChild(itemLog);
                 });
