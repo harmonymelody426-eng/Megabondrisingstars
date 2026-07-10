@@ -53,12 +53,11 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      /* https://lh3.googleusercontent.com/d/1bVb8-aeX77T66_KMGibIn4bu02jKZGa7 */
       background-image: linear-gradient(to bottom, rgba(8, 3, 24, 0.50), rgba(8, 3, 24, 0.90)), url('https://lh3.googleusercontent.com/d/1bVb8-aeX77T66_KMGibIn4bu02jKZGa7');
       background-size: cover;
       background-position: center;
@@ -68,7 +67,6 @@
     .heading-font {
       font-family: 'Space Grotesk', sans-serif;
     }
-    /* Custom Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
     }
@@ -82,13 +80,9 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #8a5cf61c;
     }
-
-    /* Flip Animation helper for ranking changes */
     .leaderboard-item {
       transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    
-    /* Neon glow text */
     .text-glow-gold {
       text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
     }
@@ -107,8 +101,6 @@
     .text-glow-legend {
       text-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
     }
-
-    /* Floating particles for star additions */
     @keyframes floatUp {
       0% {
         transform: translateY(0) scale(1);
@@ -123,6 +115,18 @@
       position: absolute;
       pointer-events: none;
       animation: floatUp 1.2s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(139, 92, 246, 0.3);
+      border-radius: 50%;
+      border-top-color: #8b5cf6;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -161,11 +165,11 @@
           </button>
         </div>
 
-        <!-- Simulated Current Active Student (For Profile Photo Upload simulation) -->
+        <!-- Simulated Current Active Student -->
         <div class="flex items-center gap-2 bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-1.5">
           <div class="relative">
             <img id="currentActiveAvatar" src="https://picsum.photos/seed/current/100/100" alt="Me" class="w-8 h-8 rounded-full border border-brand-500/40 object-cover">
-            <label id="headerPhotoUploadLabel" for="selfPhotoUpload" class="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-600 hover:bg-brand-500 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md transition-transform active:scale-95 hidden">
+            <label id="headerPhotoUploadLabel" for="selfPhotoUpload" class="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-600 hover:bg-brand-500 text-white rounded-full flex items-center justify-center hidden cursor-pointer">
               <i class="fa-solid fa-camera text-[8px]"></i>
             </label>
             <input type="file" id="selfPhotoUpload" accept="image/*" class="hidden" onchange="handleSelfPhotoUpload(event)">
@@ -178,11 +182,11 @@
           </div>
         </div>
 
-        <!-- PWA Install Button -->
-        <button id="btnInstallApp" class="hidden bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all duration-300 hover:scale-105 active:scale-95">
-          <i class="fa-solid fa-download"></i> Pasang Aplikasi
-        </button>
-
+        <!-- Database Status Indicator -->
+        <div class="text-xs font-semibold text-slate-400 flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/50 border border-slate-800 rounded-xl">
+          <span id="dbStatusIndicator" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+          <span id="dbStatusText">Connecting...</span>
+        </div>
       </div>
     </div>
   </header>
@@ -190,7 +194,7 @@
   <!-- MAIN APP CONTAINER -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
     
-    <!-- ADMIN UTILITY PANEL (Only visible if role is admin) -->
+    <!-- ADMIN UTILITY PANEL -->
     <div id="adminPanel" class="hidden mb-8 p-6 bg-gradient-to-r from-purple-950/40 via-brand-950/40 to-slate-950/40 border-2 border-dashed border-brand-500/30 rounded-2xl animate-pulse-subtle">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
@@ -200,10 +204,10 @@
           <p class="text-xs text-slate-400">Kelola siswa, prestasi, penalti, dan perbarui foto profil dengan hak akses penuh.</p>
         </div>
         <div class="flex gap-2">
-          <button onclick="openAddStudentModal()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg shadow-brand-500/20 hover:scale-105">
+          <button onclick="openAddStudentModal()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
             <i class="fa-solid fa-user-plus"></i> Tambah Siswa Baru
           </button>
-          <button onclick="openTransactionModal()" class="bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg shadow-purple-500/10 hover:scale-105">
+          <button onclick="openTransactionModal()" class="bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
             <i class="fa-solid fa-star"></i> Kelola Prestasi / Penalti
           </button>
         </div>
@@ -213,11 +217,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-300">
         <div class="bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center"><i class="fa-solid fa-award"></i></div>
-          <div><p class="font-bold">Tambah Prestasi</p><p class="text-[10px] text-slate-500">Memberikan bintang &amp; catatan emas.</p></div>
+          <div><p class="font-bold">Tambah Prestasi</p><p class="text-[10px] text-slate-500">Memberikan bintang & catatan emas.</p></div>
         </div>
         <div class="bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center"><i class="fa-solid fa-circle-minus"></i></div>
-          <div><p class="font-bold">Berikan Penalti</p><p class="text-[10px] text-slate-500">Mengurangi bintang &amp; catatan pelanggaran.</p></div>
+          <div><p class="font-bold">Berikan Penalti</p><p class="text-[10px] text-slate-500">Mengurangi bintang & catatan pelanggaran.</p></div>
         </div>
         <div class="bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
           <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-images"></i></div>
@@ -229,7 +233,7 @@
     <!-- MAIN LEADERBOARD WORKSPACE -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
-      <!-- 1. PODIUM TOP 3 & Highlight Rank 4-5 (Left/Central 7 cols) -->
+      <!-- PODIUM TOP 3 & Highlight Rank 4-5 -->
       <section class="lg:col-span-7 space-y-8">
         
         <!-- Section Header -->
@@ -241,7 +245,7 @@
             <p class="text-xs text-slate-400 mt-1">Dapatkan Bintang Sebanyak Banyaknya, Dan jadilah yang paling bersinar !!</p>
           </div>
           <div class="bg-slate-950/40 px-3 py-1.5 rounded-full border border-slate-800 text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Real-time Live Sorting
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live Database Sync
           </div>
         </div>
 
@@ -250,9 +254,7 @@
           
           <!-- RANK 2 (Left) -->
           <div id="podium-2" class="order-1 flex flex-col items-center relative transition-all duration-700">
-            <!-- Rank Glow -->
             <div class="absolute -top-10 w-24 h-24 bg-slate-500/10 rounded-full blur-xl -z-10"></div>
-            <!-- Avatar Container -->
             <div class="relative cursor-pointer group hover:scale-105 transition-transform" onclick="viewUserDetail(2)">
               <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-full p-[3px] bg-gradient-to-tr from-slate-400 via-slate-200 to-slate-500 shadow-lg shadow-slate-500/20 relative">
                 <img id="p2-avatar" src="https://picsum.photos/seed/placeholder/150/150" class="w-full h-full object-cover rounded-full bg-slate-900" alt="Rank 2">
@@ -261,17 +263,12 @@
                 <i class="fa-solid fa-crown text-yellow-600 text-[10px]"></i> #2
               </div>
             </div>
-            <!-- Identity & Stats -->
             <div class="text-center mt-3 w-full">
-              <h3 id="p2-name" class="font-bold text-xs sm:text-sm text-slate-200 line-clamp-1">Siswa 2</h3>
-              <div class="flex items-center justify-center gap-1 mt-1">
-                <span id="p2-badge" class="px-2 py-0.5 text-[9px] font-bold rounded bg-slate-800 border border-slate-500/30 text-slate-300">Silver II</span>
-              </div>
+              <h3 id="p2-name" class="font-bold text-xs sm:text-sm text-slate-200 line-clamp-1">Loading...</h3>
               <div class="flex items-center justify-center gap-1 mt-1 text-yellow-400 font-extrabold text-xs sm:text-sm">
                 <i class="fa-solid fa-star"></i> <span id="p2-stars">0</span>
               </div>
             </div>
-            <!-- Physical Podium Stand -->
             <div class="w-full h-20 sm:h-24 bg-gradient-to-b from-slate-800/80 to-slate-950/90 border-t border-slate-700/50 rounded-t-xl mt-4 flex items-center justify-center shadow-lg">
               <span class="heading-font text-2xl sm:text-3xl font-black text-slate-500/30">II</span>
             </div>
@@ -279,13 +276,10 @@
 
           <!-- RANK 1 (Center - Elevated) -->
           <div id="podium-1" class="order-2 flex flex-col items-center relative transition-all duration-700 -translate-y-4">
-            <!-- King Glow -->
             <div class="absolute -top-16 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl -z-10 animate-pulse"></div>
-            <!-- Crown Badge -->
             <div class="absolute -top-14 z-10 animate-bounce-slow">
               <i class="fa-solid fa-crown text-amber-400 text-3xl filter drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"></i>
             </div>
-            <!-- Avatar Container -->
             <div class="relative cursor-pointer group hover:scale-105 transition-transform" onclick="viewUserDetail(1)">
               <div class="w-20 h-20 sm:w-28 sm:h-28 rounded-full p-1 bg-gradient-to-tr from-yellow-500 via-amber-300 to-yellow-600 shadow-2xl shadow-yellow-500/30 relative">
                 <img id="p1-avatar" src="https://picsum.photos/seed/placeholder/150/150" class="w-full h-full object-cover rounded-full bg-slate-900" alt="Rank 1">
@@ -294,27 +288,20 @@
                 <i class="fa-solid fa-star text-slate-950 text-[10px]"></i> #1
               </div>
             </div>
-            <!-- Identity & Stats -->
             <div class="text-center mt-3 w-full">
-              <h3 id="p1-name" class="font-bold text-sm sm:text-base text-white line-clamp-1">Siswa 1</h3>
-              <div class="flex items-center justify-center gap-1 mt-1">
-                <span id="p1-badge" class="px-2 py-0.5 text-[9px] font-bold rounded bg-yellow-950/50 border border-yellow-500/40 text-yellow-400">Bintang Terang IV</span>
-              </div>
+              <h3 id="p1-name" class="font-bold text-sm sm:text-base text-white line-clamp-1">Loading...</h3>
               <div class="flex items-center justify-center gap-1 mt-1 text-yellow-400 font-extrabold text-sm sm:text-base">
                 <i class="fa-solid fa-star text-glow-gold"></i> <span id="p1-stars">0</span>
               </div>
             </div>
-            <!-- Physical Podium Stand -->
-            <div class="w-full h-24 sm:h-32 bg-gradient-to-b from-yellow-600/40 via-yellow-900/40 to-slate-950 border-t-2 border-yellow-500/50 rounded-t-xl mt-4 flex items-center justify-center shadow-2xl">
+            <div class="w-full h-24 sm:h-32 bg-gradient-to-b from-yellow-600/40 via-yellow-900/40 to-slate-950 border-t-2 border-yellow-500/50 rounded-t-xl mt-4 flex items-center justify-center shadow-lg">
               <span class="heading-font text-4xl sm:text-5xl font-black text-yellow-500/30">I</span>
             </div>
           </div>
 
           <!-- RANK 3 (Right) -->
           <div id="podium-3" class="order-3 flex flex-col items-center relative transition-all duration-700">
-            <!-- Rank Glow -->
             <div class="absolute -top-10 w-24 h-24 bg-amber-900/10 rounded-full blur-xl -z-10"></div>
-            <!-- Avatar Container -->
             <div class="relative cursor-pointer group hover:scale-105 transition-transform" onclick="viewUserDetail(3)">
               <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-full p-[3px] bg-gradient-to-tr from-amber-700 via-orange-400 to-amber-900 shadow-lg shadow-amber-950/30 relative">
                 <img id="p3-avatar" src="https://picsum.photos/seed/placeholder/150/150" class="w-full h-full object-cover rounded-full bg-slate-900" alt="Rank 3">
@@ -323,17 +310,12 @@
                 <i class="fa-solid fa-shield text-amber-200 text-[10px]"></i> #3
               </div>
             </div>
-            <!-- Identity & Stats -->
             <div class="text-center mt-3 w-full">
-              <h3 id="p3-name" class="font-bold text-xs sm:text-sm text-slate-200 line-clamp-1">Siswa 3</h3>
-              <div class="flex items-center justify-center gap-1 mt-1">
-                <span id="p3-badge" class="px-2 py-0.5 text-[9px] font-bold rounded bg-amber-950/40 border border-amber-800/30 text-amber-500">Bronze V</span>
-              </div>
+              <h3 id="p3-name" class="font-bold text-xs sm:text-sm text-slate-200 line-clamp-1">Loading...</h3>
               <div class="flex items-center justify-center gap-1 mt-1 text-yellow-400 font-extrabold text-xs sm:text-sm">
                 <i class="fa-solid fa-star"></i> <span id="p3-stars">0</span>
               </div>
             </div>
-            <!-- Physical Podium Stand -->
             <div class="w-full h-16 sm:h-20 bg-gradient-to-b from-amber-950/50 to-slate-950/90 border-t border-amber-800/40 rounded-t-xl mt-4 flex items-center justify-center shadow-lg">
               <span class="heading-font text-xl sm:text-2xl font-black text-amber-800/30">III</span>
             </div>
@@ -345,48 +327,38 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           
           <!-- RANK 4 CARD -->
-          <div id="card-rank-4" onclick="viewUserDetail(4)" class="group bg-gradient-to-r from-slate-900/60 to-purple-950/30 border border-purple-900/30 hover:border-brand-500/40 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-950/50">
+          <div id="card-rank-4" onclick="viewUserDetail(4)" class="group bg-gradient-to-r from-slate-900/60 to-purple-950/30 border border-purple-900/30 hover:border-brand-500/40 rounded-2xl p-4 cursor-pointer transition-all">
             <div class="flex items-center gap-4">
               <div class="heading-font text-lg font-black text-slate-500 w-6">#4</div>
               <div class="relative">
-                <img id="p4-avatar" src="https://picsum.photos/seed/p4/100/100" class="w-14 h-14 rounded-full object-cover border-2 border-slate-800 group-hover:border-brand-400/50 transition-colors" alt="Rank 4">
-                <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-900 text-purple-300 text-[10px] font-bold rounded-full flex items-center justify-center border border-purple-700">4</div>
+                <img id="p4-avatar" src="https://picsum.photos/seed/p4/100/100" class="w-14 h-14 rounded-full object-cover border-2 border-slate-800 group-hover:border-brand-400/50 transition-colors">
               </div>
               <div>
-                <h4 id="p4-name" class="font-bold text-sm text-slate-100 group-hover:text-brand-300 transition-colors line-clamp-1">Siswa 4</h4>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                  <span id="p4-badge" class="px-1.5 py-0.5 text-[8px] font-bold rounded bg-slate-950 text-slate-400">Bronze I</span>
-                </div>
+                <h4 id="p4-name" class="font-bold text-sm text-slate-100 group-hover:text-brand-300 transition-colors line-clamp-1">Loading...</h4>
               </div>
             </div>
             <div class="text-right">
               <div class="text-yellow-400 font-black text-sm flex items-center gap-1 justify-end">
                 <i class="fa-solid fa-star"></i> <span id="p4-stars">0</span>
               </div>
-              <span class="text-[9px] text-slate-500">Peringkat 4</span>
             </div>
           </div>
 
           <!-- RANK 5 CARD -->
-          <div id="card-rank-5" onclick="viewUserDetail(5)" class="group bg-gradient-to-r from-slate-900/60 to-purple-950/30 border border-purple-900/30 hover:border-brand-500/40 rounded-2xl p-4 flex items-center justify-between cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-brand-950/50">
+          <div id="card-rank-5" onclick="viewUserDetail(5)" class="group bg-gradient-to-r from-slate-900/60 to-purple-950/30 border border-purple-900/30 hover:border-brand-500/40 rounded-2xl p-4 cursor-pointer transition-all">
             <div class="flex items-center gap-4">
               <div class="heading-font text-lg font-black text-slate-500 w-6">#5</div>
               <div class="relative">
-                <img id="p5-avatar" src="https://picsum.photos/seed/p5/100/100" class="w-14 h-14 rounded-full object-cover border-2 border-slate-800 group-hover:border-brand-400/50 transition-colors" alt="Rank 5">
-                <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-purple-900 text-purple-300 text-[10px] font-bold rounded-full flex items-center justify-center border border-purple-700">5</div>
+                <img id="p5-avatar" src="https://picsum.photos/seed/p5/100/100" class="w-14 h-14 rounded-full object-cover border-2 border-slate-800 group-hover:border-brand-400/50 transition-colors">
               </div>
               <div>
-                <h4 id="p5-name" class="font-bold text-sm text-slate-100 group-hover:text-brand-300 transition-colors line-clamp-1">Siswa 5</h4>
-                <div class="flex items-center gap-1.5 mt-0.5">
-                  <span id="p5-badge" class="px-1.5 py-0.5 text-[8px] font-bold rounded bg-slate-950 text-slate-400">Bronze I</span>
-                </div>
+                <h4 id="p5-name" class="font-bold text-sm text-slate-100 group-hover:text-brand-300 transition-colors line-clamp-1">Loading...</h4>
               </div>
             </div>
             <div class="text-right">
               <div class="text-yellow-400 font-black text-sm flex items-center gap-1 justify-end">
                 <i class="fa-solid fa-star"></i> <span id="p5-stars">0</span>
               </div>
-              <span class="text-[9px] text-slate-500">Peringkat 5</span>
             </div>
           </div>
 
@@ -394,32 +366,28 @@
 
       </section>
 
-      <!-- 2. SCROLLABLE LEADERBOARD (RANK 6+) (Right 5 cols) -->
+      <!-- SCROLLABLE LEADERBOARD (RANK 6+) -->
       <section class="lg:col-span-5 space-y-4">
         <div>
           <h2 class="heading-font text-xl font-bold tracking-wide text-purple-200">KLASEMEN UMUM</h2>
           <p class="text-xs text-slate-400">Daftar peringkat lengkap siswa StarAcademy</p>
         </div>
 
-        <!-- Search & Filter bar inside Leaderboard section -->
+        <!-- Search & Filter bar -->
         <div class="flex gap-2">
           <div class="relative flex-grow">
             <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
             <input type="text" id="studentSearch" oninput="renderLeaderboard()" placeholder="Cari nama siswa..." class="w-full bg-slate-950/60 border border-slate-800 text-slate-200 pl-9 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
           </div>
-          <select id="tierFilter" onchange="renderLeaderboard()" class="bg-slate-950/60 border border-slate-800 text-slate-300 px-3 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
-            <option value="all">Semua Tier</option>
-            <option value="Bintang Redup">Bintang Redup</option>
-            <option value="Bintang Menyala">Bintang Menyala</option>
-            <option value="Bintang Kejora">Bintang Kejora</option>
-            <option value="RISING STAR">RISING STAR</option>
-          </select>
         </div>
 
         <!-- Scrollable Area -->
         <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-3 shadow-inner">
           <div id="leaderboardList" class="space-y-2 max-h-[440px] overflow-y-auto pr-1">
-            <!-- Dynamic Rows inserted here by JS -->
+            <div class="flex justify-center items-center h-32">
+              <div class="loading-spinner"></div>
+              <span class="ml-2 text-xs text-slate-400">Loading leaderboard...</span>
+            </div>
           </div>
         </div>
       </section>
@@ -429,19 +397,17 @@
 
   <!-- USER DETAIL MODAL -->
   <div id="userDetailModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-purple-900/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative animate-pulse-subtle">
+    <div class="bg-slate-900 border border-purple-900/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative">
       
-      <!-- Top header / Tier styling background -->
       <div id="modalTierBanner" class="p-6 bg-gradient-to-r from-brand-900 to-indigo-950 relative overflow-hidden">
-        <button onclick="closeUserDetailModal()" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 w-8 h-8 rounded-full flex items-center justify-center transition-all">
+        <button onclick="closeUserDetailModal()" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 w-8 h-8 rounded-full flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
 
         <div class="flex items-center gap-4 mt-2">
-          <!-- Profile Picture & Change Option inside Modal -->
           <div class="relative group">
             <img id="modalAvatar" src="https://picsum.photos/seed/p1/150/150" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-white/20" alt="Avatar">
-            <label id="modalPhotoUploadLabel" class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity duration-200">
+            <label id="modalPhotoUploadLabel" class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity hidden">
               <i class="fa-solid fa-camera text-white text-xs mb-1"></i>
               <span class="text-[8px] text-white">Ganti Foto</span>
               <input type="file" id="modalPhotoUploadInput" accept="image/*" class="hidden" onchange="handleModalPhotoUpload(event)">
@@ -449,53 +415,43 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h3 id="modalName" class="heading-font text-lg sm:text-xl font-bold text-white">Ahmad Fauzi</h3>
+              <h3 id="modalName" class="heading-font text-lg sm:text-xl font-bold text-white">Student Name</h3>
               <span id="modalRankLabel" class="bg-yellow-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">#1</span>
             </div>
             <p id="modalTierName" class="text-sm font-semibold text-brand-300 flex items-center gap-1.5 mt-1">
-              <i class="fa-solid fa-crown text-amber-400"></i> Bronze I
+              <i class="fa-solid fa-crown text-amber-400"></i> Tier Name
             </p>
           </div>
         </div>
 
-        <!-- Floating Particles Effect in Banner -->
         <div class="absolute -right-6 -bottom-6 text-white/5 text-8xl pointer-events-none">
           <i id="modalTierIconLarge" class="fa-solid fa-crown"></i>
         </div>
       </div>
 
-      <!-- Detail Statistics & Star Progress -->
       <div class="p-6 space-y-6">
         
-        <!-- Gamified Tier Display Progress -->
         <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
           <div class="flex justify-between items-center mb-2">
-            <span class="text-xs text-slate-400 font-semibold">Progres Bintang Tier</span>
-            <span id="modalTotalStarsText" class="text-sm font-extrabold text-yellow-400"><i class="fa-solid fa-star"></i> 28 Bintang</span>
+            <span class="text-xs text-slate-400 font-semibold">Progres Bintang</span>
+            <span id="modalTotalStarsText" class="text-sm font-extrabold text-yellow-400"><i class="fa-solid fa-star"></i> 0 Bintang</span>
           </div>
-          <!-- Lit Stars Array -->
           <div id="modalStarIcons" class="flex items-center gap-2 py-2">
-            <!-- Render 5 stars, colored based on how many they have in the current division -->
-          </div>
-          <div class="flex justify-between items-center text-[10px] text-slate-500 mt-2">
-            <span id="currentTierLevel">Bronze V</span>
-            <span id="nextTierLevel">Bronze I (Maks)</span>
+            <!-- Stars rendered by JS -->
           </div>
         </div>
 
-        <!-- Achievement & Penalty History Timeline -->
         <div>
           <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pencapaian &amp; Penalti
+            <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pencapaian & Penalti
           </h4>
           <div id="modalHistoryTimeline" class="space-y-3 max-h-48 overflow-y-auto pr-1">
-            <!-- Timeline details -->
+            <p class="text-xs text-slate-500">Tidak ada riwayat.</p>
           </div>
         </div>
 
-        <!-- Delete Student Quick Action (Admin Mode Only) -->
         <div id="modalAdminDeleteBtnContainer" class="hidden pt-4 border-t border-slate-800/80">
-          <button id="btnDeleteStudent" class="w-full bg-rose-950/30 hover:bg-rose-900/30 text-rose-500 hover:text-rose-400 border border-rose-900/40 py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2">
+          <button id="btnDeleteStudent" class="w-full bg-rose-950/30 hover:bg-rose-900/30 text-rose-500 hover:text-rose-400 border border-rose-900/40 py-2.5 rounded-xl text-xs font-bold transition-all">
             <i class="fa-solid fa-trash-can"></i> Hapus Siswa dari Sistem
           </button>
         </div>
@@ -514,71 +470,40 @@
       <form id="addStudentForm" onsubmit="handleAddStudent(event)" class="p-6 space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Nama Lengkap Siswa</label>
-          <input type="text" id="newStudentName" required="" placeholder="Contoh: Andi Wijaya" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
+          <input type="text" id="newStudentName" required placeholder="Contoh: Andi Wijaya" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Bintang Awal</label>
           <input type="number" id="newStudentStars" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Foto Profil Default</label>
-          <div class="grid grid-cols-4 gap-2">
-            <label class="cursor-pointer relative rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500">
-              <input type="radio" name="avatarOption" value="seed1" checked="" class="hidden peer">
-              <img src="https://picsum.photos/seed/seed1/100/100" class="w-full h-12 object-cover" alt="Preset 1">
-              <div class="absolute inset-0 bg-brand-600/30 opacity-0 peer-checked:opacity-100 flex items-center justify-center"><i class="fa-solid fa-check text-white"></i></div>
-            </label>
-            <label class="cursor-pointer relative rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500">
-              <input type="radio" name="avatarOption" value="seed2" class="hidden peer">
-              <img src="https://picsum.photos/seed/seed2/100/100" class="w-full h-12 object-cover" alt="Preset 2">
-              <div class="absolute inset-0 bg-brand-600/30 opacity-0 peer-checked:opacity-100 flex items-center justify-center"><i class="fa-solid fa-check text-white"></i></div>
-            </label>
-            <label class="cursor-pointer relative rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500">
-              <input type="radio" name="avatarOption" value="seed3" class="hidden peer">
-              <img src="https://picsum.photos/seed/seed3/100/100" class="w-full h-12 object-cover" alt="Preset 3">
-              <div class="absolute inset-0 bg-brand-600/30 opacity-0 peer-checked:opacity-100 flex items-center justify-center"><i class="fa-solid fa-check text-white"></i></div>
-            </label>
-            <label class="cursor-pointer relative rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500">
-              <input type="radio" name="avatarOption" value="custom" id="customAvatarRadio" class="hidden peer">
-              <div class="w-full h-12 bg-slate-950 flex flex-col items-center justify-center text-slate-500 border border-dashed border-slate-800 rounded-lg">
-                <i class="fa-solid fa-upload text-xs"></i>
-                <span class="text-[8px] mt-0.5">Unggah</span>
-              </div>
-              <div class="absolute inset-0 bg-brand-600/30 opacity-0 peer-checked:opacity-100 flex items-center justify-center"><i class="fa-solid fa-check text-white"></i></div>
-            </label>
-          </div>
-          <!-- Custom image upload element hidden but triggerable -->
-          <input type="file" id="customAvatarUpload" accept="image/*" class="hidden" onchange="handleNewStudentAvatarUpload(event)">
-          <p id="customAvatarName" class="text-[10px] text-emerald-400 mt-1.5 hidden"><i class="fa-solid fa-circle-check"></i> Gambar berhasil dipilih</p>
         </div>
         <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl text-xs font-bold transition-all hover:shadow-lg hover:shadow-brand-500/20">Simpan Siswa</button>
       </form>
     </div>
   </div>
 
-  <!-- ADMIN MANAGE TRANSACTION MODAL (PRESTASI / PENALTI) -->
+  <!-- ADMIN MANAGE TRANSACTION MODAL -->
   <div id="transactionModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-purple-900/40 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative">
       <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
-        <h3 class="heading-font text-lg font-bold text-white"><i class="fa-solid fa-sliders text-brand-400 mr-2"></i>Kelola Bintang &amp; Catatan</h3>
+        <h3 class="heading-font text-lg font-bold text-white"><i class="fa-solid fa-sliders text-brand-400 mr-2"></i>Kelola Bintang & Catatan</h3>
         <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <form id="transactionForm" onsubmit="handleTransactionSubmit(event)" class="p-6 space-y-4">
         
         <div>
           <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Pilih Siswa</label>
-          <select id="transactionStudentSelect" required="" class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-            <!-- Dynamic dropdown list from student db -->
+          <select id="transactionStudentSelect" required class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <option value="">-- Pilih Siswa --</option>
           </select>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Kategori Catatan</label>
           <div class="grid grid-cols-2 gap-2">
-            <button type="button" id="typeAchievementBtn" onclick="setTransactionType('achievement')" class="py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+            <button type="button" id="typeAchievementBtn" onclick="setTransactionType('achievement')" class="py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1">
               <i class="fa-solid fa-award"></i> Prestasi (Tambah)
             </button>
-            <button type="button" id="typePenaltyBtn" onclick="setTransactionType('penalty')" class="py-2.5 rounded-xl border border-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+            <button type="button" id="typePenaltyBtn" onclick="setTransactionType('penalty')" class="py-2.5 rounded-xl border border-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center gap-1">
               <i class="fa-solid fa-circle-minus"></i> Penalti (Kurangi)
             </button>
           </div>
@@ -586,12 +511,12 @@
 
         <div>
           <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Jumlah Bintang</label>
-          <input type="number" id="transactionStars" min="1" value="1" required="" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
+          <input type="number" id="transactionStars" min="1" value="1" required class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
         </div>
 
         <div>
           <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Keterangan / Deskripsi</label>
-          <textarea id="transactionDescription" required="" placeholder="Contoh: Menjawab kuis dengan sempurna / Datang terlambat ke kelas" rows="3" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 resize-none"></textarea>
+          <textarea id="transactionDescription" required placeholder="Contoh: Menjawab kuis dengan sempurna" rows="3" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
         </div>
 
         <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl text-xs font-bold transition-all hover:shadow-lg hover:shadow-brand-500/20">Proses Perubahan</button>
@@ -602,950 +527,16 @@
   <!-- FOOTER -->
   <footer class="border-t border-purple-950/40 bg-brand-950/90 py-6 text-center text-xs text-slate-500 mt-12">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <p>© 2023 StarAcademy. Dirancang dengan penuh dedikasi &amp; keindahan visual.</p>
+      <p>© 2026 StarAcademy. Powered by Supabase</p>
       <p class="flex items-center gap-1.5">
-        <span>Sistem Ranking Terintegrasi</span>
-        <span class="px-2 py-0.5 rounded bg-brand-900/40 text-brand-400 font-extrabold text-[10px]">VER 2.5</span>
+        <span>Sistem Ranking Terintegrasi Database</span>
+        <span class="px-2 py-0.5 rounded bg-brand-900/40 text-brand-400 font-extrabold text-[10px]">VER 3.0 - SUPABASE</span>
       </p>
     </div>
   </footer>
 
-  <!-- JAVASCRIPT SYSTEM LOGIC -->
-  <script>
-    // INITIAL SYSTEM DATA (Rich & Gamified dummy data saved in localStorage to persist operations)
-    const DEFAULT_STUDENTS = [
-      {
-        id: "u1",
-        name: "Ahmad Fauzi",
-        avatar: "https://picsum.photos/seed/ahmad/150/150",
-        stars: 28,
-        history: [
-          { type: 'achievement', stars: 20, desc: 'Juara 1 Lomba Cerdas Cermat Nasional', date: '2023-10-15' },
-          { type: 'achievement', stars: 10, desc: 'Meraih skor sempurna dalam Ujian Tengah Semester', date: '2023-10-20' },
-          { type: 'penalty', stars: 2, desc: 'Terlambat masuk kelas tanpa konfirmasi', date: '2023-10-22' }
-        ]
-      },
-      {
-        id: "u2",
-        name: "Citra Lestari",
-        avatar: "https://picsum.photos/seed/citra/150/150",
-        stars: 23,
-        history: [
-          { type: 'achievement', stars: 18, desc: 'Juara Kompetisi Desain UI/UX Tingkat Sekolah', date: '2023-10-18' },
-          { type: 'achievement', stars: 5, desc: 'Aktif berdiskusi dan membantu teman sekelas', date: '2023-10-21' }
-        ]
-      },
-      {
-        id: "u3",
-        name: "Fajar Nugraha",
-        avatar: "https://picsum.photos/seed/fajar/150/150",
-        stars: 14,
-        history: [
-          { type: 'achievement', stars: 15, desc: 'Penghargaan Karya Esai Sains Terfavorit', date: '2023-10-11' },
-          { type: 'penalty', stars: 1, desc: 'Lupa membawa perlengkapan praktikum', date: '2023-10-14' }
-        ]
-      },
-      {
-        id: "u4",
-        name: "Budi Santoso",
-        avatar: "https://picsum.photos/seed/budi/150/150",
-        stars: 12,
-        history: [
-          { type: 'achievement', stars: 12, desc: 'Penyaji materi presentasi bahasa inggris terbaik', date: '2023-10-09' }
-        ]
-      },
-      {
-        id: "u5",
-        name: "Dian Wahyuni",
-        avatar: "https://picsum.photos/seed/dian/150/150",
-        stars: 9,
-        history: [
-          { type: 'achievement', stars: 9, desc: 'Kontribusi tinggi dalam program penanaman pohon sekolah', date: '2023-10-10' }
-        ]
-      },
-      {
-        id: "u6",
-        name: "Gilang Permana",
-        avatar: "https://picsum.photos/seed/gilang/150/150",
-        stars: 8,
-        history: [
-          { type: 'achievement', stars: 8, desc: 'Aktif merapikan lab komputer setelah kelas selesai', date: '2023-10-12' }
-        ]
-      },
-      {
-        id: "u7",
-        name: "Hani Fatimah",
-        avatar: "https://picsum.photos/seed/hani/150/150",
-        stars: 5,
-        history: [
-          { type: 'achievement', stars: 5, desc: 'Nilai ujian pemrograman harian sempurna', date: '2023-10-16' }
-        ]
-      },
-      {
-        id: "u8",
-        name: "Irfan Hakim",
-        avatar: "https://picsum.photos/seed/irfan/150/150",
-        stars: 3,
-        history: [
-          { type: 'achievement', stars: 3, desc: 'Membantu mendesain mading sekolah bertema pahlawan', date: '2023-10-17' }
-        ]
-      }
-    ];
-
-    // STATE CONTROL
-    let students = JSON.parse(localStorage.getItem('sa_students')) || DEFAULT_STUDENTS;
-    let currentRole = 'user'; // 'user' or 'admin'
-    let currentActiveUserId = localStorage.getItem('sa_active_user') || 'u2'; // Default acting as Citra Lestari
-    let transactionType = 'achievement'; // 'achievement' or 'penalty'
-    let customAvatarBase64 = null;
-    let rankSnapshot = {}; // Saves positions of students before updates to track upward/downward shifts
-
-    // TIER CALCULATION ALGORITHM
-    // 1. Bintang Redup (0 - 10 Bintang)
-    // 2. Bintang Menyala (11 - 30 Bintang)
-    // 3. Bintang Kejora (31 - 60 Bintang)
-    // 4. RISING STAR (61+ Bintang)
-    function getTierInfo(stars) {
-      let name = "";
-      let tierName = "";
-      let starsInTier = 0;
-      let color = "";
-      let bg = "";
-      let border = "";
-      let icon = "";
-      let gradient = "";
-      let textGlow = "";
-
-      if (stars <= 10) {
-        tierName = "Bintang Redup";
-        name = "Bintang Redup ☁️";
-        starsInTier = Math.min(5, Math.max(1, Math.ceil(stars / 2)));
-        color = "text-slate-400";
-        bg = "bg-slate-950/30";
-        border = "border-slate-800";
-        icon = "fa-solid fa-cloud";
-        gradient = "from-slate-800 to-slate-950";
-        textGlow = "text-slate-500";
-      } else if (stars <= 30) {
-        tierName = "Bintang Menyala";
-        name = "Bintang Menyala 🔥";
-        starsInTier = Math.min(5, Math.max(1, Math.ceil((stars - 10) / 4)));
-        color = "text-orange-400";
-        bg = "bg-orange-950/30";
-        border = "border-orange-800/40";
-        icon = "fa-solid fa-fire";
-        gradient = "from-orange-900 to-slate-950";
-        textGlow = "text-glow-bronze";
-      } else if (stars <= 60) {
-        tierName = "Bintang Kejora";
-        name = "Bintang Kejora ✨";
-        starsInTier = Math.min(5, Math.max(1, Math.ceil((stars - 30) / 6)));
-        color = "text-cyan-400";
-        bg = "bg-cyan-950/30";
-        border = "border-cyan-800/40";
-        icon = "fa-solid fa-star";
-        gradient = "from-cyan-900 to-slate-950";
-        textGlow = "text-glow-platinum";
-      } else {
-        tierName = "RISING STAR";
-        name = "RISING STAR 👑";
-        starsInTier = 5;
-        color = "text-yellow-400";
-        bg = "bg-yellow-950/30";
-        border = "border-yellow-800/40";
-        icon = "fa-solid fa-crown";
-        gradient = "from-yellow-600 to-slate-950";
-        textGlow = "text-glow-gold";
-      }
-
-      return {
-        name: name,
-        tierName: tierName,
-        starsInTier: starsInTier,
-        color: color,
-        bg: bg,
-        border: border,
-        icon: icon,
-        gradient: gradient,
-        textGlow: textGlow
-      };
-    }
-
-    // AUDIO DESIGN FOR MAXIMUM IMMERSION (Using Web Audio API so no external assets are required)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(type) {
-      if (!audioCtx) return;
-      
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      if (type === 'success') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
-      } else if (type === 'penalty') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
-        osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.3); // A2
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.35);
-      } else if (type === 'pop') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.1);
-      }
-    }
-
-    // INITIALIZATION RUN
-    window.addEventListener('DOMContentLoaded', () => {
-      saveSnapshot();
-      initUI();
-      renderLeaderboard();
-      setupPWA();
-    });
-
-    function saveSnapshot() {
-      // Save current positions for displacement tracking during shifts
-      const sorted = [...students].sort((a, b) => b.stars - a.stars);
-      rankSnapshot = {};
-      sorted.forEach((student, index) => {
-        rankSnapshot[student.id] = index + 1;
-      });
-    }
-
-    function initUI() {
-      // Populate active user selector and set header elements
-      populateUserDropdown();
-      updateHeaderProfile();
-      updateAdminPanelVisibility();
-    }
-
-    function populateUserDropdown() {
-      const select = document.getElementById('currentUserSelector');
-      select.innerHTML = '';
-      students.forEach(s => {
-        const option = document.createElement('option');
-        option.value = s.id;
-        option.textContent = s.name;
-        if (s.id === currentActiveUserId) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
-    }
-
-    function updateHeaderProfile() {
-      const activeUser = students.find(s => s.id === currentActiveUserId);
-      if (activeUser) {
-        document.getElementById('currentActiveAvatar').src = activeUser.avatar;
-      }
-    }
-
-    function updateAdminPanelVisibility() {
-      const panel = document.getElementById('adminPanel');
-      const btnUser = document.getElementById('btnRoleUser');
-      const btnAdmin = document.getElementById('btnRoleAdmin');
-      const headerPhotoUploadLabel = document.getElementById('headerPhotoUploadLabel');
-
-      if (currentRole === 'admin') {
-        panel.classList.remove('hidden');
-        if (headerPhotoUploadLabel) headerPhotoUploadLabel.classList.remove('hidden');
-        btnAdmin.classList.add('bg-brand-600', 'text-white', 'shadow-md');
-        btnAdmin.classList.remove('text-purple-300');
-        btnUser.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
-        btnUser.classList.add('text-purple-300');
-      } else {
-        panel.classList.add('hidden');
-        if (headerPhotoUploadLabel) headerPhotoUploadLabel.classList.add('hidden');
-        btnUser.classList.add('bg-brand-600', 'text-white', 'shadow-md');
-        btnUser.classList.remove('text-purple-300');
-        btnAdmin.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
-        btnAdmin.classList.add('text-purple-300');
-      }
-    }
-
-    // CHANGE ROLES
-    function setRole(role) {
-      if (role === 'admin') {
-        const password = prompt("Masukkan Password Admin:");
-        if (password !== 'megabond123') {
-          alert("Password salah!");
-          return;
-        }
-        alert("Akses Admin Diterima!");
-      }
-
-      currentRole = role;
-      updateAdminPanelVisibility();
-      renderLeaderboard(); // Re-render untuk memunculkan/menyembunyikan tombol admin
-      
-      if (typeof playBeep === 'function') {
-        playBeep('pop');
-      }
-    }
-
-    // ACTING AS SELECTED USER
-    function changeActiveUser(userId) {
-      currentActiveUserId = userId;
-      localStorage.setItem('sa_active_user', userId);
-      updateHeaderProfile();
-      playBeep('pop');
-    }
-
-    // CHOOSE/UPLOAD AVATAR SIMULATION
-    function handleSelfPhotoUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const base64 = e.target.result;
-          updateStudentAvatar(currentActiveUserId, base64);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function updateStudentAvatar(userId, imageBase64) {
-      students = students.map(s => {
-        if (s.id === userId) {
-          return { ...s, avatar: imageBase64 };
-        }
-        return s;
-      });
-      persistData();
-      updateHeaderProfile();
-      renderLeaderboard();
-      
-      // If modal is open for this student, update modal too
-      const modal = document.getElementById('userDetailModal');
-      if (!modal.classList.contains('hidden')) {
-        document.getElementById('modalAvatar').src = imageBase64;
-      }
-      playBeep('success');
-    }
-
-    function persistData() {
-      localStorage.setItem('sa_students', JSON.stringify(students));
-    }
-
-    // CORE LEADERBOARD RENDERING & ANIMATION LAYER
-    function renderLeaderboard() {
-      const query = document.getElementById('studentSearch').value.toLowerCase();
-      const tierFilter = document.getElementById('tierFilter').value;
-
-      // Sort students based on total stars
-      let sortedStudents = [...students].sort((a, b) => b.stars - a.stars);
-
-      // Extract details for Top 5 Podium
-      const top5 = sortedStudents.slice(0, 5);
-
-      // Render Podium (Rank 1, 2, 3)
-      renderPodium(top5);
-
-      // Render Rank 6+ (Klasemen Umum) list
-      const listContainer = document.getElementById('leaderboardList');
-      listContainer.innerHTML = '';
-
-      sortedStudents.forEach((student, index) => {
-        const rank = index + 1;
-        const tier = getTierInfo(student.stars);
-
-        // Filter operations
-        if (query && !student.name.toLowerCase().includes(query)) return;
-        if (tierFilter !== 'all' && tier.tierName !== tierFilter) return;
-
-        // Render visual card
-        const row = document.createElement('div');
-        row.id = `row-student-${student.id}`;
-        row.className = `leaderboard-item flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-slate-900 border border-slate-800/60 hover:border-brand-500/30 cursor-pointer transition-all duration-300`;
-        
-        // Custom styling for current self user
-        if (student.id === currentActiveUserId) {
-          row.classList.add('ring-1', 'ring-brand-500/50', 'bg-brand-950/20');
-        }
-
-        // Track displacement from snapshot
-        let displacementHtml = '';
-        const oldRank = rankSnapshot[student.id];
-        if (oldRank && oldRank !== rank) {
-          if (oldRank > rank) {
-            // Upwards movement
-            displacementHtml = `<span class="text-[10px] text-emerald-400 font-bold ml-1.5 flex items-center gap-0.5"><i class="fa-solid fa-arrow-trend-up"></i>${oldRank - rank}</span>`;
-          } else {
-            // Downwards movement
-            displacementHtml = `<span class="text-[10px] text-rose-500 font-bold ml-1.5 flex items-center gap-0.5"><i class="fa-solid fa-arrow-trend-down"></i>${rank - oldRank}</span>`;
-          }
-        }
-
-        // Determine if large rank is shown or standard layout
-        const isTop5 = rank <= 5;
-        const iconSizeClass = isTop5 ? 'w-12 h-12' : 'w-9 h-9';
-        const textSizeClass = isTop5 ? 'text-sm font-bold' : 'text-xs font-medium';
-
-        row.innerHTML = `
-          <div class="flex items-center gap-3 flex-grow" onclick="viewUserDetailByStudentId('${student.id}')">
-            <!-- Rank Indicator -->
-            <div class="heading-font text-xs font-extrabold text-slate-500 w-6 text-center">
-              ${rank}
-            </div>
-            <!-- Avatar -->
-            <div class="relative flex-shrink-0">
-              <img src="${student.avatar}" class="${iconSizeClass} rounded-full object-cover border border-slate-800" alt="${student.name}">
-              <!-- Dynamic mini badge based on rank -->
-              ${rank <= 3 ? `
-                <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black ${
-                  rank === 1 ? 'bg-yellow-400 text-slate-950' : rank === 2 ? 'bg-slate-200 text-slate-950' : 'bg-amber-700 text-white'
-                }">
-                  ${rank}
-                </div>
-              ` : ''}
-            </div>
-            <!-- Identity -->
-            <div class="min-w-0">
-              <div class="flex items-center gap-1.5">
-                <span class="${textSizeClass} text-slate-200 truncate">${student.name}</span>
-                ${student.id === currentActiveUserId ? '<span class="bg-brand-900/60 text-brand-300 text-[8px] font-black px-1 rounded">Saya</span>' : ''}
-                ${displacementHtml}
-              </div>
-              <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="text-[9px] font-extrabold ${tier.color} flex items-center gap-1">
-                  <i class="${tier.icon}"></i> ${tier.name}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Stars Badge & Admin Options -->
-          <div class="flex items-center gap-3">
-            <div class="text-right" onclick="viewUserDetailByStudentId('${student.id}')">
-              <div class="text-yellow-400 font-extrabold text-sm flex items-center gap-1 justify-end">
-                <i class="fa-solid fa-star ${tier.textGlow}"></i> ${student.stars}
-              </div>
-              <span class="text-[9px] text-slate-500">Bintang</span>
-            </div>
-            
-            <!-- Admin direct quick add/subtract buttons if admin mode is enabled -->
-            ${currentRole === 'admin' ? `
-              <div class="flex items-center gap-1 border-l border-slate-800/80 pl-2">
-                <button onclick="quickChangeStars('${student.id}', 1)" class="w-7 h-7 bg-emerald-950/40 border border-emerald-900/40 text-emerald-400 hover:bg-emerald-900 hover:text-white rounded-lg flex items-center justify-center transition-all active:scale-90" title="Quick Add 1 Star">
-                  <i class="fa-solid fa-plus text-xs"></i>
-                </button>
-                <button onclick="quickChangeStars('${student.id}', -1)" class="w-7 h-7 bg-rose-950/40 border border-rose-900/40 text-rose-500 hover:bg-rose-900 hover:text-white rounded-lg flex items-center justify-center transition-all active:scale-90" title="Quick Penalty 1 Star">
-                  <i class="fa-solid fa-minus text-xs"></i>
-                </button>
-              </div>
-            ` : ''}
-          </div>
-        `;
-
-        listContainer.appendChild(row);
-      });
-
-      if (listContainer.innerHTML === '') {
-        listContainer.innerHTML = `
-          <div class="text-center py-10 text-slate-500 text-xs">
-            <i class="fa-solid fa-folder-open text-2xl mb-2 block"></i> Tidak ada siswa yang cocok dengan kriteria pencarian.
-          </div>
-        `;
-      }
-    }
-
-    // PODIUM RENDERING LAYER
-    function renderPodium(top5) {
-      const p1 = top5[0] || { name: "Unassigned", stars: 0, avatar: "https://picsum.photos/seed/placeholder/150/150" };
-      const p2 = top5[1] || { name: "Unassigned", stars: 0, avatar: "https://picsum.photos/seed/placeholder/150/150" };
-      const p3 = top5[2] || { name: "Unassigned", stars: 0, avatar: "https://picsum.photos/seed/placeholder/150/150" };
-
-      // Update Rank 1
-      const p1Tier = getTierInfo(p1.stars);
-      document.getElementById('p1-avatar').src = p1.avatar;
-      document.getElementById('p1-name').textContent = p1.name;
-      document.getElementById('p1-stars').textContent = p1.stars;
-      document.getElementById('p1-badge').textContent = p1Tier.name;
-      document.getElementById('p1-badge').className = `px-2 py-0.5 text-[9px] font-bold rounded ${p1Tier.bg} border ${p1Tier.border} ${p1Tier.color}`;
-
-      // Update Rank 2
-      const p2Tier = getTierInfo(p2.stars);
-      document.getElementById('p2-avatar').src = p2.avatar;
-      document.getElementById('p2-name').textContent = p2.name;
-      document.getElementById('p2-stars').textContent = p2.stars;
-      document.getElementById('p2-badge').textContent = p2Tier.name;
-      document.getElementById('p2-badge').className = `px-2 py-0.5 text-[9px] font-bold rounded ${p2Tier.bg} border ${p2Tier.border} ${p2Tier.color}`;
-
-      // Update Rank 3
-      const p3Tier = getTierInfo(p3.stars);
-      document.getElementById('p3-avatar').src = p3.avatar;
-      document.getElementById('p3-name').textContent = p3.name;
-      document.getElementById('p3-stars').textContent = p3.stars;
-      document.getElementById('p3-badge').textContent = p3Tier.name;
-      document.getElementById('p3-badge').className = `px-2 py-0.5 text-[9px] font-bold rounded ${p3Tier.bg} border ${p3Tier.border} ${p3Tier.color}`;
-
-      // Update runner up slots Rank 4 and 5
-      const p4 = top5[3];
-      const card4 = document.getElementById('card-rank-4');
-      if (p4) {
-        card4.classList.remove('opacity-40');
-        document.getElementById('p4-avatar').src = p4.avatar;
-        document.getElementById('p4-name').textContent = p4.name;
-        document.getElementById('p4-stars').textContent = p4.stars;
-        const p4Tier = getTierInfo(p4.stars);
-        document.getElementById('p4-badge').textContent = p4Tier.name;
-        document.getElementById('p4-badge').className = `px-1.5 py-0.5 text-[8px] font-bold rounded ${p4Tier.bg} border ${p4Tier.border} ${p4Tier.color}`;
-      } else {
-        card4.classList.add('opacity-40');
-      }
-
-      const p5 = top5[4];
-      const card5 = document.getElementById('card-rank-5');
-      if (p5) {
-        card5.classList.remove('opacity-40');
-        document.getElementById('p5-avatar').src = p5.avatar;
-        document.getElementById('p5-name').textContent = p5.name;
-        document.getElementById('p5-stars').textContent = p5.stars;
-        const p5Tier = getTierInfo(p5.stars);
-        document.getElementById('p5-badge').textContent = p5Tier.name;
-        document.getElementById('p5-badge').className = `px-1.5 py-0.5 text-[8px] font-bold rounded ${p5Tier.bg} border ${p5Tier.border} ${p5Tier.color}`;
-      } else {
-        card5.classList.add('opacity-40');
-      }
-    }
-
-    // MODAL DETAIL CONTROL
-    function viewUserDetailByStudentId(studentId) {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-
-      const sorted = [...students].sort((a, b) => b.stars - a.stars);
-      const rank = sorted.findIndex(s => s.id === studentId) + 1;
-      const tier = getTierInfo(student.stars);
-
-      // Populate Name, Rank, Avatar
-      document.getElementById('modalName').textContent = student.name;
-      document.getElementById('modalAvatar').src = student.avatar;
-      document.getElementById('modalRankLabel').textContent = `#${rank}`;
-      document.getElementById('modalTierName').innerHTML = `<i class="${tier.icon}"></i> ${tier.name}`;
-      document.getElementById('modalTierIconLarge').className = `${tier.icon} opacity-5`;
-
-      // Configure visual banner gradient
-      const banner = document.getElementById('modalTierBanner');
-      banner.className = `p-6 bg-gradient-to-r ${tier.gradient} relative overflow-hidden transition-all duration-300`;
-
-      // Configure total stars text
-      document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star text-yellow-400 animate-spin-slow"></i> ${student.stars} Bintang`;
-
-      // Dynamic sub-tier level progression labels
-      document.getElementById('currentTierLevel').textContent = `${tier.tierName}`;
-      document.getElementById('nextTierLevel').textContent = `Progres Bintang`;
-
-      // Render star collection icons for the current tier partition
-      const starIconsContainer = document.getElementById('modalStarIcons');
-      starIconsContainer.innerHTML = '';
-      const totalCapacity = 5;
-      for (let i = 1; i <= totalCapacity; i++) {
-        const starElement = document.createElement('i');
-        if (i <= tier.starsInTier) {
-          // Lit star
-          starElement.className = `fa-solid fa-star text-yellow-400 text-lg ${tier.textGlow} transform transition-all duration-300 hover:scale-125`;
-        } else {
-          // Empty/Unlit slot star
-          starElement.className = `fa-solid fa-star text-slate-700 text-lg`;
-        }
-        starIconsContainer.appendChild(starElement);
-      }
-
-      // Render timeline history logs
-      const timeline = document.getElementById('modalHistoryTimeline');
-      timeline.innerHTML = '';
-
-      if (!student.history || student.history.length === 0) {
-        timeline.innerHTML = `
-          <div class="text-center py-4 text-slate-500 text-xs">
-            Belum ada catatan riwayat prestasi atau penalti untuk siswa ini.
-          </div>
-        `;
-      } else {
-        const sortedHistory = [...student.history].sort((a, b) => new Date(b.date) - new Date(a.date));
-        sortedHistory.forEach(item => {
-          const isAchievement = item.type === 'achievement';
-          const icon = isAchievement ? 'fa-award text-emerald-400' : 'fa-circle-minus text-rose-500';
-          const borderStyle = isAchievement ? 'border-emerald-900/30 bg-emerald-950/20' : 'border-rose-950 bg-rose-950/15';
-          const symbol = isAchievement ? '+' : '-';
-          const valueColor = isAchievement ? 'text-emerald-400' : 'text-rose-500';
-
-          const card = document.createElement('div');
-          card.className = `p-3 border rounded-xl flex items-start justify-between gap-3 ${borderStyle}`;
-          card.innerHTML = `
-            <div class="flex items-start gap-2.5">
-              <div class="mt-0.5"><i class="fa-solid ${icon}"></i></div>
-              <div>
-                <p class="text-xs text-slate-200 font-semibold leading-relaxed">${item.desc}</p>
-                <p class="text-[9px] text-slate-500 mt-1">${formatDate(item.date)}</p>
-              </div>
-            </div>
-            <div class="text-xs font-black ${valueColor} whitespace-nowrap">
-              ${symbol}${item.stars} <i class="fa-solid fa-star"></i>
-            </div>
-          `;
-          timeline.appendChild(card);
-        });
-      }
-
-      // Only Admin can change profile photos
-      const modalPhotoUploadLabel = document.getElementById('modalPhotoUploadLabel');
-      if (currentRole === 'admin') {
-        modalPhotoUploadLabel.classList.remove('hidden');
-      } else {
-        modalPhotoUploadLabel.classList.add('hidden');
-      }
-
-      // Keep photo upload input assigned to this specific student
-      const photoInput = document.getElementById('modalPhotoUploadInput');
-      photoInput.dataset.studentId = studentId;
-
-      // Handle Delete Student Section for Admin Only
-      const deleteSection = document.getElementById('modalAdminDeleteBtnContainer');
-      const deleteBtn = document.getElementById('btnDeleteStudent');
-      if (currentRole === 'admin') {
-        deleteSection.classList.remove('hidden');
-        deleteBtn.onclick = () => handleDeleteStudent(studentId);
-      } else {
-        deleteSection.classList.add('hidden');
-      }
-
-      // Display Modal
-      document.getElementById('userDetailModal').classList.remove('hidden');
-      playBeep('pop');
-    }
-
-    // Overloaded function for index mapping (podium clicked)
-    function viewUserDetail(podiumRank) {
-      const sorted = [...students].sort((a, b) => b.stars - a.stars);
-      const student = sorted[podiumRank - 1];
-      if (student) {
-        viewUserDetailByStudentId(student.id);
-      }
-    }
-
-    function closeUserDetailModal() {
-      document.getElementById('userDetailModal').classList.add('hidden');
-      playBeep('pop');
-    }
-
-    // PHOTO UPLOAD FOR MODAL SPECIFIC TARGETS
-    function handleModalPhotoUpload(event) {
-      const file = event.target.files[0];
-      const targetStudentId = event.target.dataset.studentId;
-      if (file && targetStudentId) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          updateStudentAvatar(targetStudentId, e.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    // MODAL ADD STUDENT PROCESSES
-    function openAddStudentModal() {
-      document.getElementById('addStudentModal').classList.remove('hidden');
-      customAvatarBase64 = null;
-      document.getElementById('customAvatarName').classList.add('hidden');
-      document.getElementById('addStudentForm').reset();
-      playBeep('pop');
-    }
-
-    function closeAddStudentModal() {
-      document.getElementById('addStudentModal').classList.add('hidden');
-      playBeep('pop');
-    }
-
-    function handleNewStudentAvatarUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          customAvatarBase64 = e.target.result;
-          document.getElementById('customAvatarName').classList.remove('hidden');
-          // Automatically check the custom option radio button
-          document.getElementById('customAvatarRadio').checked = true;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function handleAddStudent(event) {
-      event.preventDefault();
-      const name = document.getElementById('newStudentName').value.trim();
-      const initialStars = parseInt(document.getElementById('newStudentStars').value) || 0;
-      
-      let avatar = "";
-      const avatarSelection = document.querySelector('input[name="avatarOption"]:checked').value;
-      if (avatarSelection === 'custom' && customAvatarBase64) {
-        avatar = customAvatarBase64;
-      } else {
-        const seed = avatarSelection === 'custom' ? 'default' : avatarSelection;
-        avatar = `https://picsum.photos/seed/${seed + Date.now()}/150/150`;
-      }
-
-      const newStudent = {
-        id: 'u' + (Date.now()),
-        name: name,
-        avatar: avatar,
-        stars: initialStars,
-        history: initialStars > 0 ? [
-          { type: 'achievement', stars: initialStars, desc: 'Bintang awal pendaftaran siswa baru', date: getTodayDateString() }
-        ] : []
-      };
-
-      saveSnapshot();
-      students.push(newStudent);
-      persistData();
-      populateUserDropdown();
-      renderLeaderboard();
-      closeAddStudentModal();
-      playBeep('success');
-      triggerCelebration();
-    }
-
-    // DELETE STUDENT PROCESS
-    function handleDeleteStudent(studentId) {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-
-      const confirmDelete = confirm(`Apakah Anda yakin ingin menghapus data prestasi & keanggotaan siswa "${student.name}"? Tindakan ini permanen.`);
-      if (confirmDelete) {
-        saveSnapshot();
-        students = students.filter(s => s.id !== studentId);
-        persistData();
-        populateUserDropdown();
-        renderLeaderboard();
-        closeUserDetailModal();
-        playBeep('penalty');
-      }
-    }
-
-    // MODAL TRANSACTION (PRESTASI / PENALTI) PROCESSES
-    function openTransactionModal() {
-      const select = document.getElementById('transactionStudentSelect');
-      select.innerHTML = '';
-      students.forEach(s => {
-        const option = document.createElement('option');
-        option.value = s.id;
-        option.textContent = s.name;
-        select.appendChild(option);
-      });
-
-      document.getElementById('transactionModal').classList.remove('hidden');
-      setTransactionType('achievement');
-      document.getElementById('transactionForm').reset();
-      playBeep('pop');
-    }
-
-    function closeTransactionModal() {
-      document.getElementById('transactionModal').classList.add('hidden');
-      playBeep('pop');
-    }
-
-    function setTransactionType(type) {
-      transactionType = type;
-      const btnAch = document.getElementById('typeAchievementBtn');
-      const btnPen = document.getElementById('typePenaltyBtn');
-
-      if (type === 'achievement') {
-        btnAch.className = "py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-all w-full";
-        btnPen.className = "py-2.5 rounded-xl border border-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-all w-full";
-      } else {
-        btnPen.className = "py-2.5 rounded-xl border border-rose-500/30 bg-rose-950/20 text-rose-500 text-xs font-bold flex items-center justify-center gap-1.5 transition-all w-full";
-        btnAch.className = "py-2.5 rounded-xl border border-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center gap-1.5 transition-all w-full";
-      }
-    }
-
-    function handleTransactionSubmit(event) {
-      event.preventDefault();
-      const studentId = document.getElementById('transactionStudentSelect').value;
-      const changeAmount = parseInt(document.getElementById('transactionStars').value) || 1;
-      const desc = document.getElementById('transactionDescription').value.trim();
-
-      applyStarChange(studentId, transactionType, changeAmount, desc);
-      closeTransactionModal();
-    }
-
-    // GENERAL WORKER METHOD FOR UPDATING STARS
-    function applyStarChange(studentId, type, changeAmount, desc) {
-      saveSnapshot();
-
-      students = students.map(s => {
-        if (s.id === studentId) {
-          let updatedStars = s.stars;
-          if (type === 'achievement') {
-            updatedStars += changeAmount;
-          } else {
-            updatedStars = Math.max(0, updatedStars - changeAmount);
-          }
-
-          const newHistoryItem = {
-            type: type,
-            stars: changeAmount,
-            desc: desc,
-            date: getTodayDateString()
-          };
-
-          const updatedHistory = s.history ? [...s.history, newHistoryItem] : [newHistoryItem];
-
-          return {
-            ...s,
-            stars: updatedStars,
-            history: updatedHistory
-          };
-        }
-        return s;
-      });
-
-      persistData();
-      renderLeaderboard();
-
-      // Trigger gamified visual popping particles from row element
-      const changedRow = document.getElementById(`row-student-${studentId}`);
-      if (changedRow) {
-        changedRow.classList.add('scale-105', 'bg-purple-900/30');
-        setTimeout(() => {
-          changedRow.classList.remove('scale-105', 'bg-purple-900/30');
-        }, 800);
-        triggerFloatingParticle(changedRow, type === 'achievement' ? `+${changeAmount} ⭐️` : `-${changeAmount} ⭐️`, type);
-      }
-
-      if (type === 'achievement') {
-        playBeep('success');
-        triggerCelebration();
-      } else {
-        playBeep('penalty');
-      }
-    }
-
-    // Direct change stars buttons for quick actions in Admin Mode
-    function quickChangeStars(studentId, offset) {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-
-      const type = offset > 0 ? 'achievement' : 'penalty';
-      const absOffset = Math.abs(offset);
-      const desc = offset > 0 ? "Bonus poin cepat dari Admin" : "Penalti poin cepat dari Admin";
-
-      applyStarChange(studentId, type, absOffset, desc);
-    }
-
-    // BEAUTIFUL FLOATING PARTICLES SYSTEM
-    function triggerFloatingParticle(element, text, type) {
-      const rect = element.getBoundingClientRect();
-      const bubble = document.createElement('div');
-      bubble.className = `floating-star font-extrabold text-base px-2.5 py-1 rounded-full border shadow-lg z-50 whitespace-nowrap`;
-      bubble.style.left = `${rect.left + (rect.width / 2)}px`;
-      bubble.style.top = `${rect.top + window.scrollY}px`;
-
-      if (type === 'achievement') {
-        bubble.className += ` bg-emerald-950 border-emerald-500/40 text-emerald-400`;
-      } else {
-        bubble.className += ` bg-rose-950 border-rose-500/40 text-rose-500`;
-      }
-
-      bubble.textContent = text;
-      document.body.appendChild(bubble);
-
-      setTimeout(() => {
-        bubble.remove();
-      }, 1200);
-    }
-
-    // VISUAL CELEBRATION CONFETTI EMULATOR (Generates simple floating dots)
-    function triggerCelebration() {
-      for (let i = 0; i < 20; i++) {
-        const dot = document.createElement('div');
-        const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        
-        dot.className = `fixed w-2.5 h-2.5 rounded-full z-50 pointer-events-none`;
-        dot.style.backgroundColor = randomColor;
-        dot.style.left = `${Math.random() * 100}vw`;
-        dot.style.top = `-10px`;
-        dot.style.transform = `scale(${Math.random() * 1.5 + 0.5})`;
-
-        document.body.appendChild(dot);
-
-        // Simple falling animation with JS physics simulation
-        let y = -10;
-        let x = parseFloat(dot.style.left);
-        let speedY = Math.random() * 3 + 2;
-        let speedX = (Math.random() - 0.5) * 2;
-
-        const interval = setInterval(() => {
-          y += speedY;
-          x += speedX;
-          dot.style.top = `${y}px`;
-          dot.style.left = `${x}vw`;
-          
-          if (y > window.innerHeight) {
-            clearInterval(interval);
-            dot.remove();
-          }
-        }, 16);
-      }
-    }
-
-    // DATE CONVERSION HELPER
-    function getTodayDateString() {
-      const d = new Date();
-      return d.toISOString().split('T')[0];
-    }
-
-    function formatDate(dateStr) {
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('id-ID', options);
-    }
-
-    // PWA COMPANION ENGINE
-    let deferredPrompt;
-    function setupPWA() {
-      const btnInstall = document.getElementById('btnInstallApp');
-      
-      window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent default browser install box
-        e.preventDefault();
-        deferredPrompt = e;
-        // Make customized install button visible to user safely
-        btnInstall.classList.remove('hidden');
-      });
-
-      btnInstall.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          if (outcome === 'accepted') {
-            btnInstall.classList.add('hidden');
-          }
-          deferredPrompt = null;
-        } else {
-          // Manual prompt instruction block for unsupported systems or direct trigger failure
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-          if (isIOS) {
-            alert("Instruksi Memasang Aplikasi di iOS:\n1. Ketuk tombol 'Bagikan/Share' di Safari.\n2. Gulir ke bawah lalu ketuk 'Tambahkan ke Layar Utama/Add to Home Screen'.");
-          } else {
-            alert("Untuk memasang aplikasi ini di Android/Chrome:\n1. Klik menu titik tiga di browser Anda.\n2. Klik 'Tambahkan ke Layar Utama/Pasang Aplikasi'.");
-          }
-        }
-      });
-    }
-  </script>
-
-</body></html>
+  <!-- Supabase Client Import -->
+  <script type="module" src="app.js"></script>
+
+</body>
+</html>
