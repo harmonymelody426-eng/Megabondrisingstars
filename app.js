@@ -257,7 +257,7 @@ window.handleTransaction = async function(event) {
                           document.querySelector('textarea');
     const notes = notesElement ? notesElement.value : "";
 
-    // SINKRONISASI CONSTRAINT DATABASE: Menggunakan 'achievement' atau 'penalty'
+    // Ganti logika penentuan tipe agar bypass cache
     let dbType = 'achievement'; 
     if (window.currentTransactionType === 'penalty') {
         dbType = 'penalty';
@@ -296,7 +296,7 @@ window.handleTransaction = async function(event) {
             .insert([
                 { 
                     student_id: studentId, 
-                    type: dbType,           // Mengirim string Inggris agar lolos constraint check
+                    type: dbType,           
                     stars: amount,          
                     description: notes      
                 }
@@ -331,7 +331,6 @@ window.viewUserDetail = async function(rankNumber) {
 
     const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
-    // Isi data dasar modal profil
     document.getElementById('modalName').innerText = dataSiswa.name;
     document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
     document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
@@ -358,16 +357,13 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
-    // Tampilkan modal terlebih dahulu
     document.getElementById('userDetailModal').classList.remove('hidden');
 
-    // --- LOGIKA MENAMPILKAN RIWAYAT TRANSAKSI ---
     const riwayatContainer = document.querySelector('#userDetailModal div.mt-4 div') || document.getElementById('modalHistoryContainer');
     if (riwayatContainer) {
         riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
         
         try {
-            // Ambil data transaksi khusus siswa ini dari Supabase
             const { data: logs, error: logsError } = await supabase
                 .from('transactions')
                 .select('*')
@@ -379,13 +375,12 @@ window.viewUserDetail = async function(rankNumber) {
             if (!logs || logs.length === 0) {
                 riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
             } else {
-                riwayatContainer.innerHTML = ''; // bersihkan teks loading
+                riwayatContainer.innerHTML = '';
                 
                 logs.forEach(log => {
                     const itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
                     
-                    // Fleksibel membaca tipe 'penalty', 'penalti', atau pun bahasa Inggris/Indonesia
                     const isPenalty = log.type === 'penalti' || log.type === 'penalty';
                     const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
                     const sign = isPenalty ? '-' : '+';
