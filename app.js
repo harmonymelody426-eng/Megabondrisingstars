@@ -6,6 +6,35 @@ let currentRole = 'user';
 let localStudentsData = [];
 
 // =======================================================
+// KODE BARU: LOGIKA KONVERSI TOTAL BINTANG KE SISTEM TIER ML
+// =======================================================
+function hitungTierDanBintang(totalStars) {
+    let tierName = "Belum Ada Tier";
+    let starsInTier = 0;
+
+    if (totalStars <= 0) {
+        return { tierName, starsInTier: 0 };
+    }
+
+    if (totalStars <= 5) {
+        tierName = "Bintang Redup";
+        starsInTier = totalStars;
+    } else if (totalStars <= 10) {
+        tierName = "Bintang Menyala";
+        starsInTier = totalStars - 5;
+    } else if (totalStars <= 15) {
+        tierName = "Bintang Kejora";
+        starsInTier = totalStars - 10;
+    } else {
+        tierName = "Rising Star";
+        // Untuk Rising Star, bintang berjalan terus di atas 15
+        starsInTier = totalStars - 15; 
+    }
+
+    return { tierName, starsInTier };
+}
+
+// =======================================================
 // 1. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING
 // =======================================================
 async function ambilDanTampilkanRanking() {
@@ -27,7 +56,6 @@ async function ambilDanTampilkanRanking() {
 
         console.log('Data Siswa Berhasil Diambil:', siswa);
         
-        // Simpan data siswa ke variabel lokal agar bisa dibaca oleh fungsi detail profil & hapus
         localStudentsData = siswa || [];
 
         // --- UPDATE PODIUM JUARA 1, 2, 3 ---
@@ -102,7 +130,6 @@ async function ambilDanTampilkanRanking() {
         }
 
         // --- UPDATE LIST KELOLA SISWA DI PANEL ADMIN ---
-        // Kita buat fungsi ini agar daftar siswa muncul di panel admin beserta tombol hapusnya!
         renderAdminStudentList(siswa);
 
         // Update selector pilihan siswa di modal transaksi admin
@@ -155,7 +182,6 @@ function renderAdminStudentList(siswaArray) {
 // 2. FUNGSI UNTUK MENGHAPUS DATA SISWA DARI SUPABASE
 // =======================================================
 window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
-    // Tampilkan konfirmasi terlebih dahulu agar tidak sengaja terhapus
     const konfirmasi = confirm(`Apakah Anda yakin ingin menghapus siswa bernama "${namaSiswa}"?`);
     if (!konfirmasi) return;
 
@@ -168,7 +194,6 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
         if (error) throw error;
 
         alert(`Siswa bernama ${namaSiswa} berhasil dihapus!`);
-        // Refresh otomatis papan ranking setelah data sukses terhapus
         ambilDanTampilkanRanking();
     } catch (err) {
         alert('Gagal menghapus siswa: ' + err.message);
@@ -176,7 +201,7 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 3. FUNGSI UNTUK MELIHAT DETAIL PROFIL SISWA
+// 3. FUNGSI BARU: MELIHAT DETAIL PROFIL SISWA (SISTEM TIER ML)
 // =======================================================
 window.viewUserDetail = function(rankNumber) {
     const indexSiswa = rankNumber - 1;
@@ -184,9 +209,12 @@ window.viewUserDetail = function(rankNumber) {
 
     if (!dataSiswa) return;
 
+    // Hitung info tier berdasarkan total bintang database
+    const infoTier = hitungTierDanBintang(dataSiswa.stars);
+
     document.getElementById('modalName').innerText = dataSiswa.name;
     document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
-    document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> ${dataSiswa.stars} Bintang`;
+    document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
     
     if (dataSiswa.avatar) {
         document.getElementById('modalAvatar').src = dataSiswa.avatar;
@@ -194,21 +222,25 @@ window.viewUserDetail = function(rankNumber) {
         document.getElementById('modalAvatar').src = 'https://picsum.photos/seed/' + indexSiswa + '/150/150';
     }
 
-    let tierName = "Star Beginner";
-    if (dataSiswa.stars >= 50) tierName = "Star Legend";
-    else if (dataSiswa.stars >= 30) tierName = "Star Diamond";
-    else if (dataSiswa.stars >= 15) tierName = "Star Platinum";
-    document.getElementById('modalTierName').innerText = tierName;
+    // Ubah nama tier di text modal
+    document.getElementById('modalTierName').innerText = infoTier.tierName;
 
+    // Gambar maksimal 5 ikon bintang sesuai sisa bintang di tier-nya
     const starIconsContainer = document.getElementById('modalStarIcons');
     if (starIconsContainer) {
         starIconsContainer.innerHTML = '';
-        const jumlahBintangRender = Math.min(dataSiswa.stars, 10);
-        for (let i = 0; i < jumlahBintangRender; i++) {
+        
+        // 1. Gambar bintang yang menyala kuning
+        for (let i = 0; i < infoTier.starsInTier; i++) {
             starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
         }
-        if (dataSiswa.stars > 10) {
-            starIconsContainer.innerHTML += `<span class="text-xs text-slate-400 font-bold ml-1">+${dataSiswa.stars - 10} lainnya</span>`;
+        
+        // 2. Jika bukan tier tertinggi (Rising Star), sisa slot kosongnya diberi bintang abu-abu gelap biar pas 5 buah
+        if (infoTier.tierName !== "Rising Star") {
+            const sisaSlotKosong = 5 - infoTier.starsInTier;
+            for (let i = 0; i < sisaSlotKosong; i++) {
+                starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-slate-700 text-xs opacity-40"></i>`;
+            }
         }
     }
 
