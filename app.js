@@ -245,27 +245,43 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. FIX SINKRONISASI TOTAL: FUNGSI PROSES PRESTASI & PENALTI
+// 4. FIX ANTI-NULL: FUNGSI PROSES PRESTASI & PENALTI
 // =======================================================
 window.handleTransaction = async function(event) {
     event.preventDefault();
 
-    // SINKRONISASI ID: Mengambil ID siswa dan jumlah bintang sesuai struktur HTML asli kamu
-    const studentId = document.getElementById('transactionStudentSelect').value;
-    const amount = parseInt(document.getElementById('transactionStars').value) || 0;
+    // 1. Ambil Data Pilihan Siswa
+    const studentSelectElement = document.getElementById('transactionStudentSelect');
+    if (!studentSelectElement) {
+        alert('Elemen transactionStudentSelect tidak ditemukan!');
+        return;
+    }
+    const studentId = studentSelectElement.value;
+
+    // 2. Ambil Data Jumlah Bintang (Cari id transactionStars atau fallback ke transactionAmount)
+    const starsElement = document.getElementById('transactionStars') || document.getElementById('transactionAmount');
+    if (!starsElement) {
+        alert('Elemen input Jumlah Bintang tidak ditemukan!');
+        return;
+    }
+    const amount = parseInt(starsElement.value) || 0;
     
-    // Fleksibel mendeteksi id textarea keterangan/deskripsi milikmu
-    const notesElement = document.getElementById('transactionNotes') || document.getElementById('transactionDescription') || document.querySelector('textarea');
+    // 3. Ambil Data Catatan/Keterangan dengan metode kebal (Mencari segala kemungkinan ID atau Tag Textarea)
+    const notesElement = document.getElementById('transactionNotes') || 
+                          document.getElementById('transactionDescription') || 
+                          document.getElementById('transactionKeterangan') ||
+                          document.querySelector('#transactionForm textarea') ||
+                          document.querySelector('textarea');
+                          
+    // Ambil value jika element ditemukan, jika tidak ada fallback ke string kosong ""
     const notes = notesElement ? notesElement.value : "";
 
-    // Deteksi tipe transaksi dari variabel global atau kelas tombol aktif ('achievement' / 'penalty')
+    // 4. Deteksi tipe transaksi ('achievement' / 'penalty' -> ubah ke 'prestasi' / 'penalti')
     let type = 'prestasi'; 
     if (window.currentTransactionType) {
-        // Jika di HTML menggunakan string 'achievement', ubah menjadi 'prestasi' untuk database
         if (window.currentTransactionType === 'achievement') type = 'prestasi';
         if (window.currentTransactionType === 'penalty') type = 'penalti';
     } else {
-        // Fallback jika tidak membaca variabel global
         const penaltyBtn = document.getElementById('typePenaltyBtn');
         if (penaltyBtn && penaltyBtn.classList.contains('border-slate-800') === false) {
             type = 'penalti';
@@ -290,14 +306,13 @@ window.handleTransaction = async function(event) {
         let currentStars = studentData.stars;
         let newStars = currentStars;
         
-        // 2. Kalkulasi tambah bintang (prestasi) atau kurangi bintang (penalti)
+        // 2. Kalkulasi tambah atau kurang bintang
         if (type === 'prestasi') {
             newStars = currentStars + amount;
         } else {
             newStars = currentStars - amount;
         }
         
-        // Jaga agar bintang tidak minus di bawah 0
         if (newStars < 0) newStars = 0;
 
         // 3. Update data bintang siswa di tabel 'students'
