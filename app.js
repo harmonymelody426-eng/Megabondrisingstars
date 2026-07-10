@@ -27,6 +27,7 @@ function hitungTierDanBintang(totalStars) {
         starsInTier = totalStars - 10;
     } else {
         tierName = "Rising Star";
+        // Untuk Rising Star, bintang berjalan terus di atas 15
         starsInTier = totalStars - 15; 
     }
 
@@ -245,27 +246,38 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. KODE BARU: FUNGSI PROSES PRESTASI & PENALTI (TAMBAH/KURANG BINTANG)
+// 4. FIX: FUNGSI PROSES PRESTASI & PENALTI (AMBIL INPUT SECARA AKURAT)
 // =======================================================
 window.handleTransaction = async function(event) {
     event.preventDefault();
 
+    // Ambil ID siswa dan jumlah bintang dari form
     const studentId = document.getElementById('transactionStudentSelect').value;
-    const type = document.getElementById('transactionType').value; // 'prestasi' atau 'penalti'
     const amount = parseInt(document.getElementById('transactionAmount').value) || 0;
-    const notes = document.getElementById('transactionNotes').value;
+    
+    // Fleksibel mendeteksi id textarea catatan/keterangan/deskripsi milikmu
+    const notesElement = document.getElementById('transactionNotes') || document.getElementById('transactionDescription') || document.querySelector('textarea');
+    const notes = notesElement ? notesElement.value : "";
+
+    // Deteksi tipe transaksi dari variabel global bawaan HTML kamu atau cek kelas tombol yang aktif
+    let type = 'prestasi'; 
+    if (window.currentTransactionType) {
+        type = window.currentTransactionType; 
+    } else {
+        // Fallback jika tidak sengaja bertipe lain
+        const penaltyBtn = document.getElementById('typePenaltyBtn');
+        if (penaltyBtn && penaltyBtn.classList.contains('bg-brand-600')) {
+            type = 'penalti';
+        }
+    }
 
     if (!studentId) {
         alert('Silakan pilih siswa terlebih dahulu!');
         return;
     }
-    if (!type) {
-        alert('Silakan pilih jenis transaksi (Prestasi / Penalti)!');
-        return;
-    }
 
     try {
-        // 1. Ambil data jumlah bintang siswa saat ini dari database
+        // 1. Ambil data jumlah bintang siswa saat ini dari database Supabase
         const { data: studentData, error: fetchError } = await supabase
             .from('students')
             .select('stars')
@@ -274,14 +286,20 @@ window.handleTransaction = async function(event) {
 
         if (fetchError) throw fetchError;
 
-        // 2. Hitung jumlah kalkulasi bintang baru
         let currentStars = studentData.stars;
-        let newStars = type === 'prestasi' ? currentStars + amount : currentStars - amount;
+        let newStars = currentStars;
+        
+        // 2. Kalkulasi tambah bintang (prestasi/achievement) atau kurangi bintang (penalti/penalty)
+        if (type === 'prestasi' || type === 'achievement') {
+            newStars = currentStars + amount;
+        } else {
+            newStars = currentStars - amount;
+        }
         
         // Jaga agar bintang tidak minus di bawah 0
         if (newStars < 0) newStars = 0;
 
-        // 3. Update data bintang siswa tersebut di tabel 'students'
+        // 3. Update data bintang siswa di tabel 'students'
         const { error: updateError } = await supabase
             .from('students')
             .update({ stars: newStars })
@@ -296,7 +314,10 @@ window.handleTransaction = async function(event) {
 
         alert('Transaksi berhasil diproses! Bintang siswa telah diperbarui.');
         document.getElementById('transactionForm').reset();
-        closeTransactionModal();
+        
+        if (typeof window.closeTransactionModal === 'function') {
+            window.closeTransactionModal();
+        }
         
         // Refresh data ranking utama secara otomatis
         ambilDanTampilkanRanking();
