@@ -21,11 +21,13 @@ async function ambilDanTampilkanRanking() {
         if (error) throw error;
 
         if (statusText) statusText.innerText = 'Connected';
-        if (statusIndicator) statusIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        if (statusIndicator) {
+            statusIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        }
 
         console.log('Data Siswa Berhasil Diambil:', siswa);
         
-        // Simpan data siswa ke variabel lokal agar bisa dibaca oleh fungsi detail profil
+        // Simpan data siswa ke variabel lokal agar bisa dibaca oleh fungsi detail profil & hapus
         localStudentsData = siswa || [];
 
         // --- UPDATE PODIUM JUARA 1, 2, 3 ---
@@ -60,7 +62,6 @@ async function ambilDanTampilkanRanking() {
         if (siswa && siswa.length >= 4) {
             document.getElementById('p4-name').innerText = siswa[3].name;
             document.getElementById('p4-stars').innerText = siswa[3].stars;
-            if (siswa[3].avatar) document.getElementById('p4-avatar').src = siswa[3].avatar;
         } else {
             document.getElementById('p4-name').innerText = '-';
             document.getElementById('p4-stars').innerText = '0';
@@ -68,7 +69,6 @@ async function ambilDanTampilkanRanking() {
         if (siswa && siswa.length >= 5) {
             document.getElementById('p5-name').innerText = siswa[4].name;
             document.getElementById('p5-stars').innerText = siswa[4].stars;
-            if (siswa[4].avatar) document.getElementById('p5-avatar').src = siswa[4].avatar;
         } else {
             document.getElementById('p5-name').innerText = '-';
             document.getElementById('p5-stars').innerText = '0';
@@ -84,7 +84,6 @@ async function ambilDanTampilkanRanking() {
                 siswa.forEach((itemSiswa, index) => {
                     const row = document.createElement('div');
                     row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl cursor-pointer hover:border-brand-500/40 transition-all';
-                    // Berikan fungsi klik untuk baris klasemen umum juga
                     row.onclick = () => window.viewUserDetail(index + 1);
                     
                     row.innerHTML = `
@@ -101,6 +100,10 @@ async function ambilDanTampilkanRanking() {
                 });
             }
         }
+
+        // --- UPDATE LIST KELOLA SISWA DI PANEL ADMIN ---
+        // Kita buat fungsi ini agar daftar siswa muncul di panel admin beserta tombol hapusnya!
+        renderAdminStudentList(siswa);
 
         // Update selector pilihan siswa di modal transaksi admin
         const selectSiswa = document.getElementById('transactionStudentSelect');
@@ -121,20 +124,66 @@ async function ambilDanTampilkanRanking() {
     }
 }
 
-// =======================================================
-// 2. FUNGSI UNTUK MELIHAT DETAIL PROFIL SISWA (YANG ERROR)
-// =======================================================
-window.viewUserDetail = function(rankNumber) {
-    // Kurangi 1 karena array dimulai dari angka 0
-    const indexSiswa = rankNumber - 1;
-    const dataSiswa = localStudentsData[indexSiswa];
+// Fungsi internal untuk membuat daftar list kelola siswa di dalam panel admin
+function renderAdminStudentList(siswaArray) {
+    const adminStudentList = document.getElementById('adminStudentList');
+    if (!adminStudentList) return;
 
-    if (!dataSiswa) {
-        console.log("Data siswa pada peringkat ini tidak ditemukan.");
+    adminStudentList.innerHTML = '';
+    if (siswaArray.length === 0) {
+        adminStudentList.innerHTML = '<p class="text-xs text-slate-500 text-center col-span-full">Belum ada siswa.</p>';
         return;
     }
 
-    // Mengisi data ke elemen-elemen di dalam modal detail profil
+    siswaArray.forEach((siswa) => {
+        const item = document.createElement('div');
+        item.className = 'flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800/80';
+        item.innerHTML = `
+            <div>
+                <p class="text-xs font-bold text-slate-200">${siswa.name}</p>
+                <p class="text-[10px] text-yellow-400 font-medium"><i class="fa-solid fa-star"></i> ${siswa.stars} Bintang</p>
+            </div>
+            <button onclick="window.handleDeleteStudent('${siswa.id}', '${siswa.name}')" class="w-7 h-7 flex items-center justify-center rounded-lg bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all text-xs" title="Hapus Siswa">
+                <i class="fa-solid fa-trash"></i>
+            </button>
+        `;
+        adminStudentList.appendChild(item);
+    });
+}
+
+// =======================================================
+// 2. FUNGSI UNTUK MENGHAPUS DATA SISWA DARI SUPABASE
+// =======================================================
+window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
+    // Tampilkan konfirmasi terlebih dahulu agar tidak sengaja terhapus
+    const konfirmasi = confirm(`Apakah Anda yakin ingin menghapus siswa bernama "${namaSiswa}"?`);
+    if (!konfirmasi) return;
+
+    try {
+        const { error } = await supabase
+            .from('students')
+            .delete()
+            .eq('id', idSiswa);
+
+        if (error) throw error;
+
+        alert(`Siswa bernama ${namaSiswa} berhasil dihapus!`);
+        // Refresh otomatis papan ranking setelah data sukses terhapus
+        ambilDanTampilkanRanking();
+    } catch (err) {
+        alert('Gagal menghapus siswa: ' + err.message);
+    }
+}
+
+// =======================================================
+// 3. FUNGSI UNTUK MELIHAT DETAIL PROFIL SISWA
+// =======================================================
+window.viewUserDetail = function(rankNumber) {
+    const indexSiswa = rankNumber - 1;
+    const dataSiswa = localStudentsData[indexSiswa];
+
+    if (!dataSiswa) return;
+
     document.getElementById('modalName').innerText = dataSiswa.name;
     document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
     document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> ${dataSiswa.stars} Bintang`;
@@ -145,18 +194,15 @@ window.viewUserDetail = function(rankNumber) {
         document.getElementById('modalAvatar').src = 'https://picsum.photos/seed/' + indexSiswa + '/150/150';
     }
 
-    // Mengatur Tier secara dinamis berdasarkan jumlah bintang siswa
     let tierName = "Star Beginner";
     if (dataSiswa.stars >= 50) tierName = "Star Legend";
     else if (dataSiswa.stars >= 30) tierName = "Star Diamond";
     else if (dataSiswa.stars >= 15) tierName = "Star Platinum";
     document.getElementById('modalTierName').innerText = tierName;
 
-    // Gambar ikon bintang kecil-kecil di dalam kotak progres modal
     const starIconsContainer = document.getElementById('modalStarIcons');
     if (starIconsContainer) {
         starIconsContainer.innerHTML = '';
-        // Batasi maksimal render 10 bintang agar kotak tidak kepenuhan meluap
         const jumlahBintangRender = Math.min(dataSiswa.stars, 10);
         for (let i = 0; i < jumlahBintangRender; i++) {
             starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
@@ -166,17 +212,15 @@ window.viewUserDetail = function(rankNumber) {
         }
     }
 
-    // Tampilkan modal ke layar dengan menghapus class 'hidden'
     document.getElementById('userDetailModal').classList.remove('hidden');
 }
 
-// Fungsi untuk menutup jendela detail profil siswa
 window.closeUserDetailModal = function() {
     document.getElementById('userDetailModal').classList.add('hidden');
 }
 
 // =======================================================
-// 3. FUNGSI PENGATUR MODE (USER / ADMIN)
+// 4. FUNGSI PENGATUR MODE (USER / ADMIN)
 // =======================================================
 window.setRole = function(role) {
     currentRole = role;
@@ -196,7 +240,7 @@ window.setRole = function(role) {
 }
 
 // =======================================================
-// 4. FUNGSI MODAL DI PANEL ADMIN
+// 5. FUNGSI MODAL DI PANEL ADMIN
 // =======================================================
 window.openAddStudentModal = function() {
     document.getElementById('addStudentModal').classList.remove('hidden');
@@ -212,7 +256,7 @@ window.closeTransactionModal = function() {
 }
 
 // =======================================================
-// 5. FUNGSI PROSES SIMPAN DATA KE SUPABASE
+// 6. FUNGSI PROSES SIMPAN DATA KE SUPABASE
 // =======================================================
 window.handleAddStudent = async function(event) {
     event.preventDefault();
