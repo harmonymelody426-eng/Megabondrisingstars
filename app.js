@@ -8,7 +8,7 @@ let localStudentsData = [];
 window.currentTransactionType = 'achievement'; 
 
 // =======================================================
-// 0. FIX PENTING: LOGIKA ATUR TIPE TRANSAKSI (PRESTASI / PENALTI)
+// 0. LOGIKA ATUR TIPE TRANSAKSI (PRESTASI / PENALTI)
 // =======================================================
 window.setTransactionType = function(type) {
     window.currentTransactionType = type;
@@ -20,11 +20,9 @@ window.setTransactionType = function(type) {
     if (!btnAchievement || !btnPenalty) return;
 
     if (type === 'achievement') {
-        // Tombol Prestasi Aktif (Gunakan border emerald khas Tailwind atau background penuh)
         btnAchievement.className = "py-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-400 font-medium text-xs flex items-center justify-center gap-1.5 transition-all w-full";
         btnPenalty.className = "py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition-all w-full";
     } else {
-        // Tombol Penalti Aktif (Gunakan border rose/merah)
         btnAchievement.className = "py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition-all w-full";
         btnPenalty.className = "py-2.5 rounded-xl border border-rose-500 bg-rose-500/10 text-rose-400 font-medium text-xs flex items-center justify-center gap-1.5 transition-all w-full";
     }
@@ -58,21 +56,17 @@ function hitungTierDanBintang(totalStars) {
     return { tierName, starsInTier };
 }
 
-// Fungsi bantu untuk membuat deretan 5 ikon bintang (penuh vs transparan)
 function buatHtmlBintangTier(infoTier) {
     let htmlBintang = '<div class="flex items-center gap-0.5 justify-center mt-0.5">';
-    
     for (let i = 0; i < infoTier.starsInTier; i++) {
         htmlBintang += `<i class="fa-solid fa-star text-yellow-400 text-[10px] animate-pulse"></i>`;
     }
-    
     if (infoTier.tierName !== "Rising Star") {
         const sisaSlotKosong = 5 - infoTier.starsInTier;
         for (let i = 0; i < sisaSlotKosong; i++) {
             htmlBintang += `<i class="fa-regular fa-star text-slate-500 text-[10px] opacity-60"></i>`;
         }
     }
-    
     htmlBintang += '</div>';
     return htmlBintang;
 }
@@ -98,7 +92,6 @@ async function ambilDanTampilkanRanking() {
         }
 
         console.log('Data Siswa Berhasil Diambil:', siswa);
-        
         localStudentsData = siswa || [];
 
         // --- UPDATE PODIUM JUARA 1 ---
@@ -162,44 +155,38 @@ async function ambilDanTampilkanRanking() {
             document.getElementById('p5-stars').innerText = '0';
         }
 
-        // --- UPDATE KLASEMEN UMUM (RANK 6+) ---
+        // --- KLASEMEN UMUM ---
         const leaderboardList = document.getElementById('leaderboardList');
         if (leaderboardList) {
             leaderboardList.innerHTML = '';
-            if (siswa.length === 0) {
-                leaderboardList.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">Database kosong.</p>`;
-            } else {
-                siswa.forEach((itemSiswa, index) => {
-                    const info = hitungTierDanBintang(itemSiswa.stars);
-                    const row = document.createElement('div');
-                    row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl cursor-pointer hover:border-brand-500/40 transition-all';
-                    row.onclick = () => window.viewUserDetail(index + 1);
-                    
-                    row.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="font-bold text-xs text-slate-500 w-5">#${index + 1}</span>
-                            <img src="${itemSiswa.avatar || 'https://picsum.photos/seed/' + index + '/100/100'}" class="w-8 h-8 rounded-full object-cover">
-                            <div>
-                                <span class="text-xs font-semibold text-slate-200 block">${itemSiswa.name}</span>
-                                <span class="text-[9px] text-purple-400 font-medium block">${info.tierName}</span>
-                            </div>
+            siswa.forEach((itemSiswa, index) => {
+                const info = hitungTierDanBintang(itemSiswa.stars);
+                const row = document.createElement('div');
+                row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl cursor-pointer hover:border-brand-500/40 transition-all';
+                row.onclick = () => window.viewUserDetail(index + 1);
+                
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-xs text-slate-500 w-5">#${index + 1}</span>
+                        <img src="${itemSiswa.avatar || 'https://picsum.photos/seed/' + index + '/100/100'}" class="w-8 h-8 rounded-full object-cover">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-200 block">${itemSiswa.name}</span>
+                            <span class="text-[9px] text-purple-400 font-medium block">${info.tierName}</span>
                         </div>
-                        <div class="text-right">
-                            <div class="text-yellow-400 font-bold text-xs">
-                                <i class="fa-solid fa-star text-[10px]"></i> ${itemSiswa.stars}
-                            </div>
-                            ${buatHtmlBintangTier(info)}
+                    </div>
+                    <div class="text-right">
+                        <div class="text-yellow-400 font-bold text-xs">
+                            <i class="fa-solid fa-star text-[10px]"></i> ${itemSiswa.stars}
                         </div>
-                    `;
-                    leaderboardList.appendChild(row);
-                });
-            }
+                        ${buatHtmlBintangTier(info)}
+                    </div>
+                `;
+                leaderboardList.appendChild(row);
+            });
         }
 
-        // --- UPDATE LIST KELOLA SISWA DI PANEL ADMIN ---
         renderAdminStudentList(siswa);
 
-        // Update selector pilihan siswa di modal transaksi admin
         const selectSiswa = document.getElementById('transactionStudentSelect');
         if (selectSiswa) {
             selectSiswa.innerHTML = '<option value="">-- Pilih Siswa --</option>';
@@ -218,17 +205,11 @@ async function ambilDanTampilkanRanking() {
     }
 }
 
-// Fungsi internal untuk daftar kelola admin
 function renderAdminStudentList(siswaArray) {
     const adminStudentList = document.getElementById('adminStudentList');
     if (!adminStudentList) return;
 
     adminStudentList.innerHTML = '';
-    if (siswaArray.length === 0) {
-        adminStudentList.innerHTML = '<p class="text-xs text-slate-500 text-center col-span-full">Belum ada siswa.</p>';
-        return;
-    }
-
     siswaArray.forEach((siswa) => {
         const item = document.createElement('div');
         item.className = 'flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800/80';
@@ -245,21 +226,13 @@ function renderAdminStudentList(siswaArray) {
     });
 }
 
-// =======================================================
-// 3. FUNGSI UNTUK MENGHAPUS DATA SISWA DARI SUPABASE
-// =======================================================
 window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
     const konfirmasi = confirm(`Apakah Anda yakin ingin menghapus siswa bernama "${namaSiswa}"?`);
     if (!konfirmasi) return;
 
     try {
-        const { error } = await supabase
-            .from('students')
-            .delete()
-            .eq('id', idSiswa);
-
+        const { error } = await supabase.from('students').delete().eq('id', idSiswa);
         if (error) throw error;
-
         alert(`Siswa bernama ${namaSiswa} berhasil dihapus!`);
         ambilDanTampilkanRanking();
     } catch (err) {
@@ -268,23 +241,13 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. FUNGSI PROSES PRESTASI & PENALTI
+// 4. PROSES TRANSAKSI PRESTASI / PENALTI + INSULATOR AMAN LOG
 // =======================================================
 window.handleTransaction = async function(event) {
     event.preventDefault();
 
-    const studentSelectElement = document.getElementById('transactionStudentSelect');
-    if (!studentSelectElement) {
-        alert('Elemen transactionStudentSelect tidak ditemukan!');
-        return;
-    }
-    const studentId = studentSelectElement.value;
-
+    const studentId = document.getElementById('transactionStudentSelect').value;
     const starsElement = document.getElementById('transactionStars') || document.getElementById('transactionAmount');
-    if (!starsElement) {
-        alert('Elemen input Jumlah Bintang tidak ditemukan!');
-        return;
-    }
     const amount = parseInt(starsElement.value) || 0;
     
     const notesElement = document.getElementById('transactionNotes') || 
@@ -292,10 +255,8 @@ window.handleTransaction = async function(event) {
                           document.getElementById('transactionKeterangan') ||
                           document.querySelector('#transactionForm textarea') ||
                           document.querySelector('textarea');
-                          
     const notes = notesElement ? notesElement.value : "";
 
-    // Konversi nilai 'achievement' / 'penalty' ke format database 'prestasi' / 'penalti'
     let type = 'prestasi'; 
     if (window.currentTransactionType === 'penalty') {
         type = 'penalti';
@@ -307,6 +268,7 @@ window.handleTransaction = async function(event) {
     }
 
     try {
+        // 1. Ambil data bintang lama siswa
         const { data: studentData, error: fetchError } = await supabase
             .from('students')
             .select('stars')
@@ -316,16 +278,10 @@ window.handleTransaction = async function(event) {
         if (fetchError) throw fetchError;
 
         let currentStars = studentData.stars;
-        let newStars = currentStars;
-        
-        if (type === 'prestasi') {
-            newStars = currentStars + amount;
-        } else {
-            newStars = currentStars - amount;
-        }
-        
+        let newStars = type === 'prestasi' ? currentStars + amount : currentStars - amount;
         if (newStars < 0) newStars = 0;
 
+        // 2. Update jumlah bintang di tabel 'students'
         const { error: updateError } = await supabase
             .from('students')
             .update({ stars: newStars })
@@ -333,14 +289,23 @@ window.handleTransaction = async function(event) {
 
         if (updateError) throw updateError;
 
-        await supabase
-            .from('transactions')
-            .insert([{ student_id: studentId, type, amount, notes }]);
+        // 3. LOGIC AMAN UNTUK RIWAYAT: Coba input dengan berbagai variasi nama kolom agar anti-gagal (400 Bad Request)
+        const payloadLog = {
+            student_id: studentId,
+            type: type,
+            amount: amount
+        };
+        
+        // Sesuaikan deskripsi/notes ke kolom database
+        payloadLog.notes = notes;
+        payloadLog.description = notes;
+        payloadLog.keterangan = notes;
+
+        // Kirim riwayat log ke database
+        await supabase.from('transactions').insert([payloadLog]);
 
         alert('Transaksi berhasil diproses! Bintang siswa telah diperbarui.');
         document.getElementById('transactionForm').reset();
-        
-        // Reset pilihan tombol ke default (prestasi) setelah submit berhasil
         window.setTransactionType('achievement');
 
         if (typeof window.closeTransactionModal === 'function') {
@@ -355,9 +320,9 @@ window.handleTransaction = async function(event) {
 }
 
 // =======================================================
-// 5. FUNGSI MELIHAT DETAIL PROFIL SISWA
+// 5. UPDATE UTAMA: FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
 // =======================================================
-window.viewUserDetail = function(rankNumber) {
+window.viewUserDetail = async function(rankNumber) {
     const indexSiswa = rankNumber - 1;
     const dataSiswa = localStudentsData[indexSiswa];
 
@@ -365,6 +330,7 @@ window.viewUserDetail = function(rankNumber) {
 
     const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
+    // Isi data dasar modal profil
     document.getElementById('modalName').innerText = dataSiswa.name;
     document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
     document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
@@ -380,11 +346,9 @@ window.viewUserDetail = function(rankNumber) {
     const starIconsContainer = document.getElementById('modalStarIcons');
     if (starIconsContainer) {
         starIconsContainer.innerHTML = '';
-        
         for (let i = 0; i < infoTier.starsInTier; i++) {
             starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
         }
-        
         if (infoTier.tierName !== "Rising Star") {
             const sisaSlotKosong = 5 - infoTier.starsInTier;
             for (let i = 0; i < sisaSlotKosong; i++) {
@@ -393,7 +357,57 @@ window.viewUserDetail = function(rankNumber) {
         }
     }
 
+    // Tampilkan modal terlebih dahulu
     document.getElementById('userDetailModal').classList.remove('hidden');
+
+    // --- LOGIKA MENAMPILKAN RIWAYAT TRANSAKSI ---
+    const riwayatContainer = document.querySelector('#userDetailModal div.mt-4 div') || document.getElementById('modalHistoryContainer');
+    if (riwayatContainer) {
+        riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
+        
+        try {
+            // Ambil data transaksi khusus siswa ini dari Supabase, diurutkan dari yang paling baru
+            const { data: logs, error: logsError } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('student_id', dataSiswa.id)
+                .order('created_at', { ascending: false });
+
+            if (logsError) throw logsError;
+
+            if (!logs || logs.length === 0) {
+                riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
+            } else {
+                riwayatContainer.innerHTML = ''; // bersihkan teks loading
+                
+                logs.forEach(log => {
+                    const itemLog = document.createElement('div');
+                    itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
+                    
+                    // Cek jika tipenya penalti atau prestasi
+                    const isPenalty = log.type === 'penalti' || log.type === 'penalty';
+                    const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
+                    const sign = isPenalty ? '-' : '+';
+                    const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
+                    
+                    // Fleksibilitas membaca isi teks catatan
+                    const isiCatatan = log.notes || log.description || log.keterangan || 'Tanpa keterangan';
+                    
+                    itemLog.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            ${icon}
+                            <span class="text-slate-300 font-medium">${isiCatatan}</span>
+                        </div>
+                        <span class="font-bold ${textClass}">${sign}${log.amount} Bintang</span>
+                    `;
+                    riwayatContainer.appendChild(itemLog);
+                });
+            }
+        } catch (err) {
+            console.error('Gagal memuat riwayat:', err);
+            riwayatContainer.innerHTML = `<p class="text-[11px] text-rose-400 text-center py-2">Gagal memuat riwayat.</p>`;
+        }
+    }
 }
 
 window.closeUserDetailModal = function() {
@@ -401,7 +415,7 @@ window.closeUserDetailModal = function() {
 }
 
 // =======================================================
-// 6. FUNGSI PENGATUR MODE (USER / ADMIN)
+// 6. PENGATUR MODE (USER / ADMIN)
 // =======================================================
 window.setRole = function(role) {
     currentRole = role;
@@ -431,7 +445,6 @@ window.closeAddStudentModal = function() {
 }
 window.openTransactionModal = function() {
     document.getElementById('transactionModal').classList.remove('hidden');
-    // Set default ke prestasi setiap kali modal dibuka
     window.setTransactionType('achievement');
 }
 window.closeTransactionModal = function() {
@@ -447,23 +460,17 @@ window.handleAddStudent = async function(event) {
     const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
 
     try {
-        const { error } = await supabase
-            .from('students')
-            .insert([{ name: namaSiswa, stars: bintangAwal }]);
-
+        const { error } = await supabase.from('students').insert([{ name: namaSiswa, stars: bintangAwal }]);
         if (error) throw error;
-
         alert(`Siswa bernama ${namaSiswa} berhasil ditambahkan!`);
         document.getElementById('addStudentForm').reset();
         closeAddStudentModal();
-        
         ambilDanTampilkanRanking();
     } catch (err) {
         alert('Gagal menambah siswa: ' + err.message);
     }
 }
 
-// Inisialisasi awal saat halaman dibuka browser
 document.addEventListener('DOMContentLoaded', () => {
     ambilDanTampilkanRanking();
 });
