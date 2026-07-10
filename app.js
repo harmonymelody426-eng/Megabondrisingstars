@@ -27,7 +27,6 @@ function hitungTierDanBintang(totalStars) {
         starsInTier = totalStars - 10;
     } else {
         tierName = "Rising Star";
-        // Untuk Rising Star, bintang berjalan terus di atas 15
         starsInTier = totalStars - 15; 
     }
 
@@ -246,27 +245,29 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. FIX: FUNGSI PROSES PRESTASI & PENALTI (AMBIL INPUT SECARA AKURAT)
+// 4. FIX SINKRONISASI TOTAL: FUNGSI PROSES PRESTASI & PENALTI
 // =======================================================
 window.handleTransaction = async function(event) {
     event.preventDefault();
 
-    // Ambil ID siswa dan jumlah bintang dari form
+    // SINKRONISASI ID: Mengambil ID siswa dan jumlah bintang sesuai struktur HTML asli kamu
     const studentId = document.getElementById('transactionStudentSelect').value;
-    const amount = parseInt(document.getElementById('transactionAmount').value) || 0;
+    const amount = parseInt(document.getElementById('transactionStars').value) || 0;
     
-    // Fleksibel mendeteksi id textarea catatan/keterangan/deskripsi milikmu
+    // Fleksibel mendeteksi id textarea keterangan/deskripsi milikmu
     const notesElement = document.getElementById('transactionNotes') || document.getElementById('transactionDescription') || document.querySelector('textarea');
     const notes = notesElement ? notesElement.value : "";
 
-    // Deteksi tipe transaksi dari variabel global bawaan HTML kamu atau cek kelas tombol yang aktif
+    // Deteksi tipe transaksi dari variabel global atau kelas tombol aktif ('achievement' / 'penalty')
     let type = 'prestasi'; 
     if (window.currentTransactionType) {
-        type = window.currentTransactionType; 
+        // Jika di HTML menggunakan string 'achievement', ubah menjadi 'prestasi' untuk database
+        if (window.currentTransactionType === 'achievement') type = 'prestasi';
+        if (window.currentTransactionType === 'penalty') type = 'penalti';
     } else {
-        // Fallback jika tidak sengaja bertipe lain
+        // Fallback jika tidak membaca variabel global
         const penaltyBtn = document.getElementById('typePenaltyBtn');
-        if (penaltyBtn && penaltyBtn.classList.contains('bg-brand-600')) {
+        if (penaltyBtn && penaltyBtn.classList.contains('border-slate-800') === false) {
             type = 'penalti';
         }
     }
@@ -289,8 +290,8 @@ window.handleTransaction = async function(event) {
         let currentStars = studentData.stars;
         let newStars = currentStars;
         
-        // 2. Kalkulasi tambah bintang (prestasi/achievement) atau kurangi bintang (penalti/penalty)
-        if (type === 'prestasi' || type === 'achievement') {
+        // 2. Kalkulasi tambah bintang (prestasi) atau kurangi bintang (penalti)
+        if (type === 'prestasi') {
             newStars = currentStars + amount;
         } else {
             newStars = currentStars - amount;
