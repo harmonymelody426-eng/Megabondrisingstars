@@ -8,7 +8,7 @@ let localStudentsData = [];
 window.currentTransactionType = 'achievement'; 
 
 // =======================================================
-// 0. LOGIKA ATUR TIPE TRANSAKSI (PRESTASI / PENALTI)
+// 0. LOGIKA ATUR TIPE TRANSAKSI (ACHIEVEMENT / PENALTY)
 // =======================================================
 window.setTransactionType = function(type) {
     window.currentTransactionType = type;
@@ -257,9 +257,10 @@ window.handleTransaction = async function(event) {
                           document.querySelector('textarea');
     const notes = notesElement ? notesElement.value : "";
 
-    let type = 'prestasi'; 
+    // SINKRONISASI CONSTRAINT DATABASE: Menggunakan 'achievement' atau 'penalty'
+    let dbType = 'achievement'; 
     if (window.currentTransactionType === 'penalty') {
-        type = 'penalti';
+        dbType = 'penalty';
     }
 
     if (!studentId) {
@@ -278,7 +279,7 @@ window.handleTransaction = async function(event) {
         if (fetchError) throw fetchError;
 
         let currentStars = studentData.stars;
-        let newStars = type === 'prestasi' ? currentStars + amount : currentStars - amount;
+        let newStars = dbType === 'achievement' ? currentStars + amount : currentStars - amount;
         if (newStars < 0) newStars = 0;
 
         // 2. Update jumlah bintang di tabel 'students'
@@ -289,13 +290,13 @@ window.handleTransaction = async function(event) {
 
         if (updateError) throw updateError;
 
-        // 3. MASUKKAN LOG SESUAI KOLOM DI SUPABASE KAMU (stars & description)
+        // 3. MASUKKAN LOG SESUAI KOLOM & CONSTRAINT (achievement / penalty)
         const { error: insertError } = await supabase
             .from('transactions')
             .insert([
                 { 
                     student_id: studentId, 
-                    type: type, 
+                    type: dbType,           // Mengirim string Inggris agar lolos constraint check
                     stars: amount,          
                     description: notes      
                 }
@@ -384,12 +385,12 @@ window.viewUserDetail = async function(rankNumber) {
                     const itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
                     
+                    // Fleksibel membaca tipe 'penalty', 'penalti', atau pun bahasa Inggris/Indonesia
                     const isPenalty = log.type === 'penalti' || log.type === 'penalty';
                     const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
                     const sign = isPenalty ? '-' : '+';
                     const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
                     
-                    // Membaca kolom 'description' dan 'stars' sesuai isi tabel Supabase kamu
                     const isiCatatan = log.description || 'Tanpa keterangan';
                     const jumlahBintang = log.stars || 0;
                     
