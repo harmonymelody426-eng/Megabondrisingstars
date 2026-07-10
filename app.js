@@ -4,6 +4,31 @@ import { supabase } from './supabase-client.js';
 let currentRole = 'user';
 // Menyimpan salinan data siswa yang berhasil diambil dari database
 let localStudentsData = [];
+// Menyimpan tipe transaksi yang aktif saat admin memilih kategori catatan
+window.currentTransactionType = 'achievement'; 
+
+// =======================================================
+// 0. FIX PENTING: LOGIKA ATUR TIPE TRANSAKSI (PRESTASI / PENALTI)
+// =======================================================
+window.setTransactionType = function(type) {
+    window.currentTransactionType = type;
+    console.log("Tipe transaksi diatur ke:", type);
+
+    const btnAchievement = document.getElementById('typeAchievementBtn');
+    const btnPenalty = document.getElementById('typePenaltyBtn');
+
+    if (!btnAchievement || !btnPenalty) return;
+
+    if (type === 'achievement') {
+        // Tombol Prestasi Aktif (Gunakan border emerald khas Tailwind atau background penuh)
+        btnAchievement.className = "py-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-400 font-medium text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+        btnPenalty.className = "py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+    } else {
+        // Tombol Penalti Aktif (Gunakan border rose/merah)
+        btnAchievement.className = "py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+        btnPenalty.className = "py-2.5 rounded-xl border border-rose-500 bg-rose-500/10 text-rose-400 font-medium text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+    }
+}
 
 // =======================================================
 // 1. LOGIKA KONVERSI TOTAL BINTANG KE SISTEM TIER ML
@@ -37,12 +62,10 @@ function hitungTierDanBintang(totalStars) {
 function buatHtmlBintangTier(infoTier) {
     let htmlBintang = '<div class="flex items-center gap-0.5 justify-center mt-0.5">';
     
-    // 1. Gambar bintang yang menyala kuning penuh
     for (let i = 0; i < infoTier.starsInTier; i++) {
         htmlBintang += `<i class="fa-solid fa-star text-yellow-400 text-[10px] animate-pulse"></i>`;
     }
     
-    // 2. Jika bukan Rising Star, sisa slot kosongnya diberi bintang transparan/garis tepi (fa-regular)
     if (infoTier.tierName !== "Rising Star") {
         const sisaSlotKosong = 5 - infoTier.starsInTier;
         for (let i = 0; i < sisaSlotKosong; i++) {
@@ -245,12 +268,11 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. FIX ANTI-NULL: FUNGSI PROSES PRESTASI & PENALTI
+// 4. FUNGSI PROSES PRESTASI & PENALTI
 // =======================================================
 window.handleTransaction = async function(event) {
     event.preventDefault();
 
-    // 1. Ambil Data Pilihan Siswa
     const studentSelectElement = document.getElementById('transactionStudentSelect');
     if (!studentSelectElement) {
         alert('Elemen transactionStudentSelect tidak ditemukan!');
@@ -258,7 +280,6 @@ window.handleTransaction = async function(event) {
     }
     const studentId = studentSelectElement.value;
 
-    // 2. Ambil Data Jumlah Bintang (Cari id transactionStars atau fallback ke transactionAmount)
     const starsElement = document.getElementById('transactionStars') || document.getElementById('transactionAmount');
     if (!starsElement) {
         alert('Elemen input Jumlah Bintang tidak ditemukan!');
@@ -266,26 +287,18 @@ window.handleTransaction = async function(event) {
     }
     const amount = parseInt(starsElement.value) || 0;
     
-    // 3. Ambil Data Catatan/Keterangan dengan metode kebal (Mencari segala kemungkinan ID atau Tag Textarea)
     const notesElement = document.getElementById('transactionNotes') || 
                           document.getElementById('transactionDescription') || 
                           document.getElementById('transactionKeterangan') ||
                           document.querySelector('#transactionForm textarea') ||
                           document.querySelector('textarea');
                           
-    // Ambil value jika element ditemukan, jika tidak ada fallback ke string kosong ""
     const notes = notesElement ? notesElement.value : "";
 
-    // 4. Deteksi tipe transaksi ('achievement' / 'penalty' -> ubah ke 'prestasi' / 'penalti')
+    // Konversi nilai 'achievement' / 'penalty' ke format database 'prestasi' / 'penalti'
     let type = 'prestasi'; 
-    if (window.currentTransactionType) {
-        if (window.currentTransactionType === 'achievement') type = 'prestasi';
-        if (window.currentTransactionType === 'penalty') type = 'penalti';
-    } else {
-        const penaltyBtn = document.getElementById('typePenaltyBtn');
-        if (penaltyBtn && penaltyBtn.classList.contains('border-slate-800') === false) {
-            type = 'penalti';
-        }
+    if (window.currentTransactionType === 'penalty') {
+        type = 'penalti';
     }
 
     if (!studentId) {
@@ -294,7 +307,6 @@ window.handleTransaction = async function(event) {
     }
 
     try {
-        // 1. Ambil data jumlah bintang siswa saat ini dari database Supabase
         const { data: studentData, error: fetchError } = await supabase
             .from('students')
             .select('stars')
@@ -306,7 +318,6 @@ window.handleTransaction = async function(event) {
         let currentStars = studentData.stars;
         let newStars = currentStars;
         
-        // 2. Kalkulasi tambah atau kurang bintang
         if (type === 'prestasi') {
             newStars = currentStars + amount;
         } else {
@@ -315,7 +326,6 @@ window.handleTransaction = async function(event) {
         
         if (newStars < 0) newStars = 0;
 
-        // 3. Update data bintang siswa di tabel 'students'
         const { error: updateError } = await supabase
             .from('students')
             .update({ stars: newStars })
@@ -323,7 +333,6 @@ window.handleTransaction = async function(event) {
 
         if (updateError) throw updateError;
 
-        // 4. Catat riwayat log transaksi ke tabel 'transactions'
         await supabase
             .from('transactions')
             .insert([{ student_id: studentId, type, amount, notes }]);
@@ -331,11 +340,13 @@ window.handleTransaction = async function(event) {
         alert('Transaksi berhasil diproses! Bintang siswa telah diperbarui.');
         document.getElementById('transactionForm').reset();
         
+        // Reset pilihan tombol ke default (prestasi) setelah submit berhasil
+        window.setTransactionType('achievement');
+
         if (typeof window.closeTransactionModal === 'function') {
             window.closeTransactionModal();
         }
         
-        // Refresh data ranking utama secara otomatis
         ambilDanTampilkanRanking();
 
     } catch (err) {
@@ -420,6 +431,8 @@ window.closeAddStudentModal = function() {
 }
 window.openTransactionModal = function() {
     document.getElementById('transactionModal').classList.remove('hidden');
+    // Set default ke prestasi setiap kali modal dibuka
+    window.setTransactionType('achievement');
 }
 window.closeTransactionModal = function() {
     document.getElementById('transactionModal').classList.add('hidden');
