@@ -610,3 +610,84 @@ window.closeAddStudentModal = function() {
         modal.classList.add('hidden');
     }
 };
+// =======================================================
+// FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX)
+// =======================================================
+window.handleExcelImport = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Ambil sheet/lembar pertama dari file Excel
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Ubah data tabel Excel menjadi Array Object JSON
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet);
+            
+            if (jsonRows.length === 0) {
+                alert("❌ File Excel kosong atau format tidak sesuai!");
+                return;
+            }
+
+            // Validasi format: Kolom paling atas wajib ada header bernama 'nama'
+            const rowSampel = jsonRows[0];
+            if (!rowSampel.hasOwnProperty('nama')) {
+                alert("❌ Format Excel salah! Pastikan kolom header paling atas ada tulisan 'nama' (huruf kecil semua).");
+                return;
+            }
+
+            let jumlahSukses = 0;
+
+            // Looping masukkan data siswa ke sistem database/array web lu
+            jsonRows.forEach(row => {
+                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
+                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
+                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
+
+                if (namaSiswa !== '') {
+                    // Cek jika ada fungsi insert database bawaan template lu (misal dari Supabase/Firebase/API)
+                    if (typeof window.tambahSiswaKeDatabase === 'function') {
+                        window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
+                    } else if (typeof window.handleAddStudentSubmit === 'function') {
+                        // Jalur fungsi submit bawaan template lainnya jika ada
+                        window.handleAddStudentSubmit(namaSiswa, avatarSiswa, bintangAwal);
+                    } else if (window.globalStudents) {
+                        // Jika template lu cuma pakai penyimpanan array lokal (state sementara)
+                        window.globalStudents.push({
+                            id: Date.now() + Math.random(),
+                            name: namaSiswa,
+                            avatar_url: avatarSiswa,
+                            stars: bintangAwal,
+                            logs: []
+                        });
+                    }
+                    jumlahSukses++;
+                }
+            });
+
+            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
+            
+            // Reset input file agar bisa dipakai upload lagi
+            event.target.value = '';
+
+            // Jalankan fungsi refresh leaderboard biar nama siswa baru langsung muncul otomatis
+            if (typeof window.ambilDanTampilkanRanking === 'function') {
+                window.ambilDanTampilkanRanking();
+            } else if (typeof window.renderLeaderboard === 'function') {
+                window.renderLeaderboard();
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("❌ Gagal membaca file Excel. Pastikan file tidak rusak!");
+        }
+    };
+    
+    reader.readAsArrayBuffer(file);
+};
