@@ -413,10 +413,10 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
-    document.getElementById('userDetailModal').classList.remove('hidden');
+    document.getElementById('UserDetailModal').classList.remove('hidden');
 
     const riwayatContainer = document.getElementById('modalHistoryContainer') || 
-                             document.querySelector('#userDetailModal div.mt-4 div');
+                             document.querySelector('#UserDetailModal div.mt-4 div');
 
     if (riwayatContainer) {
         riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
@@ -511,8 +511,8 @@ window.setRole = function(role) {
 // =======================================================
 window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); }
 window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); }
-window.openTransactionModal = function() { document.getElementById('transactionModal').classList.remove('hidden'); }
-window.closeTransactionModal = function() { document.getElementById('transactionModal').classList.add('hidden'); }
+window.openTransactionModal = function() { document.getElementById('TransactionModal').classList.remove('hidden'); }
+window.closeTransactionModal = function() { document.getElementById('TransactionModal').classList.add('hidden'); }
 
 window.handleAddStudent = async function(event) {
     event.preventDefault();
@@ -566,7 +566,7 @@ window.ubahFotoSiswaAdmin = async function() {
 
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        const modalDetail = document.getElementById('userDetailModal');
+        const modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
         ambilDanTampilkanRanking();
