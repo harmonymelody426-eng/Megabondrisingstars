@@ -106,7 +106,9 @@ async function ambilDanTampilkanRanking() {
         if (typeof window.renderTable === 'function') window.renderTable(siswa);
         if (typeof window.updateLeaderboardUI === 'function') window.updateLeaderboardUI(siswa);
 
-        // --- UPDATE PODIUM JUARA 1 ---
+        // ==========================================
+        // 1. --- UPDATE PODIUM JUARA 1 ---
+        // ==========================================
         if (siswa && siswa.length >= 1) {
             const info = hitungTierDanBintang(siswa[0].stars);
             const p1Name = document.getElementById('p1-name');
@@ -114,18 +116,32 @@ async function ambilDanTampilkanRanking() {
             const p1Avatar = document.getElementById('p1-avatar');
             
             if (p1Name) p1Name.innerText = siswa[0].name;
-            if (p1Stars) p1Stars.innerHTML = `
-                <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
-                ${buatHtmlBintangTier(info)}
-                <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[0].stars}</span>
-            `;
-            if (siswa[0].avatar && p1Avatar) p1Avatar.src = siswa[0].avatar;
+            if (p1Stars) {
+                p1Stars.innerHTML = `
+                    <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
+                    ${buatHtmlBintangTier(info)}
+                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[0].stars}</span>
+                `;
+            }
+            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            if (p1Avatar && siswa[0].avatar_url) {
+                p1Avatar.src = siswa[0].avatar_url;
+            }
+            
+            // Pasang fungsi klik dinamis ke elemen podium 1
+            const podium1 = document.getElementById('podium-1');
+            if (podium1) {
+                const clickTarget = podium1.querySelector('.cursor-pointer') || podium1;
+                clickTarget.setAttribute('onclick', 'window.viewUserDetail(1)');
+            }
         } else {
             if (document.getElementById('p1-name')) document.getElementById('p1-name').innerText = 'Belum Ada';
             if (document.getElementById('p1-stars')) document.getElementById('p1-stars').innerText = '0';
         }
 
-        // --- UPDATE PODIUM JUARA 2 ---
+        // ==========================================
+        // 2. --- UPDATE PODIUM JUARA 2 ---
+        // ==========================================
         if (siswa && siswa.length >= 2) {
             const info = hitungTierDanBintang(siswa[1].stars);
             const p2Name = document.getElementById('p2-name');
@@ -133,18 +149,32 @@ async function ambilDanTampilkanRanking() {
             const p2Avatar = document.getElementById('p2-avatar');
 
             if (p2Name) p2Name.innerText = siswa[1].name;
-            if (p2Stars) p2Stars.innerHTML = `
-                <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
-                ${buatHtmlBintangTier(info)}
-                <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[1].stars}</span>
-            `;
-            if (siswa[1].avatar && p2Avatar) p2Avatar.src = siswa[1].avatar;
+            if (p2Stars) {
+                p2Stars.innerHTML = `
+                    <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
+                    ${buatHtmlBintangTier(info)}
+                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[1].stars}</span>
+                `;
+            }
+            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            if (p2Avatar && siswa[1].avatar_url) {
+                p2Avatar.src = siswa[1].avatar_url;
+            }
+            
+            // Pasang fungsi klik dinamis ke elemen podium 2
+            const podium2 = document.getElementById('podium-2');
+            if (podium2) {
+                const clickTarget = podium2.querySelector('.cursor-pointer') || podium2;
+                clickTarget.setAttribute('onclick', 'window.viewUserDetail(2)');
+            }
         } else {
             if (document.getElementById('p2-name')) document.getElementById('p2-name').innerText = 'Belum Ada';
             if (document.getElementById('p2-stars')) document.getElementById('p2-stars').innerText = '0';
         }
 
-        // --- UPDATE PODIUM JUARA 3 ---
+        // ==========================================
+        // 3. --- UPDATE PODIUM JUARA 3 ---
+        // ==========================================
         if (siswa && siswa.length >= 3) {
             const info = hitungTierDanBintang(siswa[2].stars);
             const p3Name = document.getElementById('p3-name');
@@ -152,12 +182,24 @@ async function ambilDanTampilkanRanking() {
             const p3Avatar = document.getElementById('p3-avatar');
 
             if (p3Name) p3Name.innerText = siswa[2].name;
-            if (p3Stars) p3Stars.innerHTML = `
-                <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
-                ${buatHtmlBintangTier(info)}
-                <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[2].stars}</span>
-            `;
-            if (siswa[2].avatar && p3Avatar) p3Avatar.src = siswa[2].avatar;
+            if (p3Stars) {
+                p3Stars.innerHTML = `
+                    <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
+                    ${buatHtmlBintangTier(info)}
+                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[2].stars}</span>
+                `;
+            }
+            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            if (p3Avatar && siswa[2].avatar_url) {
+                p3Avatar.src = siswa[2].avatar_url;
+            }
+            
+            // Pasang fungsi klik dinamis ke elemen podium 3
+            const podium3 = document.getElementById('podium-3');
+            if (podium3) {
+                const clickTarget = podium3.querySelector('.cursor-pointer') || podium3;
+                clickTarget.setAttribute('onclick', 'window.viewUserDetail(3)');
+            }
         } else {
             if (document.getElementById('p3-name')) document.getElementById('p3-name').innerText = 'Belum Ada';
             if (document.getElementById('p3-stars')) document.getElementById('p3-stars').innerText = '0';
