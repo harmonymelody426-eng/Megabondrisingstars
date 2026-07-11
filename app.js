@@ -72,7 +72,7 @@ function buatHtmlBintangTier(infoTier) {
 }
 
 // =======================================================
-// 2. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING + TIER (GABUNGAN FIXED)
+// 2. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING + TIER
 // =======================================================
 async function ambilDanTampilkanRanking() {
     const statusText = document.getElementById('dbStatusText');
@@ -235,11 +235,7 @@ async function ambilDanTampilkanRanking() {
         if (statusIndicator) statusIndicator.className = 'w-2 h-2 rounded-full bg-rose-500';
     }
 }
-window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
 
-// =======================================================
-// 3. RENDER HALAMAN MANAGEMENT ADMIN
-// =======================================================
 function renderAdminStudentList(siswaArray) {
     const adminStudentList = document.getElementById('adminStudentList');
     if (!adminStudentList) return;
@@ -276,7 +272,7 @@ window.handleDeleteStudent = async function(idSiswa, namaSiswa) {
 }
 
 // =======================================================
-// 4. PROSES TRANSAKSI PRESTASI / PENALTI (SINKRON SUPABASE)
+// 3. PROSES TRANSAKSI PRESTASI / PENALTI (SINKRON SUPABASE)
 // =======================================================
 window.handleTransaction = async function(event) {
     event.preventDefault();
@@ -352,7 +348,7 @@ window.handleTransaction = async function(event) {
 }
 
 // =======================================================
-// 5. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
+// 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
     const namaTarget = document.getElementById('p' + rankNumber + '-name')?.innerText || "";
@@ -442,36 +438,30 @@ window.viewUserDetail = async function(rankNumber) {
 }
 
 // =======================================================
-// 6. FUNGSI UTAMA AMBIL DATA & TAMPILKAN RANKING (PENYELAMAT CONNECTING)
+// 5. PENGATUR MODE (USER / ADMIN) - UNTUK TOMBOL DI HTML
 // =======================================================
-window.ambilDanTampilkanRanking = async function() {
-    const statusEl = document.querySelector('.bg-slate-900\\/80 span') || document.body;
-    try {
-        const { data: students, error } = await supabase
-            .from('students')
-            .select('*')
-            .order('stars', { ascending: false });
-
-        if (error) throw error;
-
-        window.localStudentsData = students; 
-
-        if (typeof window.renderPodium === 'function') window.renderPodium(students);
-        if (typeof window.renderTable === 'function') window.renderTable(students);
-        if (typeof window.updateLeaderboardUI === 'function') window.updateLeaderboardUI(students);
-        
-        const indicator = document.querySelector('.bg-slate-900\\/80 div');
-        if (indicator) indicator.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-        if (statusEl) statusEl.innerText = "Live Database Sync";
-
-    } catch (err) {
-        console.error("Gagal sinkronisasi data:", err);
-        if (statusEl) statusEl.innerText = "Connection Failed";
+window.setRole = function(role) {
+    currentRole = role;
+    window.currentRole = role;
+    console.log("Role aktif diubah ke:", role);
+    
+    const adminPanel = document.getElementById('adminPanel');
+    const btnUser = document.getElementById('btnRoleUser');
+    const btnAdmin = document.getElementById('btnRoleAdmin');
+    
+    if (role === 'admin') {
+        if (adminPanel) adminPanel.classList.remove('hidden');
+        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
+        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
+    } else {
+        if (adminPanel) adminPanel.classList.add('hidden');
+        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
+        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
     }
-}
+};
 
 // =======================================================
-// 7. FUNGSI MODAL & PROSES SIMPAN SISWA (SUPPORT AVATAR)
+// 6. FUNGSI MODAL & PROSES SIMPAN SISWA (SUPPORT AVATAR)
 // =======================================================
 window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); }
 window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); }
@@ -501,7 +491,7 @@ window.handleAddStudent = async function(event) {
 }
 
 // =======================================================
-// 8. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (DETEKSI VISUAL PANEL ADMIN)
+// 7. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
     const adminPanel = document.getElementById('adminPanel');
@@ -538,3 +528,11 @@ window.ubahFotoSiswaAdmin = async function() {
         alert("Gagal memperbarui foto: " + err.message);
     }
 }
+
+// =======================================================
+// 8. INITIALIZATION & RUN ON LOAD (OTOMATIS DI JALANKAN)
+// =======================================================
+window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
+
+// Jalankan fungsi saat web dibuka biar ga mandek di "Loading..."
+ambilDanTampilkanRanking();
