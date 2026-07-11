@@ -691,3 +691,34 @@ window.handleExcelImport = function(event) {
     
     reader.readAsArrayBuffer(file);
 };
+// =======================================================
+// FITUR DOWNLOAD TEMPLATE EXCEL SECARA OTOMATIS (INSTAN)
+// =======================================================
+window.downloadExcelTemplate = function() {
+    try {
+        // 1. Tentukan susunan kolom Header yang WAJIB (nama, avatar_url, bintang_awal)
+        // Kita kasih contoh 1 baris data kosong/contoh biar admin paham cara ngisinya
+        const templateData = [
+            {
+                "nama": "Contoh Nama Siswa",
+                "avatar_url": "https://picsum.photos/seed/siswa/150/150",
+                "bintang_awal": 5
+            }
+        ];
+
+        // 2. Buat objek lembar kerja (worksheet) baru dari SheetJS
+        const worksheet = XLSX.utils.json_to_sheet(templateData);
+        
+        // 3. Buat buku kerja (workbook) baru
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
+
+        // 4. Perintah download file ke komputer admin dengan nama file otomatis
+        XLSX.writeFile(workbook, "Template_Import_Siswa_Megabond.xlsx");
+        
+        console.log("Template Excel berhasil di-generate dan di-download.");
+    } catch (error) {
+        console.error(error);
+        alert("❌ Gagal membuat template Excel!");
+    }
+};
