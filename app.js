@@ -257,7 +257,6 @@ window.handleTransaction = async function(event) {
                           document.querySelector('textarea');
     const notes = notesElement ? notesElement.value : "";
 
-    // Ganti logika penentuan tipe agar bypass cache
     let dbType = 'achievement'; 
     if (window.currentTransactionType === 'penalty') {
         dbType = 'penalty';
@@ -269,7 +268,6 @@ window.handleTransaction = async function(event) {
     }
 
     try {
-        // 1. Ambil data bintang lama siswa
         const { data: studentData, error: fetchError } = await supabase
             .from('students')
             .select('stars')
@@ -282,7 +280,6 @@ window.handleTransaction = async function(event) {
         let newStars = dbType === 'achievement' ? currentStars + amount : currentStars - amount;
         if (newStars < 0) newStars = 0;
 
-        // 2. Update jumlah bintang di tabel 'students'
         const { error: updateError } = await supabase
             .from('students')
             .update({ stars: newStars })
@@ -290,7 +287,6 @@ window.handleTransaction = async function(event) {
 
         if (updateError) throw updateError;
 
-        // 3. MASUKKAN LOG SESUAI KOLOM & CONSTRAINT (achievement / penalty)
         const { error: insertError } = await supabase
             .from('transactions')
             .insert([
@@ -304,7 +300,7 @@ window.handleTransaction = async function(event) {
 
         if (insertError) throw insertError;
 
-        alert('Transaksi berhasil diproses! Bintang dan riwayat telah diperbarui.');
+        alert('Transaksi berhasil diproses!');
         document.getElementById('transactionForm').reset();
         window.setTransactionType('achievement');
 
@@ -324,23 +320,16 @@ window.handleTransaction = async function(event) {
 // 5. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
-    // 1. Cari data siswa berdasarkan nama yang diklik agar 100% akurat
     const namaTarget = document.getElementById('p' + rankNumber + '-name')?.innerText || "";
-    
-    // Cari kecocokan di data lokal berdasarkan nama atau fallback ke index
     let dataSiswa = localStudentsData.find(s => s.name === namaTarget);
     if (!dataSiswa) {
         dataSiswa = localStudentsData[rankNumber - 1];
     }
 
-    if (!dataSiswa) {
-        console.error("Data siswa tidak ditemukan!");
-        return;
-    }
+    if (!dataSiswa) return;
 
     const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
-    // Tampilkan data dasar ke modal
     document.getElementById('modalName').innerText = dataSiswa.name;
     document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
     document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
@@ -367,21 +356,15 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
-    // Tampilkan modal ke layar
     document.getElementById('userDetailModal').classList.remove('hidden');
 
-    // Deteksi container riwayat
     const riwayatContainer = document.getElementById('modalHistoryContainer') || 
-                             document.querySelector('#userDetailModal div.mt-4 div') ||
-                             document.querySelector('#userDetailModal div.space-y-1\\.5');
+                             document.querySelector('#userDetailModal div.mt-4 div');
 
     if (riwayatContainer) {
         riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
         
         try {
-            console.log("Mengambil riwayat untuk Student ID:", dataSiswa.id);
-            
-            // Ambil data transaksi langsung dari tabel Supabase
             const { data: logs, error: logsError } = await supabase
                 .from('transactions')
                 .select('*')
@@ -390,18 +373,15 @@ window.viewUserDetail = async function(rankNumber) {
 
             if (logsError) throw logsError;
 
-            console.log("Data log yang ditemukan dari DB:", logs);
-
             if (!logs || logs.length === 0) {
                 riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
             } else {
-                riwayatContainer.innerHTML = ''; // bersihkan status memuat
+                riwayatContainer.innerHTML = '';
                 
                 logs.forEach(log => {
                     const itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
                     
-                    // Normalisasi tipe data (achievement / penalty)
                     const isPenalty = log.type === 'penalti' || log.type === 'penalty' || log.type === 'minus';
                     const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
                     const sign = isPenalty ? '-' : '+';
@@ -421,125 +401,45 @@ window.viewUserDetail = async function(rankNumber) {
                 });
             }
         } catch (err) {
-            console.error('Gagal memuat riwayat:', err);
             riwayatContainer.innerHTML = `<p class="text-[11px] text-rose-400 text-center py-2">Gagal memuat riwayat.</p>`;
         }
     }
 }
-window.closeUserDetailModal = function() {
-    document.getElementById('userDetailModal').classList.add('hidden');
-}
 
 // =======================================================
-// 6. PENGATUR MODE (USER / ADMIN)
+// 6. FUNGSI UTAMA AMBIL DATA & TAMPILKAN RANKING (PENYELAMAT CONNECTING)
 // =======================================================
-window.setRole = function(role) {
-    currentRole = role;
-    const btnUser = document.getElementById('btnRoleUser');
-    const btnAdmin = document.getElementById('btnRoleAdmin');
-    const adminPanel = document.getElementById('adminPanel');
-
-    if (role === 'admin') {
-        btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
-        btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-        if (adminPanel) adminPanel.classList.remove('hidden');
-    } else {
-        btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
-        btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-        if (adminPanel) adminPanel.classList.add('hidden');
-    }
-}
-
-// =======================================================
-// 7. FUNGSI MODAL DI PANEL ADMIN
-// =======================================================
-window.openAddStudentModal = function() {
-    document.getElementById('addStudentModal').classList.remove('hidden');
-}
-window.closeAddStudentModal = function() {
-    document.getElementById('addStudentModal').classList.add('hidden');
-}
-window.openTransactionModal = function() {
-    document.getElementById('transactionModal').classList.remove('hidden');
-    window.setTransactionType('achievement');
-}
-window.closeTransactionModal = function() {
-    document.getElementById('transactionModal').classList.add('hidden');
-}
-
-// =======================================================
-// 8. FUNGSI PROSES SIMPAN DATA SISWA BARU (SUPPORT AVATAR)
-// =======================================================
-window.handleAddStudent = async function(event) {
-    event.preventDefault();
-    const namaSiswa = document.getElementById('newStudentName').value;
-    const linkAvatar = document.getElementById('newStudentAvatar').value.trim();
-    const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
-
-    const studentPayload = { 
-        name: namaSiswa, 
-        stars: bintangAwal 
-    };
-
-    if (linkAvatar !== "") {
-        studentPayload.avatar = linkAvatar;
-    }
-
+async function ambilDanTampilkanRanking() {
+    const statusEl = document.querySelector('.bg-slate-900\\/80 span') || document.body;
     try {
-        const { error } = await supabase.from('students').insert([studentPayload]);
-        if (error) throw error;
-        
-        alert(`Siswa bernama ${namaSiswa} berhasil ditambahkan!`);
-        document.getElementById('addStudentForm').reset();
-        closeAddStudentModal();
-        ambilDanTampilkanRanking();
-    } catch (err) {
-        alert('Gagal menambah siswa: ' + err.message);
-    }
-}
-
-// =======================================================
-// 9. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (KHUSUS ADMIN)
-// =======================================================
-window.ubahFotoSiswaAdmin = async function() {
-    if (typeof currentRole !== 'undefined' && currentRole !== 'admin') {
-        alert("Akses ditolak! Fitur ganti foto ini hanya untuk Mode Admin.");
-        return;
-    }
-
-    const namaSiswaAktif = document.getElementById('modalName').innerText;
-    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
-    
-    if (!dataSiswa) {
-        alert("Gagal mendeteksi data siswa!");
-        return;
-    }
-
-    const urlBaru = prompt("Masukkan Link URL Foto (.jpg/.png) yang baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar || "");
-    
-    if (urlBaru === null) return; 
-
-    try {
-        const { error } = await supabase
+        const { data: students, error } = await supabase
             .from('students')
-            .update({ avatar: urlBaru.trim() })
-            .eq('id', dataSiswa.id);
+            .select('*')
+            .order('stars', { ascending: false });
 
         if (error) throw error;
 
-        alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
+        window.localStudentsData = students; 
+
+        // Jalankan fungsi bawaan render jika ada di script.js / index.html
+        if (typeof window.renderPodium === 'function') window.renderPodium(students);
+        if (typeof window.renderTable === 'function') window.renderTable(students);
+        if (typeof window.updateLeaderboardUI === 'function') window.updateLeaderboardUI(students);
         
-        if (typeof window.closeUserDetailModal === 'function') {
-            window.closeUserDetailModal();
-        }
-        ambilDanTampilkanRanking();
+        // Mengubah status indikator menjadi terhubung
+        const indicator = document.querySelector('.bg-slate-900\\/80 div');
+        if (indicator) indicator.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        if (statusEl) statusEl.innerText = "Live Database Sync";
+
     } catch (err) {
-        alert("Gagal memperbarui foto: " + err.message);
+        console.error("Gagal sinkronisasi data:", err);
+        if (statusEl) statusEl.innerText = "Connection Failed";
     }
 }
+window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
 
 // =======================================================
-// 10. PENGATUR MODE (USER / ADMIN) - PENYELAMAT ERROR
+// 7. PENGATUR MODE (USER / ADMIN)
 // =======================================================
 window.setRole = function(role) {
     window.currentRole = role; 
@@ -559,25 +459,63 @@ window.setRole = function(role) {
 }
 
 // =======================================================
-// 11. FUNGSI MANAJEMEN MODAL
+// 8. FUNGSI MODAL & PROSES SIMPAN SISWA (SUPPORT AVATAR)
 // =======================================================
-window.openAddStudentModal = function() {
-    document.getElementById('addStudentModal').classList.remove('hidden');
-}
-window.closeAddStudentModal = function() {
-    document.getElementById('addStudentModal').classList.add('hidden');
-}
-window.openTransactionModal = function() {
-    document.getElementById('transactionModal').classList.remove('hidden');
-    if (typeof window.setTransactionType === 'function') {
-        window.setTransactionType('achievement');
+window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); }
+window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); }
+window.openTransactionModal = function() { document.getElementById('transactionModal').classList.remove('hidden'); }
+window.closeTransactionModal = function() { document.getElementById('transactionModal').classList.add('hidden'); }
+
+window.handleAddStudent = async function(event) {
+    event.preventDefault();
+    const namaSiswa = document.getElementById('newStudentName').value;
+    const linkAvatar = document.getElementById('newStudentAvatar').value.trim();
+    const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
+
+    const studentPayload = { name: namaSiswa, stars: bintangAwal };
+    if (linkAvatar !== "") studentPayload.avatar = linkAvatar;
+
+    try {
+        const { error } = await supabase.from('students').insert([studentPayload]);
+        if (error) throw error;
+        
+        alert(`Siswa ${namaSiswa} berhasil ditambahkan!`);
+        document.getElementById('addStudentForm').reset();
+        closeAddStudentModal();
+        ambilDanTampilkanRanking();
+    } catch (err) {
+        alert('Gagal menambah siswa: ' + err.message);
     }
 }
-window.closeTransactionModal = function() {
-    document.getElementById('transactionModal').classList.add('hidden');
+
+// =======================================================
+// 9. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (KHUSUS ADMIN)
+// =======================================================
+window.ubahFotoSiswaAdmin = async function() {
+    if (typeof currentRole !== 'undefined' && currentRole !== 'admin') {
+        alert("Akses ditolak! Fitur ganti foto ini hanya untuk Mode Admin.");
+        return;
+    }
+
+    const namaSiswaAktif = document.getElementById('modalName').innerText;
+    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
+    if (!dataSiswa) return alert("Gagal mendeteksi data siswa!");
+
+    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar || "");
+    if (urlBaru === null) return; 
+
+    try {
+        const { error } = await supabase.from('students').update({ avatar: urlBaru.trim() }).eq('id', dataSiswa.id);
+        if (error) throw error;
+
+        alert("Foto profil berhasil diperbarui!");
+        window.closeUserDetailModal();
+        ambilDanTampilkanRanking();
+    } catch (err) {
+        alert("Gagal memperbarui foto: " + err.message);
+    }
 }
 
-// RUNNER UTAMA SAAT HALAMAN DIBUKA
 document.addEventListener('DOMContentLoaded', () => {
     ambilDanTampilkanRanking();
 });
