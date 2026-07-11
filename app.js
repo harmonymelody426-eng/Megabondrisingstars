@@ -442,23 +442,31 @@ window.viewUserDetail = async function(rankNumber) {
 }
 
 // =======================================================
-// 6. PENGATUR MODE (USER / ADMIN) - FIXED VARIABEL GLOBAL
+// 6. FUNGSI UTAMA AMBIL DATA & TAMPILKAN RANKING (PENYELAMAT CONNECTING)
 // =======================================================
-window.setRole = function(role) {
-    window.currentRole = role; 
-    
-    const btnUser = document.getElementById('btnRoleUser');
-    const btnAdmin = document.getElementById('btnRoleAdmin');
-    const adminPanel = document.getElementById('adminPanel');
+window.ambilDanTampilkanRanking = async function() {
+    const statusEl = document.querySelector('.bg-slate-900\\/80 span') || document.body;
+    try {
+        const { data: students, error } = await supabase
+            .from('students')
+            .select('*')
+            .order('stars', { ascending: false });
 
-    if (role === 'admin') {
-        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
-        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-        if (adminPanel) adminPanel.classList.remove('hidden');
-    } else {
-        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
-        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-        if (adminPanel) adminPanel.classList.add('hidden');
+        if (error) throw error;
+
+        window.localStudentsData = students; 
+
+        if (typeof window.renderPodium === 'function') window.renderPodium(students);
+        if (typeof window.renderTable === 'function') window.renderTable(students);
+        if (typeof window.updateLeaderboardUI === 'function') window.updateLeaderboardUI(students);
+        
+        const indicator = document.querySelector('.bg-slate-900\\/80 div');
+        if (indicator) indicator.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        if (statusEl) statusEl.innerText = "Live Database Sync";
+
+    } catch (err) {
+        console.error("Gagal sinkronisasi data:", err);
+        if (statusEl) statusEl.innerText = "Connection Failed";
     }
 }
 
