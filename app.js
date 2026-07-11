@@ -502,17 +502,13 @@ window.handleAddStudent = async function(event) {
 // 9. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (KHUSUS ADMIN)
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
-    // Pastikan hanya bisa dijalankan saat role adalah admin
     if (typeof currentRole !== 'undefined' && currentRole !== 'admin') {
         alert("Akses ditolak! Fitur ganti foto ini hanya untuk Mode Admin.");
         return;
     }
 
-    // Ambil nama dari judul modal detail profil yang sedang terbuka
     const namaSiswaAktif = document.getElementById('modalName').innerText;
-    
-    // Cari data siswa di array lokal untuk mendapatkan ID database-nya
-    const dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
+    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
     
     if (!dataSiswa) {
         alert("Gagal mendeteksi data siswa!");
@@ -521,7 +517,7 @@ window.ubahFotoSiswaAdmin = async function() {
 
     const urlBaru = prompt("Masukkan Link URL Foto (.jpg/.png) yang baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar || "");
     
-    if (urlBaru === null) return; // Batal klik cancel
+    if (urlBaru === null) return; 
 
     try {
         const { error } = await supabase
@@ -533,7 +529,6 @@ window.ubahFotoSiswaAdmin = async function() {
 
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        // Tutup modal detail dan perbarui leaderboard utama
         if (typeof window.closeUserDetailModal === 'function') {
             window.closeUserDetailModal();
         }
@@ -542,3 +537,47 @@ window.ubahFotoSiswaAdmin = async function() {
         alert("Gagal memperbarui foto: " + err.message);
     }
 }
+
+// =======================================================
+// 10. PENGATUR MODE (USER / ADMIN) - PENYELAMAT ERROR
+// =======================================================
+window.setRole = function(role) {
+    window.currentRole = role; 
+    const btnUser = document.getElementById('btnRoleUser');
+    const btnAdmin = document.getElementById('btnRoleAdmin');
+    const adminPanel = document.getElementById('adminPanel');
+
+    if (role === 'admin') {
+        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
+        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
+        if (adminPanel) adminPanel.classList.remove('hidden');
+    } else {
+        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
+        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
+        if (adminPanel) adminPanel.classList.add('hidden');
+    }
+}
+
+// =======================================================
+// 11. FUNGSI MANAJEMEN MODAL
+// =======================================================
+window.openAddStudentModal = function() {
+    document.getElementById('addStudentModal').classList.remove('hidden');
+}
+window.closeAddStudentModal = function() {
+    document.getElementById('addStudentModal').classList.add('hidden');
+}
+window.openTransactionModal = function() {
+    document.getElementById('transactionModal').classList.remove('hidden');
+    if (typeof window.setTransactionType === 'function') {
+        window.setTransactionType('achievement');
+    }
+}
+window.closeTransactionModal = function() {
+    document.getElementById('transactionModal').classList.add('hidden');
+}
+
+// RUNNER UTAMA SAAT HALAMAN DIBUKA
+document.addEventListener('DOMContentLoaded', () => {
+    ambilDanTampilkanRanking();
+});
