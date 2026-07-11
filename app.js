@@ -438,22 +438,38 @@ window.viewUserDetail = async function(rankNumber) {
 }
 
 // =======================================================
-// 5. PENGATUR MODE (USER / ADMIN) - UNTUK TOMBOL DI HTML
+// 5. PENGATUR MODE (USER / ADMIN) WITH PASSWORD PROTECT
 // =======================================================
 window.setRole = function(role) {
-    currentRole = role;
-    window.currentRole = role;
-    console.log("Role aktif diubah ke:", role);
-    
     const adminPanel = document.getElementById('adminPanel');
     const btnUser = document.getElementById('btnRoleUser');
     const btnAdmin = document.getElementById('btnRoleAdmin');
-    
+
     if (role === 'admin') {
+        // Tentukan password yang kamu mau di sini (Contoh: "min3bondowoso")
+        const passwordBenar = "junexmessi"; 
+        const inputPassword = prompt("Masukkan Password Khusus Admin:");
+
+        // Jika batal atau password salah, gagalkan proses masuk admin
+        if (inputPassword === null) return; // User menekan tombol cancel
+        if (inputPassword !== passwordBenar) {
+            alert("❌ Password Salah! Akses Admin Ditolak.");
+            return;
+        }
+
+        // Jika lolos, set role ke admin
+        currentRole = 'admin';
+        window.currentRole = 'admin';
+        console.log("Akses Admin Diterima.");
+
         if (adminPanel) adminPanel.classList.remove('hidden');
         if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
         if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
     } else {
+        // Mode Siswa / Balik ke User biasa (tanpa password)
+        currentRole = 'user';
+        window.currentRole = 'user';
+        
         if (adminPanel) adminPanel.classList.add('hidden');
         if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
         if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
