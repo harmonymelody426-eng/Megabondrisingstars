@@ -360,7 +360,7 @@ window.viewUserDetail = async function(rankNumber) {
     // Tampilkan modal
     document.getElementById('userDetailModal').classList.remove('hidden');
 
-    // Pencarian container riwayat yang fleksibel agar tidak null/error
+    // Pencarian container riwayat yang fleksibel
     const riwayatContainer = document.getElementById('modalHistoryContainer') || 
                              document.querySelector('#userDetailModal div.mt-4 div') ||
                              document.querySelector('#userDetailModal div.space-y-2');
@@ -387,7 +387,7 @@ window.viewUserDetail = async function(rankNumber) {
                     const itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
                     
-                    // Cek tipe (Mendukung format 'achievement' atau 'penalty' dari database kamu)
+                    // Cek tipe (Mendukung 'achievement' maupun 'penalty')
                     const isPenalty = log.type === 'penalti' || log.type === 'penalty' || log.type === 'minus';
                     const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
                     const sign = isPenalty ? '-' : '+';
@@ -401,7 +401,7 @@ window.viewUserDetail = async function(rankNumber) {
                             ${icon}
                             <span class="text-slate-300 font-medium">${isiCatatan}</span>
                         </div>
-                        <span class="font-bold ${textClass}">${sign}${jumlahBuintang || jumlahBintang} Bintang</span>
+                        <span class="font-bold ${textClass}">${sign}${jumlahBintang} Bintang</span>
                     `;
                     riwayatContainer.appendChild(itemLog);
                 });
