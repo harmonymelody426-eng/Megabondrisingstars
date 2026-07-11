@@ -547,6 +547,48 @@
 
   <!-- Supabase Client Import -->
   <script type="module" src="app.js"></script>
+<script>
+    // Kita bajak fungsi setRole bawaan template agar melewati filter password dulu
+    window.setRole = function(role) {
+      const adminPanel = document.getElementById('adminPanel');
+      const btnUser = document.getElementById('btnRoleUser');
+      const btnAdmin = document.getElementById('btnRoleAdmin');
 
+      if (role === 'admin') {
+        // Lu bisa ganti password sesuka hati lu di sini bro
+        const passwordBenar = "min3bondowoso"; 
+        const inputPassword = prompt("Masukkan Password Khusus Admin:");
+
+        if (inputPassword === null) return; // Jika klik batal
+        if (inputPassword !== passwordBenar) {
+          alert("❌ Password Salah! Akses Admin Ditolak.");
+          return;
+        }
+        
+        // Jika password benar, buka panel admin
+        if (typeof currentRole !== 'undefined') currentRole = 'admin';
+        window.currentRole = 'admin';
+        
+        if (adminPanel) adminPanel.classList.remove('hidden');
+        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
+        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
+        console.log("Mode Admin Aktif.");
+      } else {
+        // Kembalikan ke Mode Siswa
+        if (typeof currentRole !== 'undefined') currentRole = 'user';
+        window.currentRole = 'user';
+        
+        if (adminPanel) adminPanel.classList.add('hidden');
+        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
+        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
+        console.log("Mode Siswa Aktif.");
+      }
+      
+      // Jalankan fungsi update data dari app.js
+      if (typeof window.ambilDanTampilkanRanking === 'function') {
+        window.ambilDanTampilkanRanking();
+      }
+    };
+  </script>
 </body>
 </html>
