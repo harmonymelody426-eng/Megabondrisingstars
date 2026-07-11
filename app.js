@@ -491,10 +491,18 @@ window.handleAddStudent = async function(event) {
 }
 
 // =======================================================
-// 9. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (KHUSUS ADMIN)
+// 9. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (DETEKSI VISUAL PANEL ADMIN)
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
-    if (typeof currentRole !== 'undefined' && currentRole !== 'admin') {
+    // Deteksi apakah panel admin sedang aktif terbuka di layar
+    const adminPanel = document.getElementById('adminPanel');
+    const isPanelAdminTerbuka = adminPanel && !adminPanel.classList.contains('hidden');
+    
+    // Fallback cadangan cek variabel global
+    const isAdminVariabel = typeof currentRole !== 'undefined' && currentRole === 'admin';
+
+    // Jika dua-duanya mendeteksi bukan admin, baru kita tolak
+    if (!isPanelAdminTerbuka && !isAdminVariabel) {
         alert("Akses ditolak! Fitur ganti foto ini hanya untuk Mode Admin.");
         return;
     }
@@ -507,17 +515,21 @@ window.ubahFotoSiswaAdmin = async function() {
     if (urlBaru === null) return; 
 
     try {
-        const { error } = await supabase.from('students').update({ avatar: urlBaru.trim() }).eq('id', dataSiswa.id);
+        const { error } = await supabase
+            .from('students')
+            .update({ avatar: urlBaru.trim() })
+            .eq('id', dataSiswa.id);
+
         if (error) throw error;
 
-        alert("Foto profil berhasil diperbarui!");
-        window.closeUserDetailModal();
+        alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
+        
+        // Tutup modal detail secara manual
+        const modalDetail = document.getElementById('userDetailModal');
+        if (modalDetail) modalDetail.classList.add('hidden');
+        
         ambilDanTampilkanRanking();
     } catch (err) {
         alert("Gagal memperbarui foto: " + err.message);
     }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    ambilDanTampilkanRanking();
-});
