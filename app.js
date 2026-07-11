@@ -468,16 +468,27 @@ window.closeTransactionModal = function() {
 }
 
 // =======================================================
-// 8. FUNGSI PROSES SIMPAN DATA SISWA BARU KE SUPABASE
+// 8. FUNGSI PROSES SIMPAN DATA SISWA BARU (SUPPORT AVATAR)
 // =======================================================
 window.handleAddStudent = async function(event) {
     event.preventDefault();
     const namaSiswa = document.getElementById('newStudentName').value;
+    const linkAvatar = document.getElementById('newStudentAvatar').value.trim();
     const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
 
+    const studentPayload = { 
+        name: namaSiswa, 
+        stars: bintangAwal 
+    };
+
+    if (linkAvatar !== "") {
+        studentPayload.avatar = linkAvatar;
+    }
+
     try {
-        const { error } = await supabase.from('students').insert([{ name: namaSiswa, stars: bintangAwal }]);
+        const { error } = await supabase.from('students').insert([studentPayload]);
         if (error) throw error;
+        
         alert(`Siswa bernama ${namaSiswa} berhasil ditambahkan!`);
         document.getElementById('addStudentForm').reset();
         closeAddStudentModal();
@@ -487,6 +498,47 @@ window.handleAddStudent = async function(event) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    ambilDanTampilkanRanking();
-});
+// =======================================================
+// 9. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (KHUSUS ADMIN)
+// =======================================================
+window.ubahFotoSiswaAdmin = async function() {
+    // Pastikan hanya bisa dijalankan saat role adalah admin
+    if (typeof currentRole !== 'undefined' && currentRole !== 'admin') {
+        alert("Akses ditolak! Fitur ganti foto ini hanya untuk Mode Admin.");
+        return;
+    }
+
+    // Ambil nama dari judul modal detail profil yang sedang terbuka
+    const namaSiswaAktif = document.getElementById('modalName').innerText;
+    
+    // Cari data siswa di array lokal untuk mendapatkan ID database-nya
+    const dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
+    
+    if (!dataSiswa) {
+        alert("Gagal mendeteksi data siswa!");
+        return;
+    }
+
+    const urlBaru = prompt("Masukkan Link URL Foto (.jpg/.png) yang baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar || "");
+    
+    if (urlBaru === null) return; // Batal klik cancel
+
+    try {
+        const { error } = await supabase
+            .from('students')
+            .update({ avatar: urlBaru.trim() })
+            .eq('id', dataSiswa.id);
+
+        if (error) throw error;
+
+        alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
+        
+        // Tutup modal detail dan perbarui leaderboard utama
+        if (typeof window.closeUserDetailModal === 'function') {
+            window.closeUserDetailModal();
+        }
+        ambilDanTampilkanRanking();
+    } catch (err) {
+        alert("Gagal memperbarui foto: " + err.message);
+    }
+}
