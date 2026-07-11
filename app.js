@@ -439,10 +439,12 @@ async function ambilDanTampilkanRanking() {
 window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
 
 // =======================================================
-// 7. PENGATUR MODE (USER / ADMIN)
+// 7. PENGATUR MODE (USER / ADMIN) - FIXED VARIABEL GLOBAL
 // =======================================================
 window.setRole = function(role) {
+    // Memastikan status role tersimpan di tingkat window/global agar terbaca fungsi lain
     window.currentRole = role; 
+    
     const btnUser = document.getElementById('btnRoleUser');
     const btnAdmin = document.getElementById('btnRoleAdmin');
     const adminPanel = document.getElementById('adminPanel');
