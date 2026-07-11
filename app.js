@@ -438,39 +438,11 @@ window.viewUserDetail = async function(rankNumber) {
 }
 
 // =======================================================
-// 5. PENGATUR MODE (USER / ADMIN) DENGAN KATA SANDI AMAN
+// 5. PENGATUR MODE (USER / ADMIN)
 // =======================================================
-window.bukaAdmin = function(role) {
-    const adminPanel = document.getElementById('adminPanel');
-    const btnUser = document.getElementById('btnRoleUser');
-    const btnAdmin = document.getElementById('btnRoleAdmin');
-
-    if (role === 'admin') {
-        // Silakan ganti password-nya di sini
-        const passwordBenar = "min3bondowoso"; 
-        const inputPassword = prompt("Masukkan Password Khusus Admin:");
-
-        if (inputPassword === null) return; // Menekan tombol batal
-        if (inputPassword !== passwordBenar) {
-            alert("❌ Password Salah! Akses Admin Ditolak.");
-            return;
-        }
-
-        currentRole = 'admin';
-        window.currentRole = 'admin';
-        console.log("Akses Admin Diterima.");
-
-        if (adminPanel) adminPanel.classList.remove('hidden');
-        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
-        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-    } else {
-        currentRole = 'user';
-        window.currentRole = 'user';
-        
-        if (adminPanel) adminPanel.classList.add('hidden');
-        if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
-        if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
-    }
+window.setRole = function(role) {
+    // Logika dipindahkan ke HTML agar tidak terkunci module scope
+    console.log("Fungsi setRole app.js terpanggil untuk role:", role);
 };
 
 // =======================================================
