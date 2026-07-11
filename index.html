@@ -4,6 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MEGABOND - MIN 3 BONDOWOSO</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -30,7 +31,7 @@
           keyframes: {
             glow: {
               '0%': { boxShadow: '0 0 15px rgba(139, 92, 246, 0.1)' },
-              '100%': { boxShadow: '0 0 30px rgba(139, 92, 246, 0.3)' }
+              '100%': { boxShadow: '0 0 30px rgba(139, 92, 246, 0.4)' }
             },
             float: {
               '0%, 100%': { transform: 'translateY(0)' },
@@ -46,292 +47,476 @@
     }
   </script>
 
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
   <style>
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
+      background-image: linear-gradient(to bottom, rgba(8, 3, 24, 0.50), rgba(8, 3, 24, 0.90)), url('https://lh3.googleusercontent.com/d/1aP68CHdo0qKFdIPxFK8nLCfgerB3G9uL');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      overflow-x: hidden;
     }
-    .glass-card {
-      background: rgba(15, 7, 38, 0.6);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+    .heading-font {
+      font-family: 'Space Grotesk', sans-serif;
     }
-    .podium-gradient-1 {
-      background: linear-gradient(180deg, rgba(234, 179, 8, 0.2) 0%, rgba(234, 179, 8, 0.05) 100%);
+    ::-webkit-scrollbar {
+      width: 6px;
     }
-    .podium-gradient-2 {
-      background: linear-gradient(180deg, rgba(148, 163, 184, 0.15) 0%, rgba(148, 163, 184, 0.03) 100%);
+    ::-webkit-scrollbar-track {
+      background: #0d072bda;
     }
-    .podium-gradient-3 {
-      background: linear-gradient(180deg, rgba(180, 83, 9, 0.15) 0%, rgba(180, 83, 9, 0.03) 100%);
+    ::-webkit-scrollbar-thumb {
+      background: #a28dc20c;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #8a5cf61c;
+    }
+    .leaderboard-item {
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .text-glow-gold {
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+    }
+    .text-glow-silver {
+      text-shadow: 0 0 10px rgba(226, 232, 240, 0.6);
+    }
+    .text-glow-bronze {
+      text-shadow: 0 0 10px rgba(180, 83, 9, 0.6);
+    }
+    .text-glow-platinum {
+      text-shadow: 0 0 10px rgba(45, 212, 191, 0.6);
+    }
+    .text-glow-diamond {
+      text-shadow: 0 0 10px rgba(167, 139, 250, 0.6);
+    }
+    .text-glow-legend {
+      text-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+    }
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-80px) scale(1.4);
+        opacity: 0;
+      }
+    }
+    .floating-star {
+      position: absolute;
+      pointer-events: none;
+      animation: floatUp 1.2s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(139, 92, 246, 0.3);
+      border-radius: 50%;
+      border-top-color: #8b5cf6;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-brand-500 selection:text-white overflow-x-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-brand-950/40 via-slate-950 to-slate-950">
+<body class="text-slate-100 min-h-screen relative flex flex-col justify-between">
 
-  <header class="border-b border-purple-950/30 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+  <!-- Background Decorative Blurs -->
+  <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[120px] pointer-events-none -z-10 animate-glow-slow"></div>
+  <div class="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-indigo-900/20 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+  <div class="absolute bottom-10 left-10 w-[300px] h-[300px] bg-pink-900/10 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+
+  <!-- HEADER -->
+  <header class="border-b border-purple-950/40 bg-brand-950/80 backdrop-blur-md sticky top-0 z-40 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      
+      <!-- Brand Logo -->
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-purple-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
-          <i class="fa-solid fa-bolt text-white text-sm animate-pulse"></i>
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-pink-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+          <i class="fa-solid fa-crown text-white text-lg animate-pulse"></i>
         </div>
         <div>
-          <span class="font-extrabold text-sm tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-purple-400">MEGABOND</span>
-          <span class="block text-[10px] text-purple-400 font-bold tracking-widest uppercase">MIN 3 BONDOWOSO</span>
+          <h1 class="heading-font text-xl font-bold bg-gradient-to-r from-white via-purple-200 to-brand-400 bg-clip-text text-transparent">Megabond</h1>
+          <p class="text-xs text-purple-300/60 font-semibold tracking-wider">MIN 3 BONDOWOSO</p>
         </div>
       </div>
 
-      <div class="flex bg-slate-900/60 p-1 rounded-xl border border-slate-800/80">
-        <button id="btnRoleUser" onclick="setRole('user')" class="px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md">
-          <i class="fa-solid fa-user-gradient text-[10px]"></i> Mode Siswa
-        </button>
-        <button id="btnRoleAdmin" onclick="setRole('admin')" class="px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white">
-          <i class="fa-solid fa-user-shield text-[10px]"></i> Mode Admin
-        </button>
+      <!-- Controls & User Switcher -->
+      <div class="flex flex-wrap items-center gap-4">
+        
+        <!-- Simulation & Role Switcher -->
+        <div class="bg-purple-950/60 border border-purple-800/40 rounded-xl p-1 flex items-center shadow-inner">
+          <button id="btnRoleUser" onclick="setRole('user')" class="px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md">
+            <i class="fa-solid fa-user"></i> Mode Siswa
+          </button>
+          <button id="btnRoleAdmin" onclick="setRole('admin')" class="px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white">
+            <i class="fa-solid fa-user-shield"></i> Mode Admin
+          </button>
+        </div>
+
+        <!-- Simulated Current Active Student -->
+        <div class="flex items-center gap-2 bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-1.5">
+          <div class="relative">
+            <img id="currentActiveAvatar" src="https://picsum.photos/seed/current/100/100" alt="Me" class="w-8 h-8 rounded-full border border-brand-500/40 object-cover">
+            <label id="headerPhotoUploadLabel" for="selfPhotoUpload" class="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-600 hover:bg-brand-500 text-white rounded-full flex items-center justify-center hidden cursor-pointer">
+              <i class="fa-solid fa-camera text-[8px]"></i>
+            </label>
+            <input type="file" id="selfPhotoUpload" accept="image/*" class="hidden" onchange="handleSelfPhotoUpload(event)">
+          </div>
+          <div class="text-left hidden xs:block">
+            <p class="text-[10px] text-slate-400 font-semibold leading-none">Masuk Sebagai</p>
+            <select id="currentUserSelector" onchange="changeActiveUser(this.value)" class="bg-transparent text-xs font-bold text-slate-200 focus:outline-none cursor-pointer pr-1">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Database Status Indicator -->
+        <div class="text-xs font-semibold text-slate-400 flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/50 border border-slate-800 rounded-xl">
+          <span id="dbStatusIndicator" class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+          <span id="dbStatusText">Connecting...</span>
+        </div>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 py-8">
+  <!-- MAIN APP CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
     
-    <div class="mb-6 flex justify-end">
-      <div class="inline-flex items-center gap-2 bg-slate-900/80 border border-slate-800/60 px-3 py-1.5 rounded-full text-[10px] font-semibold text-slate-400 shadow-inner">
-        <div id="dbStatusIndicator" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-        <span id="dbStatusText">Connecting...</span>
+    <!-- ADMIN UTILITY PANEL -->
+    <div id="adminPanel" class="hidden mb-8 p-6 bg-gradient-to-r from-purple-950/40 via-brand-950/40 to-slate-950/40 border-2 border-dashed border-brand-500/30 rounded-2xl animate-pulse-subtle">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h2 class="heading-font text-lg font-bold text-brand-300 flex items-center gap-2">
+            <i class="fa-solid fa-gears text-brand-400"></i> Panel Kontrol Admin
+          </h2>
+          <p class="text-xs text-slate-400">Kelola siswa, prestasi, penalti, dan perbarui foto profil dengan hak akses penuh.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="openAddStudentModal()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
+            <i class="fa-solid fa-user-plus"></i> Tambah Siswa Baru
+          </button>
+          <button onclick="openTransactionModal()" class="bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
+            <i class="fa-solid fa-star"></i> Kelola Prestasi / Penalti
+          </button>
+        </div>
+      </div>
+      <div class="mt-6 border-t border-slate-800/80 pt-5">
+        <h3 class="text-xs font-bold text-purple-400 mb-3 uppercase tracking-wider">Kelola & Hapus Data Siswa</h3>
+        <div id="adminStudentList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+          </div>
+      </div>
+      
+      <!-- Quick Admin Guide -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-300">
+        <div class="bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center"><i class="fa-solid fa-award"></i></div>
+          <div><p class="font-bold">Tambah Prestasi</p><p class="text-[10px] text-slate-500">Memberikan bintang & catatan emas.</p></div>
+        </div>
+        <div class="bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center"><i class="fa-solid fa-circle-minus"></i></div>
+          <div><p class="font-bold">Berikan Penalti</p><p class="text-[10px] text-slate-500">Mengurangi bintang & catatan pelanggaran.</p></div>
+        </div>
+        <div class="bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-images"></i></div>
+          <div><p class="font-bold">Ganti Foto Siswa</p><p class="text-[10px] text-slate-500">Unggah foto profil langsung dari list.</p></div>
+        </div>
       </div>
     </div>
 
-    <section id="adminPanel" class="hidden mb-10 p-6 rounded-2xl border border-brand-500/20 bg-gradient-to-b from-brand-950/20 via-slate-900/40 to-slate-900/20 backdrop-blur-md shadow-xl animate-pulseSubtle">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4 mb-6">
-        <div>
-          <h2 class="text-base font-bold text-slate-100 flex items-center gap-2">
-            <i class="fa-solid fa-sliders text-brand-400"></i> Panel Kontrol Admin
-          </h2>
-          <p class="text-xs text-slate-400">Kelola poin bintang, catatan prestasi, dan data siswa MIN 3 Bondowoso di sini.</p>
-        </div>
-        <div class="flex gap-2">
-          <button onclick="openAddStudentModal()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all">
-            <i class="fa-solid fa-user-plus text-brand-400"></i> Tambah Siswa Baru
-          </button>
-          <button onclick="openTransactionModal()" class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg shadow-brand-500/10">
-            <i class="fa-solid fa-star-half-stroke"></i> Input Nilai Bintang
-          </button>
-        </div>
-      </div>
-
-      <div>
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Daftar Manajemen Siswa</h3>
-        <div id="adminStudentList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-60 overflow-y-auto pr-2">
-          <p class="text-xs text-slate-500 italic py-2">Memuat daftar siswa...</p>
-        </div>
-      </div>
-    </section>
-
+    <!-- MAIN LEADERBOARD WORKSPACE -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
-      <div class="lg:col-span-5 space-y-6">
-        <div class="glass-card border border-slate-800/80 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
-          <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-600/10 rounded-full blur-3xl pointer-events-none"></div>
+      <!-- PODIUM TOP 3 & Highlight Rank 4-5 -->
+      <section class="lg:col-span-7 space-y-8">
+        
+        <!-- Section Header -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="heading-font text-2xl font-black tracking-wide text-white flex items-center gap-2">
+              <span class="bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">MATAMUDA RISING STAR</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Dapatkan Bintang Sebanyak Banyaknya, Dan jadilah yang paling bersinar !!</p>
+          </div>
+          <div class="bg-slate-950/40 px-3 py-1.5 rounded-full border border-slate-800 text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live Database Sync
+          </div>
+        </div>
+
+        <!-- 3D PODIUM DISPLAY (TOP 1, 2, 3) -->
+        <div class="grid grid-cols-3 gap-3 sm:gap-6 pt-12 pb-6 relative min-h-[340px] items-end">
           
-          <div class="text-center mb-8">
-            <span class="inline-block px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-bold uppercase tracking-widest mb-2">The Immortals</span>
-            <h2 class="text-lg font-extrabold text-slate-100 tracking-tight">Top Hall of Fame</h2>
-            <p class="text-xs text-slate-400">Apresiasi 3 Besar Pemilik Bintang Tertinggi</p>
+          <!-- RANK 2 (Left) -->
+          <div id="podium-2" class="order-1 flex flex-col items-center relative transition-all duration-700">
+            <div class="absolute -top-10 w-24 h-24 bg-slate-500/10 rounded-full blur-xl -z-10"></div>
+            <div class="relative cursor-pointer group hover:scale-105 transition-transform" onclick="viewUserDetail(2)">
+              <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-full p-[3px] bg-gradient-to-tr from-slate-400 via-slate-200 to-slate-500 shadow-lg shadow-slate-500/20 relative">
+                <img id="p2-avatar" src="https://picsum.photos/seed/placeholder/150/150" class="w-full h-full object-cover rounded-full bg-slate-900" alt="Rank 2">
+              </div>
+              <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-200 text-slate-950 font-black text-xs px-2.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+                <i class="fa-solid fa-crown text-yellow-600 text-[10px]"></i> #2
+              </div>
+            </div>
+            <div class="text-center mt-3 w-full">
+              <h3 id="p2-name" class="font-bold text-xs sm:text-sm text-slate-200 line-clamp-1">Loading...</h3>
+              <div class="flex items-center justify-center gap-1 mt-1 text-yellow-400 font-extrabold text-xs sm:text-sm">
+                <i class="fa-solid fa-star"></i> <span id="p2-stars">0</span>
+              </div>
+            </div>
+            <div class="w-full h-20 sm:h-24 bg-gradient-to-b from-slate-800/80 to-slate-950/90 border-t border-slate-700/50 rounded-t-xl mt-4 flex items-center justify-center shadow-lg">
+              <span class="heading-font text-2xl sm:text-3xl font-black text-slate-500/30">II</span>
+            </div>
           </div>
 
-          <div class="flex items-end justify-center gap-2 pt-12 pb-4">
-            
-            <div class="w-28 text-center flex flex-col items-center">
-              <div class="relative mb-3 group cursor-pointer" onclick="viewUserDetail(2)">
-                <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-slate-400 to-slate-600 opacity-40 blur-sm group-hover:opacity-70 transition duration-300"></div>
-                <img id="p2-avatar" src="https://picsum.photos/seed/siswa2/100/100" class="w-14 h-14 rounded-full border-2 border-slate-400 object-cover relative z-10 bg-slate-950">
-                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-400 text-slate-950 font-black text-[10px] flex items-center justify-center border border-slate-950 z-20 shadow">2</div>
+          <!-- RANK 1 (Center - Elevated) -->
+          <div id="podium-1" class="order-2 flex flex-col items-center relative transition-all duration-700 -translate-y-4">
+            <div class="absolute -top-16 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl -z-10 animate-pulse"></div>
+            <div class="absolute -top-14 z-10 animate-bounce-slow">
+              <i class="fa-solid fa-crown text-amber-400 text-3xl filter drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"></i>
+            </div>
+            <div class="relative cursor-pointer group hover:scale-105 transition-transform" onclick="viewUserDetail(1)">
+              <div class="w-20 h-20 sm:w-28 sm:h-28 rounded-full p-1 bg-gradient-to-tr from-yellow-500 via-amber-300 to-yellow-600 shadow-2xl shadow-yellow-500/30 relative">
+                <img id="p1-avatar" src="https://picsum.photos/seed/placeholder/150/150" class="w-full h-full object-cover rounded-full bg-slate-900" alt="Rank 1">
               </div>
-              <div id="p2-stars" class="min-h-[45px] text-center mb-1">
-                <span class="text-[10px] text-slate-400 animate-pulse">Loading...</span>
-              </div>
-              <span id="p2-name" class="block text-xs font-bold text-slate-300 truncate w-full max-w-[90px]">-</span>
-              <div class="w-full h-24 podium-gradient-2 border-t-2 border-slate-500/40 rounded-t-xl mt-3 flex items-center justify-center shadow-inner">
-                <i class="fa-solid fa-medal text-slate-400 text-xl opacity-40"></i>
+              <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-slate-950 font-black text-xs px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                <i class="fa-solid fa-star text-slate-950 text-[10px]"></i> #1
               </div>
             </div>
-
-            <div class="w-32 text-center flex flex-col items-center z-10">
-              <div class="relative mb-4 -mt-10 group cursor-pointer" onclick="viewUserDetail(1)">
-                <div class="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-yellow-400 via-amber-500 to-yellow-300 opacity-70 blur animate-glow-slow"></div>
-                <img id="p1-avatar" src="https://picsum.photos/seed/siswa1/120/120" class="w-20 h-20 rounded-full border-4 border-yellow-500 object-cover relative z-10 bg-slate-950">
-                <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-yellow-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center border-2 border-slate-950 z-20 shadow-lg">1</div>
-                <i class="fa-solid fa-crown text-yellow-400 text-base absolute -top-5 left-1/2 -translate-x-1/2 animate-bounce-slow drop-shadow-[0_4px_6px_rgba(234,179,8,0.4)]"></i>
-              </div>
-              <div id="p1-stars" class="min-h-[45px] text-center mb-1">
-                <span class="text-[10px] text-slate-400 animate-pulse">Loading...</span>
-              </div>
-              <span id="p1-name" class="block text-sm font-extrabold text-slate-100 truncate w-full max-w-[110px] bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">-</span>
-              <div class="w-full h-32 podium-gradient-1 border-t-4 border-yellow-500/60 rounded-t-xl mt-3 flex items-center justify-center shadow-2xl relative">
-                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-yellow-400/40 to-transparent"></div>
-                <i class="fa-solid fa-trophy text-yellow-500 text-3xl opacity-50 drop-shadow-2xl animate-pulse"></i>
+            <div class="text-center mt-3 w-full">
+              <h3 id="p1-name" class="font-bold text-sm sm:text-base text-white line-clamp-1">Loading...</h3>
+              <div class="flex items-center justify-center gap-1 mt-1 text-yellow-400 font-extrabold text-sm sm:text-base">
+                <i class="fa-solid fa-star text-glow-gold"></i> <span id="p1-stars">0</span>
               </div>
             </div>
-
-            <div class="w-28 text-center flex flex-col items-center">
-              <div class="relative mb-3 group cursor-pointer" onclick="viewUserDetail(3)">
-                <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-600 to-amber-800 opacity-40 blur-sm group-hover:opacity-70 transition duration-300"></div>
-                <img id="p3-avatar" src="https://picsum.photos/seed/siswa3/100/100" class="w-14 h-14 rounded-full border-2 border-amber-700 object-cover relative z-10 bg-slate-950">
-                <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-700 text-slate-100 font-black text-[10px] flex items-center justify-center border border-slate-950 z-20 shadow">3</div>
-              </div>
-              <div id="p3-stars" class="min-h-[45px] text-center mb-1">
-                <span class="text-[10px] text-slate-400 animate-pulse">Loading...</span>
-              </div>
-              <span id="p3-name" class="block text-xs font-bold text-slate-300 truncate w-full max-w-[90px]">-</span>
-              <div class="w-full h-20 podium-gradient-3 border-t-2 border-amber-700/40 rounded-t-xl mt-3 flex items-center justify-center shadow-inner">
-                <i class="fa-solid fa-medal text-amber-700 text-xl opacity-40"></i>
-              </div>
+            <div class="w-full h-24 sm:h-32 bg-gradient-to-b from-yellow-600/40 via-yellow-900/40 to-slate-950 border-t-2 border-yellow-500/50 rounded-t-xl mt-4 flex items-center justify-center shadow-lg">
+              <span class="heading-font text-4xl sm:text-5xl font-black text-yellow-500/30">I</span>
             </div>
-
           </div>
 
-          <div class="mt-4 border-t border-slate-800/80 pt-4 grid grid-cols-2 gap-3">
-            <div class="bg-slate-900/40 border border-slate-800/60 p-2.5 rounded-xl flex items-center justify-between cursor-pointer hover:border-slate-700 transition-all" onclick="viewUserDetail(4)">
-              <div class="flex items-center gap-2 truncate">
-                <span class="text-[10px] font-bold text-slate-500">#4</span>
-                <span id="p4-name" class="text-xs font-medium text-slate-300 truncate max-w-[70px]">-</span>
+          <!-- RANK 3 (Right) -->
+          <div id="podium-3" class="order-3 flex flex-col items-center relative transition-all duration-700">
+            <div class="absolute -top-10 w-24 h-24 bg-amber-900/10 rounded-full blur-xl -z-10"></div>
+            <div class="relative cursor-pointer group hover:scale-105 transition-transform" onclick="viewUserDetail(3)">
+              <div class="w-16 h-16 sm:w-24 sm:h-24 rounded-full p-[3px] bg-gradient-to-tr from-amber-700 via-orange-400 to-amber-900 shadow-lg shadow-amber-950/30 relative">
+                <img id="p3-avatar" src="https://picsum.photos/seed/placeholder/150/150" class="w-full h-full object-cover rounded-full bg-slate-900" alt="Rank 3">
               </div>
-              <span class="text-[11px] font-bold text-yellow-400/90"><i class="fa-solid fa-star text-[9px]"></i> <span id="p4-stars">0</span></span>
+              <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-700 text-white font-black text-xs px-2.5 py-0.5 rounded-full flex items-center gap-0.5 shadow-md">
+                <i class="fa-solid fa-shield text-amber-200 text-[10px]"></i> #3
+              </div>
             </div>
-            <div class="bg-slate-900/40 border border-slate-800/60 p-2.5 rounded-xl flex items-center justify-between cursor-pointer hover:border-slate-700 transition-all" onclick="viewUserDetail(5)">
-              <div class="flex items-center gap-2 truncate">
-                <span class="text-[10px] font-bold text-slate-500">#5</span>
-                <span id="p5-name" class="text-xs font-medium text-slate-300 truncate max-w-[70px]">-</span>
+            <div class="text-center mt-3 w-full">
+              <h3 id="p3-name" class="font-bold text-xs sm:text-sm text-slate-200 line-clamp-1">Loading...</h3>
+              <div class="flex items-center justify-center gap-1 mt-1 text-yellow-400 font-extrabold text-xs sm:text-sm">
+                <i class="fa-solid fa-star"></i> <span id="p3-stars">0</span>
               </div>
-              <span class="text-[11px] font-bold text-yellow-400/90"><i class="fa-solid fa-star text-[9px]"></i> <span id="p5-stars">0</span></span>
+            </div>
+            <div class="w-full h-16 sm:h-20 bg-gradient-to-b from-amber-950/50 to-slate-950/90 border-t border-amber-800/40 rounded-t-xl mt-4 flex items-center justify-center shadow-lg">
+              <span class="heading-font text-xl sm:text-2xl font-black text-amber-800/30">III</span>
             </div>
           </div>
 
         </div>
-      </div>
 
-      <div class="lg:col-span-7">
-        <div class="glass-card border border-slate-800/80 rounded-3xl p-6 shadow-2xl">
-          <div class="flex justify-between items-center mb-6">
-            <div>
-              <h2 class="text-base font-extrabold text-slate-100 flex items-center gap-2">
-                <i class="fa-solid fa-list-numeric text-brand-400"></i> Klasemen Umum
-              </h2>
-              <p class="text-xs text-slate-400">Peringkat akumulasi seluruh bintang siswa aktif</p>
+        <!-- RUNNER-UPS CARD (RANK 4 & 5) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          
+          <!-- RANK 4 CARD -->
+          <div id="card-rank-4" onclick="viewUserDetail(4)" class="group bg-gradient-to-r from-slate-900/60 to-purple-950/30 border border-purple-900/30 hover:border-brand-500/40 rounded-2xl p-4 cursor-pointer transition-all">
+            <div class="flex items-center gap-4">
+              <div class="heading-font text-lg font-black text-slate-500 w-6">#4</div>
+              <div class="relative">
+                <img id="p4-avatar" src="https://picsum.photos/seed/p4/100/100" class="w-14 h-14 rounded-full object-cover border-2 border-slate-800 group-hover:border-brand-400/50 transition-colors">
+              </div>
+              <div>
+                <h4 id="p4-name" class="font-bold text-sm text-slate-100 group-hover:text-brand-300 transition-colors line-clamp-1">Loading...</h4>
+              </div>
             </div>
-            <div class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer" onclick="window.ambilDanTampilkanRanking ? window.ambilDanTampilkanRanking() : location.reload()" title="Refresh Data">
-              <i class="fa-solid fa-arrows-rotate text-xs"></i>
+            <div class="text-right">
+              <div class="text-yellow-400 font-black text-sm flex items-center gap-1 justify-end">
+                <i class="fa-solid fa-star"></i> <span id="p4-stars">0</span>
+              </div>
             </div>
           </div>
 
-          <div id="leaderboardList" class="space-y-2.5 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
-            <div class="flex justify-between items-center bg-slate-900/20 border border-slate-900/60 p-3 rounded-xl animate-pulse">
-              <div class="flex items-center gap-3">
-                <div class="w-4 h-4 bg-slate-800 rounded"></div>
-                <div class="w-8 h-8 bg-slate-800 rounded-full"></div>
-                <div class="space-y-1.5">
-                  <div class="w-24 h-3 bg-slate-800 rounded"></div>
-                  <div class="w-14 h-2 bg-slate-800 rounded"></div>
-                </div>
+          <!-- RANK 5 CARD -->
+          <div id="card-rank-5" onclick="viewUserDetail(5)" class="group bg-gradient-to-r from-slate-900/60 to-purple-950/30 border border-purple-900/30 hover:border-brand-500/40 rounded-2xl p-4 cursor-pointer transition-all">
+            <div class="flex items-center gap-4">
+              <div class="heading-font text-lg font-black text-slate-500 w-6">#5</div>
+              <div class="relative">
+                <img id="p5-avatar" src="https://picsum.photos/seed/p5/100/100" class="w-14 h-14 rounded-full object-cover border-2 border-slate-800 group-hover:border-brand-400/50 transition-colors">
               </div>
-              <div class="w-10 h-4 bg-slate-800 rounded"></div>
+              <div>
+                <h4 id="p5-name" class="font-bold text-sm text-slate-100 group-hover:text-brand-300 transition-colors line-clamp-1">Loading...</h4>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-yellow-400 font-black text-sm flex items-center gap-1 justify-end">
+                <i class="fa-solid fa-star"></i> <span id="p5-stars">0</span>
+              </div>
             </div>
           </div>
 
         </div>
-      </div>
+
+      </section>
+
+      <!-- SCROLLABLE LEADERBOARD (RANK 6+) -->
+      <section class="lg:col-span-5 space-y-4">
+        <div>
+          <h2 class="heading-font text-xl font-bold tracking-wide text-purple-200">KLASEMEN UMUM</h2>
+          <p class="text-xs text-slate-400">Daftar peringkat lengkap siswa StarAcademy</p>
+        </div>
+
+        <!-- Search & Filter bar -->
+        <div class="flex gap-2">
+          <div class="relative flex-grow">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+            <input type="text" id="studentSearch" oninput="renderLeaderboard()" placeholder="Cari nama siswa..." class="w-full bg-slate-950/60 border border-slate-800 text-slate-200 pl-9 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+          </div>
+        </div>
+
+        <!-- Scrollable Area -->
+        <div class="bg-slate-950/60 border border-slate-900 rounded-2xl p-3 shadow-inner">
+          <div id="leaderboardList" class="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+            <div class="flex justify-center items-center h-32">
+              <div class="loading-spinner"></div>
+              <span class="ml-2 text-xs text-slate-400">Loading leaderboard...</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
     </div>
   </main>
 
-  <div id="userDetailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 relative shadow-2xl animate-float">
-      <button onclick="document.getElementById('userDetailModal').classList.add('hidden')" class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition-all">
-        <i class="fa-solid fa-xmark text-xs"></i>
-      </button>
+  <!-- USER DETAIL MODAL -->
+  <div id="userDetailModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-purple-900/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative">
+      
+      <div id="modalTierBanner" class="p-6 bg-gradient-to-r from-brand-900 to-indigo-950 relative overflow-hidden">
+        <button onclick="closeUserDetailModal()" class="absolute top-4 right-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 w-8 h-8 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
 
-      <div class="flex items-center gap-4 border-b border-slate-800/60 pb-4 mb-4">
-        <div class="relative group">
-          <img id="modalAvatar" src="" class="w-16 h-16 rounded-full object-cover border-2 border-brand-500 bg-slate-950">
-          <button onclick="window.ubahFotoSiswaAdmin()" class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white text-[10px] opacity-0 group-hover:opacity-100 transition-all font-bold" title="Ubah Link Foto">
-            <i class="fa-solid fa-pen text-[9px] mr-1"></i> Edit
+        <div class="flex items-center gap-4 mt-2">
+          <div class="relative group">
+            <img id="modalAvatar" onclick="window.ubahFotoSiswaAdmin()" title="Klik untuk ubah foto (Khusus Admin)" class="w-24 h-24 rounded-full border-4 border-brand-500/30 object-cover mx-auto cursor-pointer hover:scale-105 transition-all" src="" alt="Avatar">
+            <label id="modalPhotoUploadLabel" class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity hidden">
+              <i class="fa-solid fa-camera text-white text-xs mb-1"></i>
+              <span class="text-[8px] text-white">Ganti Foto</span>
+              <input type="file" id="modalPhotoUploadInput" accept="image/*" class="hidden" onchange="handleModalPhotoUpload(event)">
+            </label>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="modalName" class="heading-font text-lg sm:text-xl font-bold text-white">Student Name</h3>
+              <span id="modalRankLabel" class="bg-yellow-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">#1</span>
+            </div>
+            <p id="modalTierName" class="text-sm font-semibold text-brand-300 flex items-center gap-1.5 mt-1">
+              <i class="fa-solid fa-crown text-amber-400"></i> Tier Name
+            </p>
+          </div>
+        </div>
+
+        <div class="absolute -right-6 -bottom-6 text-white/5 text-8xl pointer-events-none">
+          <i id="modalTierIconLarge" class="fa-solid fa-crown"></i>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-6">
+        
+        <div class="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-xs text-slate-400 font-semibold">Progres Bintang</span>
+            <span id="modalTotalStarsText" class="text-sm font-extrabold text-yellow-400"><i class="fa-solid fa-star"></i> 0 Bintang</span>
+          </div>
+          <div id="modalStarIcons" class="flex items-center gap-2 py-2">
+            <!-- Stars rendered by JS -->
+          </div>
+        </div>
+
+        <div class="mt-4">
+    <h4 class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider flex items-center gap-1">
+        <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pencapaian & Penalti
+    </h4>
+    
+    <div id="modalHistoryContainer" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+        <p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>
+    </div>
+</div>
+
+        <div id="modalAdminDeleteBtnContainer" class="hidden pt-4 border-t border-slate-800/80">
+          <button id="btnDeleteStudent" class="w-full bg-rose-950/30 hover:bg-rose-900/30 text-rose-500 hover:text-rose-400 border border-rose-900/40 py-2.5 rounded-xl text-xs font-bold transition-all">
+            <i class="fa-solid fa-trash-can"></i> Hapus Siswa dari Sistem
           </button>
         </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <span id="modalRankLabel" class="bg-brand-600/20 text-brand-400 text-[10px] font-extrabold px-1.5 py-0.5 rounded">#1</span>
-            <h3 id="modalName" class="text-sm font-bold text-slate-100">Nama Siswa</h3>
-          </div>
-          <p id="modalTierName" class="text-xs text-purple-400 font-medium mt-0.5">Tier Player</p>
-          <div id="modalStarIcons" class="flex gap-0.5 mt-1"></div>
-        </div>
-      </div>
 
-      <div>
-        <div class="flex justify-between items-center mb-2">
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Riwayat Log Bintang</h4>
-          <span id="modalTotalStarsText" class="text-xs font-bold text-yellow-400"><i class="fa-solid fa-star"></i> Total: 0</span>
-        </div>
-        <div id="modalHistoryContainer" class="max-h-48 overflow-y-auto space-y-1.5 pr-1">
-          <p class="text-xs text-slate-500 italic py-2 text-center">Tidak ada riwayat aktivitas.</p>
-        </div>
       </div>
     </div>
   </div>
 
-  <div id="addStudentModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 relative shadow-2xl">
-      <button onclick="closeAddStudentModal()" class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition-all">
-        <i class="fa-solid fa-xmark text-xs"></i>
-      </button>
-
-      <h3 class="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-user-plus text-brand-400"></i> Pendaftaran Siswa</h3>
-      
-      <form id="addStudentForm" onsubmit="window.handleAddStudent(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Nama Lengkap Siswa</label>
-          <input type="text" id="newStudentName" required placeholder="Contoh: Ahmad Dhani" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Link URL Foto Profil (Opsional)</label>
-          <input type="url" id="newStudentAvatar" placeholder="https://link-foto.com/gambar.jpg" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Saldo Bintang Awal</label>
-          <input type="number" id="newStudentStars" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-        </div>
-        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl text-xs font-bold transition-all hover:shadow-lg hover:shadow-brand-500/20">Simpan Data Siswa</button>
-      </form>
+  <!-- ADMIN ADD STUDENT MODAL -->
+  <div id="addStudentModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-purple-900/40 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative">
+      <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
+        <h3 class="heading-font text-lg font-bold text-white"><i class="fa-solid fa-user-plus text-brand-400 mr-2"></i>Tambah Siswa Baru</h3>
+        <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="addStudentForm" onsubmit="handleAddStudent(event)" class="p-6 space-y-4">
+    <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Nama Lengkap Siswa</label>
+        <input type="text" id="newStudentName" required placeholder="Contoh: Andi Wijaya" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+    </div>
+    <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Link URL Foto Siswa (Opsional)</label>
+        <input type="url" id="newStudentAvatar" placeholder="Contoh: https://link-gambar.com/foto.png" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+    </div>
+    <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Bintang Awal</label>
+        <input type="number" id="newStudentStars" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+    </div>
+    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl text-xs font-bold transition-all hover:shadow-lg">Simpan Siswa Baru</button>
+</form>
     </div>
   </div>
 
-  <div id="transactionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 relative shadow-2xl">
-      <button onclick="closeTransactionModal()" class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition-all">
-        <i class="fa-solid fa-xmark text-xs"></i>
-      </button>
-
-      <h3 class="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2"><i class="fa-solid fa-star-half-stroke text-brand-400"></i> Form Alokasi Bintang</h3>
-      
-      <div class="flex gap-2 mb-4 bg-slate-950 p-1 rounded-xl border border-slate-800">
-        <button type="button" id="typeAchievementBtn" onclick="window.setTransactionType('achievement')" class="py-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-400 font-medium text-xs flex items-center justify-center gap-1.5 transition-all w-full">
-          <i class="fa-solid fa-circle-plus"></i> Tambah Poin
-        </button>
-        <button type="button" id="typePenaltyBtn" onclick="window.setTransactionType('penalty')" class="py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition-all w-full">
-          <i class="fa-solid fa-circle-minus"></i> Kurang Poin
-        </button>
+  <!-- ADMIN MANAGE TRANSACTION MODAL -->
+  <div id="transactionModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-purple-900/40 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative">
+      <div class="p-6 border-b border-slate-800/80 flex justify-between items-center">
+        <h3 class="heading-font text-lg font-bold text-white"><i class="fa-solid fa-sliders text-brand-400 mr-2"></i>Kelola Bintang & Catatan</h3>
+        <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
-
-      <form id="transactionForm" onsubmit="window.handleTransaction(event)" class="space-y-4">
+      <form id="transactionForm" onsubmit="window.handleTransaction(event)" class="p-6 space-y-4">
+        
         <div>
-          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Pilih Nama Siswa</label>
-          <select id="transactionStudentSelect" required class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
+          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Pilih Siswa</label>
+          <select id="transactionStudentSelect" required class="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
             <option value="">-- Pilih Siswa --</option>
           </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Kategori Catatan</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="typeAchievementBtn" onclick="setTransactionType('achievement')" class="py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1">
+              <i class="fa-solid fa-award"></i> Prestasi (Tambah)
+            </button>
+            <button type="button" id="typePenaltyBtn" onclick="setTransactionType('penalty')" class="py-2.5 rounded-xl border border-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center gap-1">
+              <i class="fa-solid fa-circle-minus"></i> Penalti (Kurangi)
+            </button>
+          </div>
         </div>
 
         <div>
@@ -349,31 +534,38 @@
     </div>
   </div>
 
+  <!-- FOOTER -->
   <footer class="border-t border-purple-950/40 bg-brand-950/90 py-6 text-center text-xs text-slate-500 mt-12">
     <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-      <p>© 2026 Megabond System. All rights reserved.</p>
-      <p class="text-purple-400/60 font-medium">MIN 3 Bondowoso Juara</p>
+      <p>© 2026 StarAcademy. Powered by Supabase</p>
+      <p class="flex items-center gap-1.5">
+        <span>Sistem Ranking Terintegrasi Database</span>
+        <span class="px-2 py-0.5 rounded bg-brand-900/40 text-brand-400 font-extrabold text-[10px]">VER 3.0 - SUPABASE</span>
+      </p>
     </div>
   </footer>
 
+  <!-- Supabase Client Import -->
   <script type="module" src="app.js"></script>
-
-  <script>
+<script>
+    // Kita bajak fungsi setRole bawaan template agar melewati filter password dulu
     window.setRole = function(role) {
       const adminPanel = document.getElementById('adminPanel');
       const btnUser = document.getElementById('btnRoleUser');
       const btnAdmin = document.getElementById('btnRoleAdmin');
 
       if (role === 'admin') {
+        // Lu bisa ganti password sesuka hati lu di sini bro
         const passwordBenar = "min3bondowoso"; 
         const inputPassword = prompt("Masukkan Password Khusus Admin:");
 
-        if (inputPassword === null) return; // Klik batal
+        if (inputPassword === null) return; // Jika klik batal
         if (inputPassword !== passwordBenar) {
           alert("❌ Password Salah! Akses Admin Ditolak.");
           return;
         }
         
+        // Jika password benar, buka panel admin
         if (typeof currentRole !== 'undefined') currentRole = 'admin';
         window.currentRole = 'admin';
         
@@ -382,6 +574,7 @@
         if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
         console.log("Mode Admin Aktif.");
       } else {
+        // Kembalikan ke Mode Siswa
         if (typeof currentRole !== 'undefined') currentRole = 'user';
         window.currentRole = 'user';
         
@@ -391,10 +584,11 @@
         console.log("Mode Siswa Aktif.");
       }
       
+      // Jalankan fungsi update data dari app.js
       if (typeof window.ambilDanTampilkanRanking === 'function') {
         window.ambilDanTampilkanRanking();
       }
     };
   </script>
-
-</body></html>
+</body>
+</html>
