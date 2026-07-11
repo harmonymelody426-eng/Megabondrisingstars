@@ -438,26 +438,24 @@ window.viewUserDetail = async function(rankNumber) {
 }
 
 // =======================================================
-// 5. PENGATUR MODE (USER / ADMIN) WITH PASSWORD PROTECT
+// 5. PENGATUR MODE (USER / ADMIN) DENGAN KATA SANDI AMAN
 // =======================================================
-window.setRole = function(role) {
+window.bukaAdmin = function(role) {
     const adminPanel = document.getElementById('adminPanel');
     const btnUser = document.getElementById('btnRoleUser');
     const btnAdmin = document.getElementById('btnRoleAdmin');
 
     if (role === 'admin') {
-        // Tentukan password yang kamu mau di sini (Contoh: "min3bondowoso")
-        const passwordBenar = "junexmessi"; 
+        // Silakan ganti password-nya di sini
+        const passwordBenar = "min3bondowoso"; 
         const inputPassword = prompt("Masukkan Password Khusus Admin:");
 
-        // Jika batal atau password salah, gagalkan proses masuk admin
-        if (inputPassword === null) return; // User menekan tombol cancel
+        if (inputPassword === null) return; // Menekan tombol batal
         if (inputPassword !== passwordBenar) {
             alert("❌ Password Salah! Akses Admin Ditolak.");
             return;
         }
 
-        // Jika lolos, set role ke admin
         currentRole = 'admin';
         window.currentRole = 'admin';
         console.log("Akses Admin Diterima.");
@@ -466,7 +464,6 @@ window.setRole = function(role) {
         if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
         if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
     } else {
-        // Mode Siswa / Balik ke User biasa (tanpa password)
         currentRole = 'user';
         window.currentRole = 'user';
         
