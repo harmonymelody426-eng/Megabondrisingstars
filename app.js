@@ -563,7 +563,7 @@ ambilDanTampilkanRanking();
 
 // 1. Fungsi menutup modal Detail Profil Siswa (tombol X yang macet tadi)
 window.closeUserDetailModal = function() {
-    const modal = document.getElementById('userDetailModal');
+    const modal = document.getElementById('UserDetailModal');
     if (modal) {
         modal.classList.add('hidden');
     }
@@ -571,7 +571,7 @@ window.closeUserDetailModal = function() {
 
 // 2. Fungsi menutup modal Form Input Bintang Admin
 window.closeTransactionModal = function() {
-    const modal = document.getElementById('transactionModal');
+    const modal = document.getElementById('TransactionModal');
     if (modal) {
         modal.classList.add('hidden');
     }
