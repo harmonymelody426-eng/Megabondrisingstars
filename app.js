@@ -240,21 +240,15 @@ if (siswa && siswa.length >= 5) {
         `;
     }
     
-    // Perbaikan Target: Ambil langsung berdasarkan ID Card-nya dan kirimkan angka rank 5
+// --- PERBAIKAN RANK 5 (BERSIH & ANTI-CRASH) ---
     const card5 = document.getElementById('card-rank-5');
-    if (card5) card5.setAttribute('onclick', 'window.viewUserDetail(5)');
+    if (card5) {
+        card5.setAttribute('onclick', 'window.viewUserDetail(5)');
+    }
 } else {
     if (p5Name) p5Name.innerText = '-';
     if (p5Stars) p5Stars.innerText = '0';
 }
-            
-            // Pasang fungsi klik biar ngebaca ID asli siswa
-            const parentCard5 = p5Name ? p5Name.closest('.cursor-pointer') : null;
-            if (parentCard5) parentCard5.setAttribute('onclick', `viewUserDetail('${siswa[4].id}')`);
-        } else {
-            if (p5Name) p5Name.innerText = '-';
-            if (p5Stars) p5Stars.innerText = '0';
-        }
 
         // --- KLASEMEN UMUM ---
         const leaderboardList = document.getElementById('leaderboardList');
