@@ -205,6 +205,10 @@
           <p class="text-xs text-slate-400">Kelola siswa, prestasi, penalti, dan perbarui foto profil dengan hak akses penuh.</p>
         </div>
         <div class="flex gap-2">
+          <button onclick="window.downloadExcelTemplate()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
+            <i class="fa-solid fa-download"></i> Download Template
+          </button>
+
           <button onclick="document.getElementById('excelFileInput').click()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
             <i class="fa-solid fa-file-excel"></i> Import Excel
           </button>
@@ -213,6 +217,7 @@
           <button onclick="openAddStudentModal()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
             <i class="fa-solid fa-user-plus"></i> Tambah Siswa Baru
           </button>
+
           <button onclick="openTransactionModal()" class="bg-purple-900 hover:bg-purple-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-all shadow-lg">
             <i class="fa-solid fa-star"></i> Kelola Prestasi / Penalti
           </button>
