@@ -163,12 +163,25 @@ async function ambilDanTampilkanRanking() {
             if (document.getElementById('p3-stars')) document.getElementById('p3-stars').innerText = '0';
         }
 
-        // --- UPDATE RUNNER UP RANK 4 & 5 ---
+        // --- UPDATE RUNNER UP RANK 4 & 5 (SINKRON DENGAN SISTEM TIER TEMPLATE) ---
         const p4Name = document.getElementById('p4-name');
         const p4Stars = document.getElementById('p4-stars');
         if (siswa && siswa.length >= 4) {
+            // Kita hitung tier bawaan template agar bintangnya ikut sistem otomatis
+            const info4 = hitungTierDanBintang(siswa[3].stars);
+            
             if (p4Name) p4Name.innerText = siswa[3].name;
-            if (p4Stars) p4Stars.innerText = siswa[3].stars;
+            if (p4Stars) {
+                p4Stars.innerHTML = `
+                    <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info4.tierName}</span>
+                    <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info4)}</div>
+                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[3].stars}</span>
+                `;
+            }
+            
+            // Pasang fungsi klik biar ngebaca ID asli siswa
+            const parentCard4 = p4Name ? p4Name.closest('.cursor-pointer') : null;
+            if (parentCard4) parentCard4.setAttribute('onclick', `viewUserDetail('${siswa[3].id}')`);
         } else {
             if (p4Name) p4Name.innerText = '-';
             if (p4Stars) p4Stars.innerText = '0';
@@ -177,8 +190,21 @@ async function ambilDanTampilkanRanking() {
         const p5Name = document.getElementById('p5-name');
         const p5Stars = document.getElementById('p5-stars');
         if (siswa && siswa.length >= 5) {
+            // Kita hitung tier bawaan template untuk Rank 5
+            const info5 = hitungTierDanBintang(siswa[4].stars);
+            
             if (p5Name) p5Name.innerText = siswa[4].name;
-            if (p5Stars) p5Stars.innerText = siswa[4].stars;
+            if (p5Stars) {
+                p5Stars.innerHTML = `
+                    <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info5.tierName}</span>
+                    <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info5)}</div>
+                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[4].stars}</span>
+                `;
+            }
+            
+            // Pasang fungsi klik biar ngebaca ID asli siswa
+            const parentCard5 = p5Name ? p5Name.closest('.cursor-pointer') : null;
+            if (parentCard5) parentCard5.setAttribute('onclick', `viewUserDetail('${siswa[4].id}')`);
         } else {
             if (p5Name) p5Name.innerText = '-';
             if (p5Stars) p5Stars.innerText = '0';
