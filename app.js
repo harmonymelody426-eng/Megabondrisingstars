@@ -556,3 +556,31 @@ window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
 
 // Jalankan fungsi saat web dibuka biar ga mandek di "Loading..."
 ambilDanTampilkanRanking();
+
+// =======================================================
+// 9. FUNGSI PENYELAMAT UNTUK MENUTUP MODAL (ANTI-REFRESH)
+// =======================================================
+
+// 1. Fungsi menutup modal Detail Profil Siswa (tombol X yang macet tadi)
+window.closeUserDetailModal = function() {
+    const modal = document.getElementById('userDetailModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+// 2. Fungsi menutup modal Form Input Bintang Admin
+window.closeTransactionModal = function() {
+    const modal = document.getElementById('transactionModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+// 3. Fungsi menutup modal Tambah Siswa Baru (jaga-jaga kalau macet juga)
+window.closeAddStudentModal = function() {
+    const modal = document.getElementById('addStudentModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
