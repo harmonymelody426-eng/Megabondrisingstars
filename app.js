@@ -420,31 +420,41 @@ window.handleTransaction = async function(event) {
 }
 
 // =======================================================
-// 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
+// 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI (PERBAIKAN SINKRONISASI)
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
-    const namaTarget = document.getElementById('p' + rankNumber + '-name')?.innerText || "";
-    let dataSiswa = localStudentsData.find(s => s.name === namaTarget);
-    if (!dataSiswa) {
-        dataSiswa = localStudentsData[rankNumber - 1];
-    }
+    // 1. Ambil data langsung dari indeks array (Rank 1 berarti indeks 0)
+    const index = parseInt(rankNumber) - 1;
+    const dataSiswa = localStudentsData[index];
 
-    if (!dataSiswa) return;
+    if (!dataSiswa) {
+        console.error("Siswa pada peringkat ini tidak ditemukan!");
+        return;
+    }
 
     const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
-    document.getElementById('modalName').innerText = dataSiswa.name;
-    document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
-    document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
+    // 2. Isi konten teks ke dalam modal
+    if (document.getElementById('modalName')) {
+        document.getElementById('modalName').innerText = dataSiswa.name;
+    }
+    if (document.getElementById('modalRankLabel')) {
+        document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
+    }
+    if (document.getElementById('modalTotalStarsText')) {
+        document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
+    }
+    if (document.getElementById('modalTierName')) {
+        document.getElementById('modalTierName').innerText = infoTier.tierName;
+    }
     
-    if (dataSiswa.avatar) {
-        document.getElementById('modalAvatar').src = dataSiswa.avatar;
-    } else {
-        document.getElementById('modalAvatar').src = 'https://picsum.photos/seed/' + dataSiswa.name + '/150/150';
+    // 3. Perbaikan Link Avatar: Menggunakan .avatar_url agar sinkron dengan Supabase
+    const modalAvatar = document.getElementById('modalAvatar');
+    if (modalAvatar) {
+        modalAvatar.src = dataSiswa.avatar_url || 'https://picsum.photos/seed/' + encodeURIComponent(dataSiswa.name) + '/150/150';
     }
 
-    document.getElementById('modalTierName').innerText = infoTier.tierName;
-
+    // 4. Render Bintang pada modal
     const starIconsContainer = document.getElementById('modalStarIcons');
     if (starIconsContainer) {
         starIconsContainer.innerHTML = '';
@@ -459,10 +469,15 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
-    document.getElementById('UserDetailModal').classList.remove('hidden');
+    // 5. Tampilkan Modal (Pastikan ID huruf u-nya kecil atau sesuaikan dengan HTML kamu)
+    const detailModal = document.getElementById('userDetailModal') || document.getElementById('UserDetailModal');
+    if (detailModal) {
+        detailModal.classList.remove('hidden');
+    }
 
+    // 6. Muat riwayat transaksi siswa
     const riwayatContainer = document.getElementById('modalHistoryContainer') || 
-                             document.querySelector('#UserDetailModal div.mt-4 div');
+                             (detailModal ? detailModal.querySelector('div.mt-4 div') : null);
 
     if (riwayatContainer) {
         riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
