@@ -357,13 +357,19 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
+    // Tampilkan modal
     document.getElementById('userDetailModal').classList.remove('hidden');
 
-    const riwayatContainer = document.querySelector('#userDetailModal div.mt-4 div') || document.getElementById('modalHistoryContainer');
+    // Pencarian container riwayat yang fleksibel agar tidak null/error
+    const riwayatContainer = document.getElementById('modalHistoryContainer') || 
+                             document.querySelector('#userDetailModal div.mt-4 div') ||
+                             document.querySelector('#userDetailModal div.space-y-2');
+
     if (riwayatContainer) {
         riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
         
         try {
+            // Ambil data log khusus siswa ini dari Supabase
             const { data: logs, error: logsError } = await supabase
                 .from('transactions')
                 .select('*')
@@ -375,13 +381,14 @@ window.viewUserDetail = async function(rankNumber) {
             if (!logs || logs.length === 0) {
                 riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
             } else {
-                riwayatContainer.innerHTML = '';
+                riwayatContainer.innerHTML = ''; // bersihkan teks loading
                 
                 logs.forEach(log => {
                     const itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
                     
-                    const isPenalty = log.type === 'penalti' || log.type === 'penalty';
+                    // Cek tipe (Mendukung format 'achievement' atau 'penalty' dari database kamu)
+                    const isPenalty = log.type === 'penalti' || log.type === 'penalty' || log.type === 'minus';
                     const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
                     const sign = isPenalty ? '-' : '+';
                     const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
@@ -394,7 +401,7 @@ window.viewUserDetail = async function(rankNumber) {
                             ${icon}
                             <span class="text-slate-300 font-medium">${isiCatatan}</span>
                         </div>
-                        <span class="font-bold ${textClass}">${sign}${jumlahBintang} Bintang</span>
+                        <span class="font-bold ${textClass}">${sign}${jumlahBuintang || jumlahBintang} Bintang</span>
                     `;
                     riwayatContainer.appendChild(itemLog);
                 });
