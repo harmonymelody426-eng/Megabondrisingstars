@@ -696,8 +696,15 @@ window.handleExcelImport = function(event) {
 // =======================================================
 window.downloadExcelTemplate = function() {
     try {
-        // 1. Tentukan susunan kolom Header yang WAJIB (nama, avatar_url, bintang_awal)
-        // Kita kasih contoh 1 baris data kosong/contoh biar admin paham cara ngisinya
+        console.log("Memulai proses pembuatan template Excel...");
+        
+        // Memastikan library XLSX sudah dimuat di HTML
+        if (typeof XLSX === 'undefined') {
+            alert("❌ Library Excel belum siap! Pastikan CDN SheetJS sudah terpasang di index.html");
+            return;
+        }
+
+        // Tentukan susunan kolom Header yang WAJIB (nama, avatar_url, bintang_awal)
         const templateData = [
             {
                 "nama": "Contoh Nama Siswa",
@@ -706,19 +713,87 @@ window.downloadExcelTemplate = function() {
             }
         ];
 
-        // 2. Buat objek lembar kerja (worksheet) baru dari SheetJS
+        // Buat objek worksheet dan workbook baru
         const worksheet = XLSX.utils.json_to_sheet(templateData);
-        
-        // 3. Buat buku kerja (workbook) baru
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
 
-        // 4. Perintah download file ke komputer admin dengan nama file otomatis
+        // Unduh file secara instan
         XLSX.writeFile(workbook, "Template_Import_Siswa_Megabond.xlsx");
-        
-        console.log("Template Excel berhasil di-generate dan di-download.");
+        console.log("✅ Template Excel sukses diunduh.");
     } catch (error) {
-        console.error(error);
-        alert("❌ Gagal membuat template Excel!");
+        console.error("Eror download template:", error);
+        alert("❌ Gagal membuat template Excel! Periksa log console.");
     }
+};
+
+// =======================================================
+// FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX)
+// =======================================================
+window.handleExcelImport = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (typeof XLSX === 'undefined') {
+        alert("❌ Library Excel belum siap!");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet);
+            
+            if (jsonRows.length === 0) {
+                alert("❌ File Excel kosong!");
+                return;
+            }
+
+            const rowSampel = jsonRows[0];
+            if (!rowSampel.hasOwnProperty('nama')) {
+                alert("❌ Format Excel salah! Gunakan file dari tombol 'Download Template'.");
+                return;
+            }
+
+            let jumlahSukses = 0;
+            jsonRows.forEach(row => {
+                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
+                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
+                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
+
+                if (namaSiswa !== '') {
+                    if (typeof window.tambahSiswaKeDatabase === 'function') {
+                        window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
+                    } else if (window.globalStudents) {
+                        window.globalStudents.push({
+                            id: Date.now() + Math.random(),
+                            name: namaSiswa,
+                            avatar_url: avatarSiswa,
+                            stars: bintangAwal,
+                            logs: []
+                        });
+                    }
+                    jumlahSukses++;
+                }
+            });
+
+            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
+            event.target.value = '';
+
+            if (typeof window.ambilDanTampilkanRanking === 'function') {
+                window.ambilDanTampilkanRanking();
+            } else if (typeof window.renderLeaderboard === 'function') {
+                window.renderLeaderboard();
+            }
+
+        } catch (error) {
+            console.error("Eror saat import excel:", error);
+            alert("❌ Gagal membaca file Excel!");
+        }
+    };
+    reader.readAsArrayBuffer(file);
 };
