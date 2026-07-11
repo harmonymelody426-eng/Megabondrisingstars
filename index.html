@@ -474,16 +474,20 @@
         <button onclick="closeAddStudentModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <form id="addStudentForm" onsubmit="handleAddStudent(event)" class="p-6 space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Nama Lengkap Siswa</label>
-          <input type="text" id="newStudentName" required placeholder="Contoh: Andi Wijaya" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Bintang Awal</label>
-          <input type="number" id="newStudentStars" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
-        </div>
-        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl text-xs font-bold transition-all hover:shadow-lg hover:shadow-brand-500/20">Simpan Siswa</button>
-      </form>
+    <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Nama Lengkap Siswa</label>
+        <input type="text" id="newStudentName" required placeholder="Contoh: Andi Wijaya" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+    </div>
+    <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Link URL Foto Siswa (Opsional)</label>
+        <input type="url" id="newStudentAvatar" placeholder="Contoh: https://link-gambar.com/foto.png" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+    </div>
+    <div>
+        <label class="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Bintang Awal</label>
+        <input type="number" id="newStudentStars" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-500">
+    </div>
+    <button type="submit" class="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl text-xs font-bold transition-all hover:shadow-lg">Simpan Siswa Baru</button>
+</form>
     </div>
   </div>
 
