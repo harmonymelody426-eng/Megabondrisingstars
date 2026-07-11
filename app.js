@@ -324,13 +324,23 @@ window.handleTransaction = async function(event) {
 // 5. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
-    const indexSiswa = rankNumber - 1;
-    const dataSiswa = localStudentsData[indexSiswa];
+    // 1. Cari data siswa berdasarkan nama yang diklik agar 100% akurat
+    const namaTarget = document.getElementById('p' + rankNumber + '-name')?.innerText || "";
+    
+    // Cari kecocokan di data lokal berdasarkan nama atau fallback ke index
+    let dataSiswa = localStudentsData.find(s => s.name === namaTarget);
+    if (!dataSiswa) {
+        dataSiswa = localStudentsData[rankNumber - 1];
+    }
 
-    if (!dataSiswa) return;
+    if (!dataSiswa) {
+        console.error("Data siswa tidak ditemukan!");
+        return;
+    }
 
     const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
+    // Tampilkan data dasar ke modal
     document.getElementById('modalName').innerText = dataSiswa.name;
     document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
     document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
@@ -338,7 +348,7 @@ window.viewUserDetail = async function(rankNumber) {
     if (dataSiswa.avatar) {
         document.getElementById('modalAvatar').src = dataSiswa.avatar;
     } else {
-        document.getElementById('modalAvatar').src = 'https://picsum.photos/seed/' + indexSiswa + '/150/150';
+        document.getElementById('modalAvatar').src = 'https://picsum.photos/seed/' + dataSiswa.name + '/150/150';
     }
 
     document.getElementById('modalTierName').innerText = infoTier.tierName;
@@ -357,19 +367,21 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
-    // Tampilkan modal
+    // Tampilkan modal ke layar
     document.getElementById('userDetailModal').classList.remove('hidden');
 
-    // Pencarian container riwayat yang fleksibel
+    // Deteksi container riwayat
     const riwayatContainer = document.getElementById('modalHistoryContainer') || 
                              document.querySelector('#userDetailModal div.mt-4 div') ||
-                             document.querySelector('#userDetailModal div.space-y-2');
+                             document.querySelector('#userDetailModal div.space-y-1\\.5');
 
     if (riwayatContainer) {
         riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
         
         try {
-            // Ambil data log khusus siswa ini dari Supabase
+            console.log("Mengambil riwayat untuk Student ID:", dataSiswa.id);
+            
+            // Ambil data transaksi langsung dari tabel Supabase
             const { data: logs, error: logsError } = await supabase
                 .from('transactions')
                 .select('*')
@@ -378,16 +390,18 @@ window.viewUserDetail = async function(rankNumber) {
 
             if (logsError) throw logsError;
 
+            console.log("Data log yang ditemukan dari DB:", logs);
+
             if (!logs || logs.length === 0) {
                 riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
             } else {
-                riwayatContainer.innerHTML = ''; // bersihkan teks loading
+                riwayatContainer.innerHTML = ''; // bersihkan status memuat
                 
                 logs.forEach(log => {
                     const itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
                     
-                    // Cek tipe (Mendukung 'achievement' maupun 'penalty')
+                    // Normalisasi tipe data (achievement / penalty)
                     const isPenalty = log.type === 'penalti' || log.type === 'penalty' || log.type === 'minus';
                     const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
                     const sign = isPenalty ? '-' : '+';
@@ -412,7 +426,6 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 }
-
 window.closeUserDetailModal = function() {
     document.getElementById('userDetailModal').classList.add('hidden');
 }
