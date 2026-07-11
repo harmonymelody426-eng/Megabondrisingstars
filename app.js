@@ -72,11 +72,13 @@ function buatHtmlBintangTier(infoTier) {
 }
 
 // =======================================================
-// 2. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING + TIER
+// 2. FUNGSI UTAMA: AMBIL DATA & TAMPILKAN RANKING + TIER (GABUNGAN FIXED)
 // =======================================================
 async function ambilDanTampilkanRanking() {
     const statusText = document.getElementById('dbStatusText');
     const statusIndicator = document.getElementById('dbStatusIndicator');
+    const statusElAlt = document.querySelector('.bg-slate-900\\/80 span');
+    const indicatorAlt = document.querySelector('.bg-slate-900\\/80 div');
 
     try {
         const { data: siswa, error } = await supabase
@@ -86,73 +88,100 @@ async function ambilDanTampilkanRanking() {
 
         if (error) throw error;
 
+        // Simpan ke local state (baik local maupun window)
+        localStudentsData = siswa || [];
+        window.localStudentsData = siswa || [];
+
+        // --- UPDATE STATUS INDIKATOR DATABASE ---
         if (statusText) statusText.innerText = 'Connected';
-        if (statusIndicator) {
-            statusIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500';
-        }
+        if (statusElAlt) statusElAlt.innerText = "Live Database Sync";
+        
+        if (statusIndicator) statusIndicator.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        if (indicatorAlt) indicatorAlt.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
 
         console.log('Data Siswa Berhasil Diambil:', siswa);
-        localStudentsData = siswa || [];
+
+        // --- RUN FALLBACK EXTERNAL RENDERS (JIKA ADA) ---
+        if (typeof window.renderPodium === 'function') window.renderPodium(siswa);
+        if (typeof window.renderTable === 'function') window.renderTable(siswa);
+        if (typeof window.updateLeaderboardUI === 'function') window.updateLeaderboardUI(siswa);
 
         // --- UPDATE PODIUM JUARA 1 ---
         if (siswa && siswa.length >= 1) {
             const info = hitungTierDanBintang(siswa[0].stars);
-            document.getElementById('p1-name').innerText = siswa[0].name;
-            document.getElementById('p1-stars').innerHTML = `
+            const p1Name = document.getElementById('p1-name');
+            const p1Stars = document.getElementById('p1-stars');
+            const p1Avatar = document.getElementById('p1-avatar');
+            
+            if (p1Name) p1Name.innerText = siswa[0].name;
+            if (p1Stars) p1Stars.innerHTML = `
                 <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
                 ${buatHtmlBintangTier(info)}
                 <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[0].stars}</span>
             `;
-            if (siswa[0].avatar) document.getElementById('p1-avatar').src = siswa[0].avatar;
+            if (siswa[0].avatar && p1Avatar) p1Avatar.src = siswa[0].avatar;
         } else {
-            document.getElementById('p1-name').innerText = 'Belum Ada';
-            document.getElementById('p1-stars').innerText = '0';
+            if (document.getElementById('p1-name')) document.getElementById('p1-name').innerText = 'Belum Ada';
+            if (document.getElementById('p1-stars')) document.getElementById('p1-stars').innerText = '0';
         }
 
         // --- UPDATE PODIUM JUARA 2 ---
         if (siswa && siswa.length >= 2) {
             const info = hitungTierDanBintang(siswa[1].stars);
-            document.getElementById('p2-name').innerText = siswa[1].name;
-            document.getElementById('p2-stars').innerHTML = `
+            const p2Name = document.getElementById('p2-name');
+            const p2Stars = document.getElementById('p2-stars');
+            const p2Avatar = document.getElementById('p2-avatar');
+
+            if (p2Name) p2Name.innerText = siswa[1].name;
+            if (p2Stars) p2Stars.innerHTML = `
                 <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
                 ${buatHtmlBintangTier(info)}
                 <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[1].stars}</span>
             `;
-            if (siswa[1].avatar) document.getElementById('p2-avatar').src = siswa[1].avatar;
+            if (siswa[1].avatar && p2Avatar) p2Avatar.src = siswa[1].avatar;
         } else {
-            document.getElementById('p2-name').innerText = 'Belum Ada';
-            document.getElementById('p2-stars').innerText = '0';
+            if (document.getElementById('p2-name')) document.getElementById('p2-name').innerText = 'Belum Ada';
+            if (document.getElementById('p2-stars')) document.getElementById('p2-stars').innerText = '0';
         }
 
         // --- UPDATE PODIUM JUARA 3 ---
         if (siswa && siswa.length >= 3) {
             const info = hitungTierDanBintang(siswa[2].stars);
-            document.getElementById('p3-name').innerText = siswa[2].name;
-            document.getElementById('p3-stars').innerHTML = `
+            const p3Name = document.getElementById('p3-name');
+            const p3Stars = document.getElementById('p3-stars');
+            const p3Avatar = document.getElementById('p3-avatar');
+
+            if (p3Name) p3Name.innerText = siswa[2].name;
+            if (p3Stars) p3Stars.innerHTML = `
                 <span class="text-[10px] font-medium text-purple-300 block">${info.tierName}</span>
                 ${buatHtmlBintangTier(info)}
                 <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[2].stars}</span>
             `;
-            if (siswa[2].avatar) document.getElementById('p3-avatar').src = siswa[2].avatar;
+            if (siswa[2].avatar && p3Avatar) p3Avatar.src = siswa[2].avatar;
         } else {
-            document.getElementById('p3-name').innerText = 'Belum Ada';
-            document.getElementById('p3-stars').innerText = '0';
+            if (document.getElementById('p3-name')) document.getElementById('p3-name').innerText = 'Belum Ada';
+            if (document.getElementById('p3-stars')) document.getElementById('p3-stars').innerText = '0';
         }
 
         // --- UPDATE RUNNER UP RANK 4 & 5 ---
+        const p4Name = document.getElementById('p4-name');
+        const p4Stars = document.getElementById('p4-stars');
         if (siswa && siswa.length >= 4) {
-            document.getElementById('p4-name').innerText = siswa[3].name;
-            document.getElementById('p4-stars').innerText = siswa[3].stars;
+            if (p4Name) p4Name.innerText = siswa[3].name;
+            if (p4Stars) p4Stars.innerText = siswa[3].stars;
         } else {
-            document.getElementById('p4-name').innerText = '-';
-            document.getElementById('p4-stars').innerText = '0';
+            if (p4Name) p4Name.innerText = '-';
+            if (p4Stars) p4Stars.innerText = '0';
         }
+
+        const p5Name = document.getElementById('p5-name');
+        const p5Stars = document.getElementById('p5-stars');
         if (siswa && siswa.length >= 5) {
-            document.getElementById('p5-name').innerText = siswa[4].name;
-            document.getElementById('p5-stars').innerText = siswa[4].stars;
+            if (p5Name) p5Name.innerText = siswa[4].name;
+            if (p5Stars) p5Stars.innerText = siswa[4].stars;
         } else {
-            document.getElementById('p5-name').innerText = '-';
-            document.getElementById('p5-stars').innerText = '0';
+            if (p5Name) p5Name.innerText = '-';
+            if (p5Stars) p5Stars.innerText = '0';
         }
 
         // --- KLASEMEN UMUM ---
@@ -185,6 +214,7 @@ async function ambilDanTampilkanRanking() {
             });
         }
 
+        // Render komponen admin & input dropdown
         renderAdminStudentList(siswa);
 
         const selectSiswa = document.getElementById('transactionStudentSelect');
@@ -199,12 +229,17 @@ async function ambilDanTampilkanRanking() {
         }
 
     } catch (err) {
-        console.error('Koneksi Gagal:', err.message);
+        console.error('Koneksi/Sinkronisasi Gagal:', err.message);
         if (statusText) statusText.innerText = 'Error Connection';
+        if (statusElAlt) statusElAlt.innerText = "Connection Failed";
         if (statusIndicator) statusIndicator.className = 'w-2 h-2 rounded-full bg-rose-500';
     }
 }
+window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
 
+// =======================================================
+// 3. RENDER HALAMAN MANAGEMENT ADMIN
+// =======================================================
 function renderAdminStudentList(siswaArray) {
     const adminStudentList = document.getElementById('adminStudentList');
     if (!adminStudentList) return;
@@ -407,42 +442,9 @@ window.viewUserDetail = async function(rankNumber) {
 }
 
 // =======================================================
-// 6. FUNGSI UTAMA AMBIL DATA & TAMPILKAN RANKING (PENYELAMAT CONNECTING)
-// =======================================================
-async function ambilDanTampilkanRanking() {
-    const statusEl = document.querySelector('.bg-slate-900\\/80 span') || document.body;
-    try {
-        const { data: students, error } = await supabase
-            .from('students')
-            .select('*')
-            .order('stars', { ascending: false });
-
-        if (error) throw error;
-
-        window.localStudentsData = students; 
-
-        // Jalankan fungsi bawaan render jika ada di script.js / index.html
-        if (typeof window.renderPodium === 'function') window.renderPodium(students);
-        if (typeof window.renderTable === 'function') window.renderTable(students);
-        if (typeof window.updateLeaderboardUI === 'function') window.updateLeaderboardUI(students);
-        
-        // Mengubah status indikator menjadi terhubung
-        const indicator = document.querySelector('.bg-slate-900\\/80 div');
-        if (indicator) indicator.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-        if (statusEl) statusEl.innerText = "Live Database Sync";
-
-    } catch (err) {
-        console.error("Gagal sinkronisasi data:", err);
-        if (statusEl) statusEl.innerText = "Connection Failed";
-    }
-}
-window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
-
-// =======================================================
-// 7. PENGATUR MODE (USER / ADMIN) - FIXED VARIABEL GLOBAL
+// 6. PENGATUR MODE (USER / ADMIN) - FIXED VARIABEL GLOBAL
 // =======================================================
 window.setRole = function(role) {
-    // Memastikan status role tersimpan di tingkat window/global agar terbaca fungsi lain
     window.currentRole = role; 
     
     const btnUser = document.getElementById('btnRoleUser');
@@ -461,7 +463,7 @@ window.setRole = function(role) {
 }
 
 // =======================================================
-// 8. FUNGSI MODAL & PROSES SIMPAN SISWA (SUPPORT AVATAR)
+// 7. FUNGSI MODAL & PROSES SIMPAN SISWA (SUPPORT AVATAR)
 // =======================================================
 window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); }
 window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); }
@@ -491,17 +493,13 @@ window.handleAddStudent = async function(event) {
 }
 
 // =======================================================
-// 9. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (DETEKSI VISUAL PANEL ADMIN)
+// 8. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (DETEKSI VISUAL PANEL ADMIN)
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
-    // Deteksi apakah panel admin sedang aktif terbuka di layar
     const adminPanel = document.getElementById('adminPanel');
     const isPanelAdminTerbuka = adminPanel && !adminPanel.classList.contains('hidden');
-    
-    // Fallback cadangan cek variabel global
-    const isAdminVariabel = typeof currentRole !== 'undefined' && currentRole === 'admin';
+    const isAdminVariabel = typeof window.currentRole !== 'undefined' && window.currentRole === 'admin';
 
-    // Jika dua-duanya mendeteksi bukan admin, baru kita tolak
     if (!isPanelAdminTerbuka && !isAdminVariabel) {
         alert("Akses ditolak! Fitur ganti foto ini hanya untuk Mode Admin.");
         return;
@@ -524,7 +522,6 @@ window.ubahFotoSiswaAdmin = async function() {
 
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        // Tutup modal detail secara manual
         const modalDetail = document.getElementById('userDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
