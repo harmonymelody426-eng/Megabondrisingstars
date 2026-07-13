@@ -422,8 +422,9 @@
 
         <div class="flex items-center gap-4 mt-2">
           <div class="relative group">
+            <!-- PERBAIKAN: Modal avatar menggunakan avatar_url -->
             <img id="modalAvatar" onclick="window.ubahFotoSiswaAdmin()" title="Klik untuk ubah foto (Khusus Admin)" class="w-24 h-24 rounded-full border-4 border-brand-500/30 object-cover mx-auto cursor-pointer hover:scale-105 transition-all" src="" alt="Avatar">
-            <label id="modalPhotoUploadLabel" class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity hidden">
+            <label id="modalPhotoUploadLabel" class="absolute inset-0 bg-black/60 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
               <i class="fa-solid fa-camera text-white text-xs mb-1"></i>
               <span class="text-[8px] text-white">Ganti Foto</span>
               <input type="file" id="modalPhotoUploadInput" accept="image/*" class="hidden" onchange="handleModalPhotoUpload(event)">
