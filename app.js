@@ -123,9 +123,9 @@ async function ambilDanTampilkanRanking() {
                     <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[0].stars}</span>
                 `;
             }
-            // Menggunakan avatar_url atau avatar untuk fleksibilitas database baru/lama
-            if (p1Avatar && (siswa[0].avatar_url || siswa[0].avatar)) {
-                p1Avatar.src = siswa[0].avatar_url || siswa[0].avatar;
+            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            if (p1Avatar && siswa[0].avatar_url) {
+                p1Avatar.src = siswa[0].avatar_url;
             }
             
             // Pasang fungsi klik dinamis ke elemen podium 1
@@ -156,8 +156,9 @@ async function ambilDanTampilkanRanking() {
                     <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[1].stars}</span>
                 `;
             }
-            if (p2Avatar && (siswa[1].avatar_url || siswa[1].avatar)) {
-                p2Avatar.src = siswa[1].avatar_url || siswa[1].avatar;
+            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            if (p2Avatar && siswa[1].avatar_url) {
+                p2Avatar.src = siswa[1].avatar_url;
             }
             
             // Pasang fungsi klik dinamis ke elemen podium 2
@@ -188,8 +189,9 @@ async function ambilDanTampilkanRanking() {
                     <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[2].stars}</span>
                 `;
             }
-            if (p3Avatar && (siswa[2].avatar_url || siswa[2].avatar)) {
-                p3Avatar.src = siswa[2].avatar_url || siswa[2].avatar;
+            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            if (p3Avatar && siswa[2].avatar_url) {
+                p3Avatar.src = siswa[2].avatar_url;
             }
             
             // Pasang fungsi klik dinamis ke elemen podium 3
@@ -203,48 +205,50 @@ async function ambilDanTampilkanRanking() {
             if (document.getElementById('p3-stars')) document.getElementById('p3-stars').innerText = '0';
         }
 
-        // --- UPDATE RUNNER UP RANK 4 & 5 ---
-        const p4Name = document.getElementById('p4-name');
-        const p4Stars = document.getElementById('p4-stars');
-        if (siswa && siswa.length >= 4) {
-            const info4 = hitungTierDanBintang(siswa[3].stars);
-            if (p4Name) p4Name.innerText = siswa[3].name;
-            if (p4Stars) {
-                p4Stars.innerHTML = `
-                    <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info4.tierName}</span>
-                    <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info4)}</div>
-                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[3].stars}</span>
-                `;
-            }
-            
-            const card4 = document.getElementById('card-rank-4');
-            if (card4) card4.setAttribute('onclick', 'window.viewUserDetail(4)');
-        } else {
-            if (p4Name) p4Name.innerText = '-';
-            if (p4Stars) p4Stars.innerText = '0';
-        }
+       // --- UPDATE RUNNER UP RANK 4 & 5 ---
+const p4Name = document.getElementById('p4-name');
+const p4Stars = document.getElementById('p4-stars');
+if (siswa && siswa.length >= 4) {
+    const info4 = hitungTierDanBintang(siswa[3].stars);
+    if (p4Name) p4Name.innerText = siswa[3].name;
+    if (p4Stars) {
+        p4Stars.innerHTML = `
+            <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info4.tierName}</span>
+            <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info4)}</div>
+            <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[3].stars}</span>
+        `;
+    }
+    
+    // Perbaikan Target: Ambil langsung berdasarkan ID Card-nya dan kirimkan angka rank 4
+    const card4 = document.getElementById('card-rank-4');
+    if (card4) card4.setAttribute('onclick', 'window.viewUserDetail(4)');
+} else {
+    if (p4Name) p4Name.innerText = '-';
+    if (p4Stars) p4Stars.innerText = '0';
+}
 
-        const p5Name = document.getElementById('p5-name');
-        const p5Stars = document.getElementById('p5-stars');
-        if (siswa && siswa.length >= 5) {
-            const info5 = hitungTierDanBintang(siswa[4].stars);
-            if (p5Name) p5Name.innerText = siswa[4].name;
-            if (p5Stars) {
-                p5Stars.innerHTML = `
-                    <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info5.tierName}</span>
-                    <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info5)}</div>
-                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[4].stars}</span>
-                `;
-            }
-            
-            const card5 = document.getElementById('card-rank-5');
-            if (card5) {
-                card5.setAttribute('onclick', 'window.viewUserDetail(5)');
-            }
-        } else {
-            if (p5Name) p5Name.innerText = '-';
-            if (p5Stars) p5Stars.innerText = '0';
-        }
+const p5Name = document.getElementById('p5-name');
+const p5Stars = document.getElementById('p5-stars');
+if (siswa && siswa.length >= 5) {
+    const info5 = hitungTierDanBintang(siswa[4].stars);
+    if (p5Name) p5Name.innerText = siswa[4].name;
+    if (p5Stars) {
+        p5Stars.innerHTML = `
+            <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info5.tierName}</span>
+            <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info5)}</div>
+            <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[4].stars}</span>
+        `;
+    }
+    
+// --- PERBAIKAN RANK 5 (BERSIH & ANTI-CRASH) ---
+    const card5 = document.getElementById('card-rank-5');
+    if (card5) {
+        card5.setAttribute('onclick', 'window.viewUserDetail(5)');
+    }
+} else {
+    if (p5Name) p5Name.innerText = '-';
+    if (p5Stars) p5Stars.innerText = '0';
+}
 
         // --- KLASEMEN UMUM ---
         const leaderboardList = document.getElementById('leaderboardList');
@@ -259,7 +263,7 @@ async function ambilDanTampilkanRanking() {
                 row.innerHTML = `
                     <div class="flex items-center gap-3">
                         <span class="font-bold text-xs text-slate-500 w-5">#${index + 1}</span>
-                        <img src="${itemSiswa.avatar_url || itemSiswa.avatar || 'https://picsum.photos/seed/' + index + '/100/100'}" class="w-8 h-8 rounded-full object-cover">
+                        <img src="${itemSiswa.avatar || 'https://picsum.photos/seed/' + index + '/100/100'}" class="w-8 h-8 rounded-full object-cover">
                         <div>
                             <span class="text-xs font-semibold text-slate-200 block">${itemSiswa.name}</span>
                             <span class="text-[9px] text-purple-400 font-medium block">${info.tierName}</span>
@@ -413,6 +417,7 @@ window.handleTransaction = async function(event) {
 // 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI (PERBAIKAN SINKRONISASI)
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
+    // 1. Ambil data langsung dari indeks array (Rank 1 berarti indeks 0)
     const index = parseInt(rankNumber) - 1;
     const dataSiswa = localStudentsData[index];
 
@@ -423,6 +428,7 @@ window.viewUserDetail = async function(rankNumber) {
 
     const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
+    // 2. Isi konten teks ke dalam modal
     if (document.getElementById('modalName')) {
         document.getElementById('modalName').innerText = dataSiswa.name;
     }
@@ -436,11 +442,13 @@ window.viewUserDetail = async function(rankNumber) {
         document.getElementById('modalTierName').innerText = infoTier.tierName;
     }
     
+    // 3. Perbaikan Link Avatar: Menggunakan .avatar_url agar sinkron dengan Supabase
     const modalAvatar = document.getElementById('modalAvatar');
     if (modalAvatar) {
-        modalAvatar.src = dataSiswa.avatar_url || dataSiswa.avatar || 'https://picsum.photos/seed/' + encodeURIComponent(dataSiswa.name) + '/150/150';
+        modalAvatar.src = dataSiswa.avatar_url || 'https://picsum.photos/seed/' + encodeURIComponent(dataSiswa.name) + '/150/150';
     }
 
+    // 4. Render Bintang pada modal
     const starIconsContainer = document.getElementById('modalStarIcons');
     if (starIconsContainer) {
         starIconsContainer.innerHTML = '';
@@ -455,11 +463,13 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
+    // 5. Tampilkan Modal (Pastikan ID huruf u-nya kecil atau sesuaikan dengan HTML kamu)
     const detailModal = document.getElementById('userDetailModal') || document.getElementById('UserDetailModal');
     if (detailModal) {
         detailModal.classList.remove('hidden');
     }
 
+    // 6. Muat riwayat transaksi siswa
     const riwayatContainer = document.getElementById('modalHistoryContainer') || 
                              (detailModal ? detailModal.querySelector('div.mt-4 div') : null);
 
@@ -517,15 +527,17 @@ window.setRole = function(role) {
     const btnAdmin = document.getElementById('btnRoleAdmin');
 
     if (role === 'admin') {
+        // Tentukan password sesuka lu di sini bro
         const passwordBenar = "min3bondowoso"; 
         const inputPassword = prompt("Masukkan Password Khusus Admin:");
 
-        if (inputPassword === null) return; 
+        if (inputPassword === null) return; // Klik batal
         if (inputPassword !== passwordBenar) {
             alert("❌ Password Salah! Akses Admin Ditolak.");
             return;
         }
 
+        // Jika password benar, set role ke admin
         currentRole = 'admin';
         window.currentRole = 'admin';
         console.log("Akses Admin Diterima.");
@@ -534,6 +546,7 @@ window.setRole = function(role) {
         if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
         if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
     } else {
+        // Mode Siswa / Balik ke User biasa
         currentRole = 'user';
         window.currentRole = 'user';
         
@@ -542,6 +555,7 @@ window.setRole = function(role) {
         if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
     }
 
+    // Jalankan fungsi update data agar daftar siswa admin langsung muncul
     if (typeof ambilDanTampilkanRanking === 'function') {
         ambilDanTampilkanRanking();
     }
@@ -561,12 +575,8 @@ window.handleAddStudent = async function(event) {
     const linkAvatar = document.getElementById('newStudentAvatar').value.trim();
     const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
 
-    // Payload mendukung ganda agar kompatibel dengan penamaan kolom lama/baru
     const studentPayload = { name: namaSiswa, stars: bintangAwal };
-    if (linkAvatar !== "") {
-        studentPayload.avatar = linkAvatar;
-        studentPayload.avatar_url = linkAvatar; 
-    }
+    if (linkAvatar !== "") studentPayload.avatar = linkAvatar;
 
     try {
         const { error } = await supabase.from('students').insert([studentPayload]);
@@ -598,24 +608,20 @@ window.ubahFotoSiswaAdmin = async function() {
     let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
     if (!dataSiswa) return alert("Gagal mendeteksi data siswa!");
 
-    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar_url || dataSiswa.avatar || "");
+    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar || "");
     if (urlBaru === null) return; 
 
     try {
-        // Melakukan update ganda ke objek avatar & avatar_url agar tidak bentrok di database baru
         const { error } = await supabase
             .from('students')
-            .update({ 
-                avatar: urlBaru.trim(),
-                avatar_url: urlBaru.trim()
-            })
+            .update({ avatar: urlBaru.trim() })
             .eq('id', dataSiswa.id);
 
         if (error) throw error;
 
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        const modalDetail = document.getElementById('UserDetailModal') || document.getElementById('userDetailModal');
+        const modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
         ambilDanTampilkanRanking();
@@ -635,13 +641,16 @@ ambilDanTampilkanRanking();
 // =======================================================
 // 9. FUNGSI PENYELAMAT UNTUK MENUTUP MODAL (ANTI-REFRESH)
 // =======================================================
+
+// 1. Fungsi menutup modal Detail Profil Siswa (tombol X yang macet tadi)
 window.closeUserDetailModal = function() {
-    const modal = document.getElementById('UserDetailModal') || document.getElementById('userDetailModal');
+    const modal = document.getElementById('UserDetailModal');
     if (modal) {
         modal.classList.add('hidden');
     }
 };
 
+// 2. Fungsi menutup modal Form Input Bintang Admin
 window.closeTransactionModal = function() {
     const modal = document.getElementById('TransactionModal');
     if (modal) {
@@ -649,13 +658,94 @@ window.closeTransactionModal = function() {
     }
 };
 
+// 3. Fungsi menutup modal Tambah Siswa Baru (jaga-jaga kalau macet juga)
 window.closeAddStudentModal = function() {
     const modal = document.getElementById('addStudentModal');
     if (modal) {
         modal.classList.add('hidden');
     }
 };
+// =======================================================
+// FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX)
+// =======================================================
+window.handleExcelImport = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Ambil sheet/lembar pertama dari file Excel
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Ubah data tabel Excel menjadi Array Object JSON
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet);
+            
+            if (jsonRows.length === 0) {
+                alert("❌ File Excel kosong atau format tidak sesuai!");
+                return;
+            }
+
+            // Validasi format: Kolom paling atas wajib ada header bernama 'nama'
+            const rowSampel = jsonRows[0];
+            if (!rowSampel.hasOwnProperty('nama')) {
+                alert("❌ Format Excel salah! Pastikan kolom header paling atas ada tulisan 'nama' (huruf kecil semua).");
+                return;
+            }
+
+            let jumlahSukses = 0;
+
+            // Looping masukkan data siswa ke sistem database/array web lu
+            jsonRows.forEach(row => {
+                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
+                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
+                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
+
+                if (namaSiswa !== '') {
+                    // Cek jika ada fungsi insert database bawaan template lu (misal dari Supabase/Firebase/API)
+                    if (typeof window.tambahSiswaKeDatabase === 'function') {
+                        window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
+                    } else if (typeof window.handleAddStudentSubmit === 'function') {
+                        // Jalur fungsi submit bawaan template lainnya jika ada
+                        window.handleAddStudentSubmit(namaSiswa, avatarSiswa, bintangAwal);
+                    } else if (window.globalStudents) {
+                        // Jika template lu cuma pakai penyimpanan array lokal (state sementara)
+                        window.globalStudents.push({
+                            id: Date.now() + Math.random(),
+                            name: namaSiswa,
+                            avatar_url: avatarSiswa,
+                            stars: bintangAwal,
+                            logs: []
+                        });
+                    }
+                    jumlahSukses++;
+                }
+            });
+
+            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
+            
+            // Reset input file agar bisa dipakai upload lagi
+            event.target.value = '';
+
+            // Jalankan fungsi refresh leaderboard biar nama siswa baru langsung muncul otomatis
+            if (typeof window.ambilDanTampilkanRanking === 'function') {
+                window.ambilDanTampilkanRanking();
+            } else if (typeof window.renderLeaderboard === 'function') {
+                window.renderLeaderboard();
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("❌ Gagal membaca file Excel. Pastikan file tidak rusak!");
+        }
+    };
+    
+    reader.readAsArrayBuffer(file);
+};
 // =======================================================
 // FITUR DOWNLOAD TEMPLATE EXCEL SECARA OTOMATIS (INSTAN)
 // =======================================================
@@ -663,11 +753,13 @@ window.downloadExcelTemplate = function() {
     try {
         console.log("Memulai proses pembuatan template Excel...");
         
+        // Memastikan library XLSX sudah dimuat di HTML
         if (typeof XLSX === 'undefined') {
             alert("❌ Library Excel belum siap! Pastikan CDN SheetJS sudah terpasang di index.html");
             return;
         }
 
+        // Tentukan susunan kolom Header yang WAJIB (nama, avatar_url, bintang_awal)
         const templateData = [
             {
                 "nama": "Contoh Nama Siswa",
@@ -676,10 +768,12 @@ window.downloadExcelTemplate = function() {
             }
         ];
 
+        // Buat objek worksheet dan workbook baru
         const worksheet = XLSX.utils.json_to_sheet(templateData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
 
+        // Unduh file secara instan
         XLSX.writeFile(workbook, "Template_Import_Siswa_Megabond.xlsx");
         console.log("✅ Template Excel sukses diunduh.");
     } catch (error) {
@@ -721,7 +815,7 @@ window.handleExcelImport = function(event) {
             }
 
             let jumlahSukses = 0;
-            jsonRows.forEach(async (row) => {
+            jsonRows.forEach(row => {
                 const namaSiswa = row.nama ? row.nama.toString().trim() : '';
                 const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
                 const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
@@ -737,14 +831,6 @@ window.handleExcelImport = function(event) {
                             stars: bintangAwal,
                             logs: []
                         });
-                    } else {
-                        // Jalur insert cadangan langsung ke Supabase jika fungsi eksternal absen
-                        await supabase.from('students').insert([{
-                            name: namaSiswa,
-                            avatar: avatarSiswa,
-                            avatar_url: avatarSiswa,
-                            stars: bintangAwal
-                        }]);
                     }
                     jumlahSukses++;
                 }
