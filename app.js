@@ -428,7 +428,7 @@ window.handleTransaction = async function(event) {
 }
 
 // =======================================================
-// 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI (PERBAIKAN SINKRONISASI)
+// 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
     // PERBAIKAN: Cegah multiple call
@@ -505,7 +505,7 @@ window.viewUserDetail = async function(rankNumber) {
                     .select('*')
                     .eq('student_id', dataSiswa.id)
                     .order('created_at', { ascending: false })
-                    .limit(50); // PERBAIKAN: Batasi jumlah riwayat yang ditampilkan
+                    .limit(50);
 
                 if (logsError) throw logsError;
 
@@ -543,7 +543,6 @@ window.viewUserDetail = async function(rankNumber) {
     } catch (error) {
         console.error("Error di viewUserDetail:", error);
     } finally {
-        // PERBAIKAN: Reset flag setelah selesai
         window._isLoadingUserDetail = false;
     }
 }
@@ -557,17 +556,15 @@ window.setRole = function(role) {
     const btnAdmin = document.getElementById('btnRoleAdmin');
 
     if (role === 'admin') {
-        // Tentukan password sesuka lu di sini bro
         const passwordBenar = "min3bondowoso"; 
         const inputPassword = prompt("Masukkan Password Khusus Admin:");
 
-        if (inputPassword === null) return; // Klik batal
+        if (inputPassword === null) return;
         if (inputPassword !== passwordBenar) {
             alert("❌ Password Salah! Akses Admin Ditolak.");
             return;
         }
 
-        // Jika password benar, set role ke admin
         currentRole = 'admin';
         window.currentRole = 'admin';
         console.log("Akses Admin Diterima.");
@@ -576,7 +573,6 @@ window.setRole = function(role) {
         if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 bg-brand-600 text-white shadow-md";
         if (btnUser) btnUser.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
     } else {
-        // Mode Siswa / Balik ke User biasa
         currentRole = 'user';
         window.currentRole = 'user';
         
@@ -585,14 +581,13 @@ window.setRole = function(role) {
         if (btnAdmin) btnAdmin.className = "px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all duration-200 text-purple-300 hover:text-white";
     }
 
-    // Jalankan fungsi update data agar daftar siswa admin langsung muncul
     if (typeof ambilDanTampilkanRanking === 'function') {
         ambilDanTampilkanRanking();
     }
 };
 
 // =======================================================
-// 6. FUNGSI MODAL & PROSES SIMPAN SISWA (SUPPORT AVATAR)
+// 6. FUNGSI MODAL & PROSES SIMPAN SISWA
 // =======================================================
 window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); }
 window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); }
@@ -605,7 +600,6 @@ window.handleAddStudent = async function(event) {
     const linkAvatar = document.getElementById('newStudentAvatar').value.trim();
     const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
 
-    // PERBAIKAN: Gunakan avatar_url
     const studentPayload = { name: namaSiswa, stars: bintangAwal };
     if (linkAvatar !== "") studentPayload.avatar_url = linkAvatar;
 
@@ -623,7 +617,7 @@ window.handleAddStudent = async function(event) {
 }
 
 // =======================================================
-// 7. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (PERBAIKAN)
+// 7. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (LINK URL)
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
     const adminPanel = document.getElementById('adminPanel');
@@ -642,14 +636,12 @@ window.ubahFotoSiswaAdmin = async function() {
     const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar_url || "");
     if (urlBaru === null) return; 
 
-    // Validasi URL (opsional)
     if (urlBaru.trim() === "") {
         alert("URL tidak boleh kosong!");
         return;
     }
 
     try {
-        // PERBAIKAN: Gunakan 'avatar_url' bukan 'avatar'
         const { error } = await supabase
             .from('students')
             .update({ avatar_url: urlBaru.trim() })
@@ -659,23 +651,18 @@ window.ubahFotoSiswaAdmin = async function() {
 
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        // PERBAIKAN: Tutup modal
         const modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
-        // Refresh data dari database
         await ambilDanTampilkanRanking();
-        
-        // PERBAIKAN: HAPUS panggilan viewUserDetail() otomatis
-        // Biarkan user membuka modal manual jika ingin melihat hasilnya
 
     } catch (err) {
         alert("Gagal memperbarui foto: " + err.message);
     }
-}
+};
 
 // =======================================================
-// 8. FUNGSI UPLOAD FOTO DARI FILE (LANGSUNG KE SUPABASE)
+// 8. FUNGSI UPLOAD FOTO DARI FILE (DENGAN AUTO-DELETE)
 // =======================================================
 window.handleModalPhotoUpload = async function(event) {
     const file = event.target.files[0];
@@ -704,12 +691,34 @@ window.handleModalPhotoUpload = async function(event) {
     if (!dataSiswa) return alert("❌ Gagal mendeteksi data siswa!");
 
     try {
-        // Upload file ke Supabase Storage
+        // ==============================================
+        // 1. HAPUS FOTO LAMA JIKA ADA (AUTO-DELETE)
+        // ==============================================
+        if (dataSiswa.avatar_url) {
+            const oldFilePath = dataSiswa.avatar_url.split('/').pop();
+            if (oldFilePath) {
+                const oldPath = `avatars/${oldFilePath}`;
+                console.log('Menghapus foto lama:', oldPath);
+                
+                const { error: deleteError } = await supabase.storage
+                    .from('student-avatars')
+                    .remove([oldPath]);
+                
+                if (deleteError) {
+                    console.warn('Gagal hapus foto lama:', deleteError.message);
+                } else {
+                    console.log('✅ Foto lama berhasil dihapus');
+                }
+            }
+        }
+
+        // ==============================================
+        // 2. UPLOAD FOTO BARU
+        // ==============================================
         const fileExt = file.name.split('.').pop();
         const fileName = `avatar_${dataSiswa.id}_${Date.now()}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
 
-        // Pastikan bucket 'student-avatars' sudah dibuat di Supabase
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from('student-avatars')
             .upload(filePath, file, {
@@ -718,7 +727,6 @@ window.handleModalPhotoUpload = async function(event) {
             });
 
         if (uploadError) {
-            // Jika bucket belum dibuat, beri tahu user
             if (uploadError.message.includes('bucket not found')) {
                 throw new Error('Bucket storage belum dibuat. Silakan gunakan metode link URL.');
             }
@@ -732,7 +740,9 @@ window.handleModalPhotoUpload = async function(event) {
 
         const publicUrl = urlData.publicUrl;
 
-        // Update database dengan URL baru
+        // ==============================================
+        // 3. UPDATE DATABASE DENGAN URL BARU
+        // ==============================================
         const { error: updateError } = await supabase
             .from('students')
             .update({ avatar_url: publicUrl })
@@ -740,7 +750,7 @@ window.handleModalPhotoUpload = async function(event) {
 
         if (updateError) throw updateError;
 
-        alert("✅ Foto profil berhasil diupload!");
+        alert("✅ Foto profil berhasil diupload dan foto lama dihapus!");
         
         // Refresh data
         await ambilDanTampilkanRanking();
@@ -748,9 +758,6 @@ window.handleModalPhotoUpload = async function(event) {
         // Tutup modal
         const modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
-        
-        // PERBAIKAN: HAPUS panggilan viewUserDetail() otomatis
-        // Biarkan user membuka modal manual
 
     } catch (err) {
         console.error('Upload error:', err);
@@ -762,158 +769,7 @@ window.handleModalPhotoUpload = async function(event) {
 };
 
 // =======================================================
-// 9. INITIALIZATION & RUN ON LOAD (OTOMATIS DI JALANKAN)
-// =======================================================
-window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
-
-// Jalankan fungsi saat web dibuka biar ga mandek di "Loading..."
-ambilDanTampilkanRanking();
-
-// =======================================================
-// 10. FUNGSI PENYELAMAT UNTUK MENUTUP MODAL (ANTI-REFRESH)
-// =======================================================
-
-// 1. Fungsi menutup modal Detail Profil Siswa (tombol X yang macet tadi)
-window.closeUserDetailModal = function() {
-    const modal = document.getElementById('UserDetailModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-};
-
-// 2. Fungsi menutup modal Form Input Bintang Admin
-window.closeTransactionModal = function() {
-    const modal = document.getElementById('TransactionModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-};
-
-// 3. Fungsi menutup modal Tambah Siswa Baru (jaga-jaga kalau macet juga)
-window.closeAddStudentModal = function() {
-    const modal = document.getElementById('addStudentModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-};
-
-// =======================================================
-// 11. FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX)
-// =======================================================
-window.handleExcelImport = function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            
-            // Ambil sheet/lembar pertama dari file Excel
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            
-            // Ubah data tabel Excel menjadi Array Object JSON
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet);
-            
-            if (jsonRows.length === 0) {
-                alert("❌ File Excel kosong atau format tidak sesuai!");
-                return;
-            }
-
-            // Validasi format: Kolom paling atas wajib ada header bernama 'nama'
-            const rowSampel = jsonRows[0];
-            if (!rowSampel.hasOwnProperty('nama')) {
-                alert("❌ Format Excel salah! Pastikan kolom header paling atas ada tulisan 'nama' (huruf kecil semua).");
-                return;
-            }
-
-            let jumlahSukses = 0;
-
-            // Looping masukkan data siswa ke sistem database/array web lu
-            jsonRows.forEach(row => {
-                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
-                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
-                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
-
-                if (namaSiswa !== '') {
-                    // PERBAIKAN: Gunakan avatar_url
-                    if (typeof window.tambahSiswaKeDatabase === 'function') {
-                        window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
-                    } else if (typeof window.handleAddStudentSubmit === 'function') {
-                        window.handleAddStudentSubmit(namaSiswa, avatarSiswa, bintangAwal);
-                    } else if (window.globalStudents) {
-                        window.globalStudents.push({
-                            id: Date.now() + Math.random(),
-                            name: namaSiswa,
-                            avatar_url: avatarSiswa,
-                            stars: bintangAwal,
-                            logs: []
-                        });
-                    }
-                    jumlahSukses++;
-                }
-            });
-
-            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
-            
-            // Reset input file agar bisa dipakai upload lagi
-            event.target.value = '';
-
-            // Jalankan fungsi refresh leaderboard biar nama siswa baru langsung muncul otomatis
-            if (typeof window.ambilDanTampilkanRanking === 'function') {
-                window.ambilDanTampilkanRanking();
-            } else if (typeof window.renderLeaderboard === 'function') {
-                window.renderLeaderboard();
-            }
-
-        } catch (error) {
-            console.error(error);
-            alert("❌ Gagal membaca file Excel. Pastikan file tidak rusak!");
-        }
-    };
-    
-    reader.readAsArrayBuffer(file);
-};
-
-// =======================================================
-// 12. FITUR DOWNLOAD TEMPLATE EXCEL SECARA OTOMATIS (INSTAN)
-// =======================================================
-window.downloadExcelTemplate = function() {
-    try {
-        console.log("Memulai proses pembuatan template Excel...");
-        
-        // Memastikan library XLSX sudah dimuat di HTML
-        if (typeof XLSX === 'undefined') {
-            alert("❌ Library Excel belum siap! Pastikan CDN SheetJS sudah terpasang di index.html");
-            return;
-        }
-
-        // Tentukan susunan kolom Header yang WAJIB (nama, avatar_url, bintang_awal)
-        const templateData = [
-            {
-                "nama": "Contoh Nama Siswa",
-                "avatar_url": "https://picsum.photos/seed/siswa/150/150",
-                "bintang_awal": 5
-            }
-        ];
-
-        // Buat objek worksheet dan workbook baru
-        const worksheet = XLSX.utils.json_to_sheet(templateData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
-
-        // Unduh file secara instan
-        XLSX.writeFile(workbook, "Template_Import_Siswa_Megabond.xlsx");
-        console.log("✅ Template Excel sukses diunduh.");
-    } catch (error) {
-        console.error("Eror download template:", error);
-        alert("❌ Gagal membuat template Excel! Periksa log console.");
-    }
-};
-// =======================================================
-// FUNGSI CLEANUP UNUSED AVATARS (HAPUS FOTO TIDAK TERPAKAI)
+// 9. FUNGSI CLEANUP UNUSED AVATARS (HAPUS FOTO TIDAK TERPAKAI)
 // =======================================================
 window.cleanupUnusedAvatars = async function() {
     // Konfirmasi sebelum menjalankan
@@ -954,7 +810,6 @@ window.cleanupUnusedAvatars = async function() {
         const usedFileNames = new Set();
         students.forEach(s => {
             if (s.avatar_url) {
-                // Ambil nama file dari URL
                 const fileName = s.avatar_url.split('/').pop();
                 if (fileName) {
                     usedFileNames.add(fileName);
@@ -1024,4 +879,176 @@ window.cleanupUnusedAvatars = async function() {
         alert("❌ Gagal membersihkan storage: " + err.message);
     }
 };
-console.log("✅ app.js berhasil dimuat dengan perbaikan avatar_url!");
+
+// =======================================================
+// 10. FUNGSI CEK STORAGE USAGE
+// =======================================================
+window.checkStorageUsage = async function() {
+    try {
+        const { data: files, error } = await supabase.storage
+            .from('student-avatars')
+            .list('avatars/');
+
+        if (error) throw error;
+
+        let totalSize = 0;
+        if (files && files.length > 0) {
+            files.forEach(file => {
+                totalSize += file.metadata?.size || 0;
+            });
+        }
+
+        const sizeInMB = (totalSize / 1024 / 1024).toFixed(2);
+        const fileCount = files?.length || 0;
+
+        alert(
+            `📊 STATUS STORAGE\n\n` +
+            `📁 Total File: ${fileCount} foto\n` +
+            `💾 Total Ukuran: ${sizeInMB} MB\n` +
+            `📌 Rata-rata: ${fileCount > 0 ? (totalSize / fileCount / 1024).toFixed(0) : 0} KB/foto\n\n` +
+            `🆓 Free Tier Supabase: 1 GB\n` +
+            `📊 Terpakai: ${((totalSize / 1024 / 1024 / 1024) * 100).toFixed(2)}% dari 1 GB`
+        );
+
+    } catch (err) {
+        console.error('Error cek storage:', err);
+        alert("❌ Gagal cek storage: " + err.message);
+    }
+};
+
+// =======================================================
+// 11. INITIALIZATION & RUN ON LOAD
+// =======================================================
+window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
+
+// Jalankan fungsi saat web dibuka
+ambilDanTampilkanRanking();
+
+// =======================================================
+// 12. FUNGSI PENYELAMAT UNTUK MENUTUP MODAL
+// =======================================================
+window.closeUserDetailModal = function() {
+    const modal = document.getElementById('UserDetailModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.closeTransactionModal = function() {
+    const modal = document.getElementById('TransactionModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+window.closeAddStudentModal = function() {
+    const modal = document.getElementById('addStudentModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+};
+
+// =======================================================
+// 13. FITUR IMPORT SISWA DARI TEMPLATE EXCEL
+// =======================================================
+window.handleExcelImport = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonRows = XLSX.utils.sheet_to_json(worksheet);
+            
+            if (jsonRows.length === 0) {
+                alert("❌ File Excel kosong atau format tidak sesuai!");
+                return;
+            }
+
+            const rowSampel = jsonRows[0];
+            if (!rowSampel.hasOwnProperty('nama')) {
+                alert("❌ Format Excel salah! Pastikan kolom header paling atas ada tulisan 'nama' (huruf kecil semua).");
+                return;
+            }
+
+            let jumlahSukses = 0;
+
+            jsonRows.forEach(row => {
+                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
+                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
+                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
+
+                if (namaSiswa !== '') {
+                    if (typeof window.tambahSiswaKeDatabase === 'function') {
+                        window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
+                    } else if (typeof window.handleAddStudentSubmit === 'function') {
+                        window.handleAddStudentSubmit(namaSiswa, avatarSiswa, bintangAwal);
+                    } else if (window.globalStudents) {
+                        window.globalStudents.push({
+                            id: Date.now() + Math.random(),
+                            name: namaSiswa,
+                            avatar_url: avatarSiswa,
+                            stars: bintangAwal,
+                            logs: []
+                        });
+                    }
+                    jumlahSukses++;
+                }
+            });
+
+            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
+            event.target.value = '';
+
+            if (typeof window.ambilDanTampilkanRanking === 'function') {
+                window.ambilDanTampilkanRanking();
+            } else if (typeof window.renderLeaderboard === 'function') {
+                window.renderLeaderboard();
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert("❌ Gagal membaca file Excel. Pastikan file tidak rusak!");
+        }
+    };
+    
+    reader.readAsArrayBuffer(file);
+};
+
+// =======================================================
+// 14. FITUR DOWNLOAD TEMPLATE EXCEL
+// =======================================================
+window.downloadExcelTemplate = function() {
+    try {
+        console.log("Memulai proses pembuatan template Excel...");
+        
+        if (typeof XLSX === 'undefined') {
+            alert("❌ Library Excel belum siap! Pastikan CDN SheetJS sudah terpasang di index.html");
+            return;
+        }
+
+        const templateData = [
+            {
+                "nama": "Contoh Nama Siswa",
+                "avatar_url": "https://picsum.photos/seed/siswa/150/150",
+                "bintang_awal": 5
+            }
+        ];
+
+        const worksheet = XLSX.utils.json_to_sheet(templateData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
+
+        XLSX.writeFile(workbook, "Template_Import_Siswa_Megabond.xlsx");
+        console.log("✅ Template Excel sukses diunduh.");
+    } catch (error) {
+        console.error("Eror download template:", error);
+        alert("❌ Gagal membuat template Excel! Periksa log console.");
+    }
+};
+
+console.log("✅ app.js berhasil dimuat dengan semua fitur!");
