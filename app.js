@@ -123,7 +123,7 @@ async function ambilDanTampilkanRanking() {
                     <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[0].stars}</span>
                 `;
             }
-            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            // PERBAIKAN: Gunakan avatar_url
             if (p1Avatar && siswa[0].avatar_url) {
                 p1Avatar.src = siswa[0].avatar_url;
             }
@@ -156,7 +156,7 @@ async function ambilDanTampilkanRanking() {
                     <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[1].stars}</span>
                 `;
             }
-            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            // PERBAIKAN: Gunakan avatar_url
             if (p2Avatar && siswa[1].avatar_url) {
                 p2Avatar.src = siswa[1].avatar_url;
             }
@@ -189,7 +189,7 @@ async function ambilDanTampilkanRanking() {
                     <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[2].stars}</span>
                 `;
             }
-            // Perbaikan: Ubah .avatar menjadi .avatar_url
+            // PERBAIKAN: Gunakan avatar_url
             if (p3Avatar && siswa[2].avatar_url) {
                 p3Avatar.src = siswa[2].avatar_url;
             }
@@ -205,50 +205,61 @@ async function ambilDanTampilkanRanking() {
             if (document.getElementById('p3-stars')) document.getElementById('p3-stars').innerText = '0';
         }
 
-       // --- UPDATE RUNNER UP RANK 4 & 5 ---
-const p4Name = document.getElementById('p4-name');
-const p4Stars = document.getElementById('p4-stars');
-if (siswa && siswa.length >= 4) {
-    const info4 = hitungTierDanBintang(siswa[3].stars);
-    if (p4Name) p4Name.innerText = siswa[3].name;
-    if (p4Stars) {
-        p4Stars.innerHTML = `
-            <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info4.tierName}</span>
-            <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info4)}</div>
-            <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[3].stars}</span>
-        `;
-    }
-    
-    // Perbaikan Target: Ambil langsung berdasarkan ID Card-nya dan kirimkan angka rank 4
-    const card4 = document.getElementById('card-rank-4');
-    if (card4) card4.setAttribute('onclick', 'window.viewUserDetail(4)');
-} else {
-    if (p4Name) p4Name.innerText = '-';
-    if (p4Stars) p4Stars.innerText = '0';
-}
+        // --- UPDATE RUNNER UP RANK 4 & 5 ---
+        const p4Name = document.getElementById('p4-name');
+        const p4Stars = document.getElementById('p4-stars');
+        if (siswa && siswa.length >= 4) {
+            const info4 = hitungTierDanBintang(siswa[3].stars);
+            if (p4Name) p4Name.innerText = siswa[3].name;
+            if (p4Stars) {
+                p4Stars.innerHTML = `
+                    <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info4.tierName}</span>
+                    <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info4)}</div>
+                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[3].stars}</span>
+                `;
+            }
+            
+            // Perbaikan Target: Ambil langsung berdasarkan ID Card-nya dan kirimkan angka rank 4
+            const card4 = document.getElementById('card-rank-4');
+            if (card4) card4.setAttribute('onclick', 'window.viewUserDetail(4)');
+            
+            // PERBAIKAN: Tambahkan avatar untuk rank 4
+            const p4Avatar = document.getElementById('p4-avatar');
+            if (p4Avatar && siswa[3].avatar_url) {
+                p4Avatar.src = siswa[3].avatar_url;
+            }
+        } else {
+            if (p4Name) p4Name.innerText = '-';
+            if (p4Stars) p4Stars.innerText = '0';
+        }
 
-const p5Name = document.getElementById('p5-name');
-const p5Stars = document.getElementById('p5-stars');
-if (siswa && siswa.length >= 5) {
-    const info5 = hitungTierDanBintang(siswa[4].stars);
-    if (p5Name) p5Name.innerText = siswa[4].name;
-    if (p5Stars) {
-        p5Stars.innerHTML = `
-            <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info5.tierName}</span>
-            <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info5)}</div>
-            <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[4].stars}</span>
-        `;
-    }
-    
-// --- PERBAIKAN RANK 5 (BERSIH & ANTI-CRASH) ---
-    const card5 = document.getElementById('card-rank-5');
-    if (card5) {
-        card5.setAttribute('onclick', 'window.viewUserDetail(5)');
-    }
-} else {
-    if (p5Name) p5Name.innerText = '-';
-    if (p5Stars) p5Stars.innerText = '0';
-}
+        const p5Name = document.getElementById('p5-name');
+        const p5Stars = document.getElementById('p5-stars');
+        if (siswa && siswa.length >= 5) {
+            const info5 = hitungTierDanBintang(siswa[4].stars);
+            if (p5Name) p5Name.innerText = siswa[4].name;
+            if (p5Stars) {
+                p5Stars.innerHTML = `
+                    <span class="text-[9px] font-medium text-purple-300 block mb-0.5">${info5.tierName}</span>
+                    <div class="flex items-center gap-0.5 justify-center">${buatHtmlBintangTier(info5)}</div>
+                    <span class="text-[11px] text-yellow-400 font-bold block mt-0.5"><i class="fa-solid fa-star text-[9px]"></i> ${siswa[4].stars}</span>
+                `;
+            }
+            
+            const card5 = document.getElementById('card-rank-5');
+            if (card5) {
+                card5.setAttribute('onclick', 'window.viewUserDetail(5)');
+            }
+            
+            // PERBAIKAN: Tambahkan avatar untuk rank 5
+            const p5Avatar = document.getElementById('p5-avatar');
+            if (p5Avatar && siswa[4].avatar_url) {
+                p5Avatar.src = siswa[4].avatar_url;
+            }
+        } else {
+            if (p5Name) p5Name.innerText = '-';
+            if (p5Stars) p5Stars.innerText = '0';
+        }
 
         // --- KLASEMEN UMUM ---
         const leaderboardList = document.getElementById('leaderboardList');
@@ -260,10 +271,11 @@ if (siswa && siswa.length >= 5) {
                 row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl cursor-pointer hover:border-brand-500/40 transition-all';
                 row.onclick = () => window.viewUserDetail(index + 1);
                 
+                // PERBAIKAN: Gunakan avatar_url
                 row.innerHTML = `
                     <div class="flex items-center gap-3">
                         <span class="font-bold text-xs text-slate-500 w-5">#${index + 1}</span>
-                        <img src="${itemSiswa.avatar || 'https://picsum.photos/seed/' + index + '/100/100'}" class="w-8 h-8 rounded-full object-cover">
+                        <img src="${itemSiswa.avatar_url || 'https://picsum.photos/seed/' + index + '/100/100'}" class="w-8 h-8 rounded-full object-cover">
                         <div>
                             <span class="text-xs font-semibold text-slate-200 block">${itemSiswa.name}</span>
                             <span class="text-[9px] text-purple-400 font-medium block">${info.tierName}</span>
@@ -442,7 +454,7 @@ window.viewUserDetail = async function(rankNumber) {
         document.getElementById('modalTierName').innerText = infoTier.tierName;
     }
     
-    // 3. Perbaikan Link Avatar: Menggunakan .avatar_url agar sinkron dengan Supabase
+    // 3. PERBAIKAN: Gunakan avatar_url
     const modalAvatar = document.getElementById('modalAvatar');
     if (modalAvatar) {
         modalAvatar.src = dataSiswa.avatar_url || 'https://picsum.photos/seed/' + encodeURIComponent(dataSiswa.name) + '/150/150';
@@ -463,7 +475,7 @@ window.viewUserDetail = async function(rankNumber) {
         }
     }
 
-    // 5. Tampilkan Modal (Pastikan ID huruf u-nya kecil atau sesuaikan dengan HTML kamu)
+    // 5. Tampilkan Modal
     const detailModal = document.getElementById('userDetailModal') || document.getElementById('UserDetailModal');
     if (detailModal) {
         detailModal.classList.remove('hidden');
@@ -575,8 +587,9 @@ window.handleAddStudent = async function(event) {
     const linkAvatar = document.getElementById('newStudentAvatar').value.trim();
     const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
 
+    // PERBAIKAN: Gunakan avatar_url
     const studentPayload = { name: namaSiswa, stars: bintangAwal };
-    if (linkAvatar !== "") studentPayload.avatar = linkAvatar;
+    if (linkAvatar !== "") studentPayload.avatar_url = linkAvatar;
 
     try {
         const { error } = await supabase.from('students').insert([studentPayload]);
@@ -592,7 +605,7 @@ window.handleAddStudent = async function(event) {
 }
 
 // =======================================================
-// 7. FITUR EDIT FOTO SISWA (FIXED BUG: FOTO LANGSUNG BERUBAH)
+// 7. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG (PERBAIKAN)
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
     const adminPanel = document.getElementById('adminPanel');
@@ -605,50 +618,144 @@ window.ubahFotoSiswaAdmin = async function() {
     }
 
     const namaSiswaAktif = document.getElementById('modalName').innerText;
-    // Cari data siswa di local state berdasarkan nama
-    let siswaIndex = localStudentsData.findIndex(s => s.name === namaSiswaAktif);
-    if (siswaIndex === -1) return alert("Gagal mendeteksi data siswa!");
-    
-    let dataSiswa = localStudentsData[siswaIndex];
+    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
+    if (!dataSiswa) return alert("Gagal mendeteksi data siswa!");
 
-    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar_url || dataSiswa.avatar || "");
-    if (urlBaru === null) return; // Jika klik cancel
+    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar_url || "");
+    if (urlBaru === null) return; 
 
-    const urlBersih = urlBaru.trim();
+    // Validasi URL (opsional)
+    if (urlBaru.trim() === "") {
+        alert("URL tidak boleh kosong!");
+        return;
+    }
 
     try {
-        // FIX: Update kedua kolom sekaligus (avatar & avatar_url) agar sinkron dengan database baru/lama
+        // PERBAIKAN: Gunakan 'avatar_url' bukan 'avatar'
         const { error } = await supabase
             .from('students')
-            .update({ 
-                avatar: urlBersih,
-                avatar_url: urlBersih
-            })
+            .update({ avatar_url: urlBaru.trim() })
             .eq('id', dataSiswa.id);
 
         if (error) throw error;
 
-        // FIX: Update data di local memory agar UI langsung berubah saat itu juga tanpa refresh
-        localStudentsData[siswaIndex].avatar = urlBersih;
-        localStudentsData[siswaIndex].avatar_url = urlBersih;
-        window.localStudentsData[siswaIndex].avatar = urlBersih;
-        window.localStudentsData[siswaIndex].avatar_url = urlBersih;
-
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        // Tutup modal detail biar kelihatan perubahannya di leaderboard
-        const modalDetail = document.getElementById('UserDetailModal') || document.getElementById('userDetailModal');
+        // PERBAIKAN: Tutup modal dan refresh data
+        const modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
-        // Panggil ulang fungsi render agar layar langsung ter-update
-        ambilDanTampilkanRanking();
+        // Refresh data dari database
+        await ambilDanTampilkanRanking();
+        
+        // Buka kembali modal dengan data baru (opsional)
+        const updatedIndex = localStudentsData.findIndex(s => s.id === dataSiswa.id);
+        if (updatedIndex !== -1) {
+            // Tunggu sebentar agar data selesai di-render, lalu buka modal lagi
+            setTimeout(() => {
+                window.viewUserDetail(updatedIndex + 1);
+            }, 300);
+        }
+
     } catch (err) {
         alert("Gagal memperbarui foto: " + err.message);
     }
 }
 
 // =======================================================
-// 8. INITIALIZATION & RUN ON LOAD (OTOMATIS DI JALANKAN)
+// 8. FUNGSI UPLOAD FOTO DARI FILE (LANGSUNG KE SUPABASE)
+// =======================================================
+window.handleModalPhotoUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validasi file
+    if (!file.type.startsWith('image/')) {
+        alert('❌ File harus berupa gambar!');
+        return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+        alert('❌ Ukuran file maksimal 2MB!');
+        return;
+    }
+
+    // Cek apakah user adalah admin
+    const isAdmin = window.currentRole === 'admin';
+    if (!isAdmin) {
+        alert("❌ Hanya admin yang bisa mengganti foto!");
+        return;
+    }
+
+    const namaSiswaAktif = document.getElementById('modalName').innerText;
+    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
+    if (!dataSiswa) return alert("❌ Gagal mendeteksi data siswa!");
+
+    try {
+        // Upload file ke Supabase Storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `avatar_${dataSiswa.id}_${Date.now()}.${fileExt}`;
+        const filePath = `avatars/${fileName}`;
+
+        // Pastikan bucket 'student-avatars' sudah dibuat di Supabase
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('student-avatars')
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (uploadError) {
+            // Jika bucket belum dibuat, beri tahu user
+            if (uploadError.message.includes('bucket not found')) {
+                throw new Error('Bucket storage belum dibuat. Silakan gunakan metode link URL.');
+            }
+            throw uploadError;
+        }
+
+        // Dapatkan URL public
+        const { data: urlData } = supabase.storage
+            .from('student-avatars')
+            .getPublicUrl(filePath);
+
+        const publicUrl = urlData.publicUrl;
+
+        // Update database dengan URL baru
+        const { error: updateError } = await supabase
+            .from('students')
+            .update({ avatar_url: publicUrl })
+            .eq('id', dataSiswa.id);
+
+        if (updateError) throw updateError;
+
+        alert("✅ Foto profil berhasil diupload!");
+        
+        // Refresh data
+        await ambilDanTampilkanRanking();
+        
+        // Tutup modal
+        const modalDetail = document.getElementById('UserDetailModal');
+        if (modalDetail) modalDetail.classList.add('hidden');
+        
+        // Buka kembali modal dengan data baru
+        const updatedIndex = localStudentsData.findIndex(s => s.id === dataSiswa.id);
+        if (updatedIndex !== -1) {
+            setTimeout(() => {
+                window.viewUserDetail(updatedIndex + 1);
+            }, 300);
+        }
+
+    } catch (err) {
+        console.error('Upload error:', err);
+        alert("❌ Gagal upload foto: " + err.message);
+    }
+    
+    // Reset input
+    event.target.value = '';
+};
+
+// =======================================================
+// 9. INITIALIZATION & RUN ON LOAD (OTOMATIS DI JALANKAN)
 // =======================================================
 window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
 
@@ -656,7 +763,7 @@ window.ambilDanTampilkanRanking = ambilDanTampilkanRanking;
 ambilDanTampilkanRanking();
 
 // =======================================================
-// 9. FUNGSI PENYELAMAT UNTUK MENUTUP MODAL (ANTI-REFRESH)
+// 10. FUNGSI PENYELAMAT UNTUK MENUTUP MODAL (ANTI-REFRESH)
 // =======================================================
 
 // 1. Fungsi menutup modal Detail Profil Siswa (tombol X yang macet tadi)
@@ -682,8 +789,9 @@ window.closeAddStudentModal = function() {
         modal.classList.add('hidden');
     }
 };
+
 // =======================================================
-// FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX)
+// 11. FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX)
 // =======================================================
 window.handleExcelImport = function(event) {
     const file = event.target.files[0];
@@ -723,14 +831,12 @@ window.handleExcelImport = function(event) {
                 const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
 
                 if (namaSiswa !== '') {
-                    // Cek jika ada fungsi insert database bawaan template lu (misal dari Supabase/Firebase/API)
+                    // PERBAIKAN: Gunakan avatar_url
                     if (typeof window.tambahSiswaKeDatabase === 'function') {
                         window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
                     } else if (typeof window.handleAddStudentSubmit === 'function') {
-                        // Jalur fungsi submit bawaan template lainnya jika ada
                         window.handleAddStudentSubmit(namaSiswa, avatarSiswa, bintangAwal);
                     } else if (window.globalStudents) {
-                        // Jika template lu cuma pakai penyimpanan array lokal (state sementara)
                         window.globalStudents.push({
                             id: Date.now() + Math.random(),
                             name: namaSiswa,
@@ -763,8 +869,9 @@ window.handleExcelImport = function(event) {
     
     reader.readAsArrayBuffer(file);
 };
+
 // =======================================================
-// FITUR DOWNLOAD TEMPLATE EXCEL SECARA OTOMATIS (INSTAN)
+// 12. FITUR DOWNLOAD TEMPLATE EXCEL SECARA OTOMATIS (INSTAN)
 // =======================================================
 window.downloadExcelTemplate = function() {
     try {
@@ -800,72 +907,9 @@ window.downloadExcelTemplate = function() {
 };
 
 // =======================================================
-// FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX)
+// 13. FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX) - DUPLIKAT?
 // =======================================================
-window.handleExcelImport = function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+// Perbaikan: Hapus duplikat fungsi handleExcelImport yang kedua
+// Fungsi ini sudah didefinisikan di atas, jadi kita hapus yang duplikat
 
-    if (typeof XLSX === 'undefined') {
-        alert("❌ Library Excel belum siap!");
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet);
-            
-            if (jsonRows.length === 0) {
-                alert("❌ File Excel kosong!");
-                return;
-            }
-
-            const rowSampel = jsonRows[0];
-            if (!rowSampel.hasOwnProperty('nama')) {
-                alert("❌ Format Excel salah! Gunakan file dari tombol 'Download Template'.");
-                return;
-            }
-
-            let jumlahSukses = 0;
-            jsonRows.forEach(row => {
-                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
-                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
-                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
-
-                if (namaSiswa !== '') {
-                    if (typeof window.tambahSiswaKeDatabase === 'function') {
-                        window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
-                    } else if (window.globalStudents) {
-                        window.globalStudents.push({
-                            id: Date.now() + Math.random(),
-                            name: namaSiswa,
-                            avatar_url: avatarSiswa,
-                            stars: bintangAwal,
-                            logs: []
-                        });
-                    }
-                    jumlahSukses++;
-                }
-            });
-
-            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
-            event.target.value = '';
-
-            if (typeof window.ambilDanTampilkanRanking === 'function') {
-                window.ambilDanTampilkanRanking();
-            } else if (typeof window.renderLeaderboard === 'function') {
-                window.renderLeaderboard();
-            }
-
-        } catch (error) {
-            console.error("Eror saat import excel:", error);
-            alert("❌ Gagal membaca file Excel!");
-        }
-    };
-    reader.readAsArrayBuffer(file);
-};
+console.log("✅ app.js berhasil dimuat dengan perbaikan avatar_url!");
