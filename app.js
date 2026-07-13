@@ -912,5 +912,116 @@ window.downloadExcelTemplate = function() {
         alert("❌ Gagal membuat template Excel! Periksa log console.");
     }
 };
+// =======================================================
+// FUNGSI CLEANUP UNUSED AVATARS (HAPUS FOTO TIDAK TERPAKAI)
+// =======================================================
+window.cleanupUnusedAvatars = async function() {
+    // Konfirmasi sebelum menjalankan
+    const konfirmasi = confirm(
+        "⚠️ PERINGATAN!\n\n" +
+        "Fungsi ini akan menghapus semua file foto di storage\n" +
+        "yang TIDAK TERPAKAI oleh siswa di database.\n\n" +
+        "Apakah Anda yakin ingin melanjutkan?"
+    );
+    
+    if (!konfirmasi) return;
 
+    try {
+        // 1. Ambil semua file di bucket 'student-avatars'
+        console.log("📁 Mengambil daftar file dari storage...");
+        const { data: files, error: listError } = await supabase.storage
+            .from('student-avatars')
+            .list('avatars/');
+
+        if (listError) throw listError;
+
+        if (!files || files.length === 0) {
+            alert("📁 Storage kosong! Tidak ada file untuk dibersihkan.");
+            return;
+        }
+
+        console.log(`📁 Ditemukan ${files.length} file di storage`);
+
+        // 2. Ambil semua avatar_url dari database (yang sedang terpakai)
+        console.log("📊 Mengambil data siswa dari database...");
+        const { data: students, error: studentError } = await supabase
+            .from('students')
+            .select('avatar_url');
+
+        if (studentError) throw studentError;
+
+        // 3. Buat daftar nama file yang TERPAKAI
+        const usedFileNames = new Set();
+        students.forEach(s => {
+            if (s.avatar_url) {
+                // Ambil nama file dari URL
+                const fileName = s.avatar_url.split('/').pop();
+                if (fileName) {
+                    usedFileNames.add(fileName);
+                }
+            }
+        });
+
+        console.log(`📊 ${usedFileNames.size} file terpakai oleh siswa`);
+
+        // 4. Cari file yang TIDAK terpakai
+        const unusedFiles = [];
+        for (const file of files) {
+            if (!usedFileNames.has(file.name)) {
+                unusedFiles.push(file);
+            }
+        }
+
+        if (unusedFiles.length === 0) {
+            alert("✅ Semua file storage terpakai! Tidak ada yang perlu dibersihkan.");
+            return;
+        }
+
+        console.log(`🗑️ Menemukan ${unusedFiles.length} file tidak terpakai`);
+
+        // 5. Konfirmasi lagi sebelum hapus
+        const konfirmasiHapus = confirm(
+            `📊 Ringkasan:\n\n` +
+            `📁 Total file di storage: ${files.length}\n` +
+            `✅ File terpakai: ${usedFileNames.size}\n` +
+            `🗑️ File tidak terpakai: ${unusedFiles.length}\n\n` +
+            `Apakah Anda yakin ingin menghapus ${unusedFiles.length} file tidak terpakai?`
+        );
+
+        if (!konfirmasiHapus) return;
+
+        // 6. Hapus file yang tidak terpakai
+        let deletedCount = 0;
+        let failedCount = 0;
+
+        for (const file of unusedFiles) {
+            const filePath = `avatars/${file.name}`;
+            const { error: deleteError } = await supabase.storage
+                .from('student-avatars')
+                .remove([filePath]);
+
+            if (deleteError) {
+                console.error(`❌ Gagal hapus ${file.name}:`, deleteError.message);
+                failedCount++;
+            } else {
+                deletedCount++;
+                console.log(`✅ Berhasil hapus: ${file.name}`);
+            }
+        }
+
+        // 7. Tampilkan hasil
+        alert(
+            `✅ CLEANUP SELESAI!\n\n` +
+            `🗑️ Berhasil dihapus: ${deletedCount} file\n` +
+            `❌ Gagal dihapus: ${failedCount} file\n` +
+            `📁 Sisa file di storage: ${files.length - deletedCount} file`
+        );
+
+        console.log(`✅ Cleanup selesai! Terhapus: ${deletedCount}, Gagal: ${failedCount}`);
+
+    } catch (err) {
+        console.error('❌ Error cleanup:', err);
+        alert("❌ Gagal membersihkan storage: " + err.message);
+    }
+};
 console.log("✅ app.js berhasil dimuat dengan perbaikan avatar_url!");
