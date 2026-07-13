@@ -592,7 +592,7 @@ window.handleAddStudent = async function(event) {
 }
 
 // =======================================================
-// 7. FITUR TAMBAHAN: EDIT FOTO SISWA LANGSUNG
+// 7. FITUR EDIT FOTO SISWA (FIXED BUG: FOTO LANGSUNG BERUBAH)
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
     const adminPanel = document.getElementById('adminPanel');
@@ -605,25 +605,42 @@ window.ubahFotoSiswaAdmin = async function() {
     }
 
     const namaSiswaAktif = document.getElementById('modalName').innerText;
-    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
-    if (!dataSiswa) return alert("Gagal mendeteksi data siswa!");
+    // Cari data siswa di local state berdasarkan nama
+    let siswaIndex = localStudentsData.findIndex(s => s.name === namaSiswaAktif);
+    if (siswaIndex === -1) return alert("Gagal mendeteksi data siswa!");
+    
+    let dataSiswa = localStudentsData[siswaIndex];
 
-    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar || "");
-    if (urlBaru === null) return; 
+    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar_url || dataSiswa.avatar || "");
+    if (urlBaru === null) return; // Jika klik cancel
+
+    const urlBersih = urlBaru.trim();
 
     try {
+        // FIX: Update kedua kolom sekaligus (avatar & avatar_url) agar sinkron dengan database baru/lama
         const { error } = await supabase
             .from('students')
-            .update({ avatar: urlBaru.trim() })
+            .update({ 
+                avatar: urlBersih,
+                avatar_url: urlBersih
+            })
             .eq('id', dataSiswa.id);
 
         if (error) throw error;
 
+        // FIX: Update data di local memory agar UI langsung berubah saat itu juga tanpa refresh
+        localStudentsData[siswaIndex].avatar = urlBersih;
+        localStudentsData[siswaIndex].avatar_url = urlBersih;
+        window.localStudentsData[siswaIndex].avatar = urlBersih;
+        window.localStudentsData[siswaIndex].avatar_url = urlBersih;
+
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        const modalDetail = document.getElementById('UserDetailModal');
+        // Tutup modal detail biar kelihatan perubahannya di leaderboard
+        const modalDetail = document.getElementById('UserDetailModal') || document.getElementById('userDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
+        // Panggil ulang fungsi render agar layar langsung ter-update
         ambilDanTampilkanRanking();
     } catch (err) {
         alert("Gagal memperbarui foto: " + err.message);
