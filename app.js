@@ -1,719 +1,699 @@
-// ==========================================
-// APP.JS - FINAL REVISED TOTAL CODE
-// ==========================================
-
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 // Menggunakan Project URL dan Anon Key baru milik Anda
 const SUPABASE_URL = "https://cprpizbcfvmwnumhkkwh.supabase.co"
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwcnBpemJjZnZtd251bWhra3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2Nzg3MjIsImV4cCI6MjA5OTI1NDcyMn0.teTEiRY0wA4FKrEN3xGYW8kZ79UTt3y4_m-XNpXGgWo"
 
-const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// STATE UTAMA APP
-window.currentRole = 'user'; // 'user' atau 'admin'
-window.studentsData = [];
-window.currentActiveUserId = null; // ID Siswa yang sedang "Masuk Sebagai"
-window.currentSelectedUserForModal = null; // Data siswa yang sedang dibuka di modal detail
-let activeTransactionType = 'achievement'; // 'achievement' atau 'penalty'
+// Variabel untuk menyimpan data role aktif (default: user/siswa)
+let currentRole = 'user';
+// Menyimpan salinan data siswa yang berhasil diambil dari database
+let localStudentsData = [];
+// Menyimpan tipe transaksi yang aktif saat admin memilih kategori catatan
+window.currentTransactionType = 'achievement'; 
 
-// TIER CONFIGURATION
-const TIERS = [
-  { name: 'Legend', min: 41, icon: 'fa-solid fa-bolt text-red-500 animate-pulse', color: 'from-red-600 to-amber-600', textGlow: 'text-glow-legend' },
-  { name: 'Diamond', min: 31, icon: 'fa-solid fa-gem text-purple-400', color: 'from-violet-600 to-indigo-600', textGlow: 'text-glow-diamond' },
-  { name: 'Platinum', min: 21, icon: 'fa-solid fa-shield-halved text-teal-400', color: 'from-teal-600 to-cyan-600', textGlow: 'text-glow-platinum' },
-  { name: 'Gold', min: 11, icon: 'fa-solid fa-medal text-yellow-400', color: 'from-amber-500 to-yellow-400', textGlow: 'text-glow-gold' },
-  { name: 'Silver', min: 6, icon: 'fa-solid fa-award text-slate-300', color: 'from-slate-500 to-slate-400', textGlow: 'text-glow-silver' },
-  { name: 'Bronze', min: 0, icon: 'fa-solid fa-star text-amber-700', color: 'from-amber-800 to-orange-700', textGlow: 'text-glow-bronze' }
+// =======================================================
+// 0. LOGIKA ATUR TIPE TRANSAKSI (ACHIEVEMENT / PENALTY)
+// =======================================================
+window.setTransactionType = function(type) {
+    window.currentTransactionType = type;
+    console.log("Tipe transaksi diatur ke:", type);
+
+    const btnAchievement = document.getElementById('typeAchievementBtn');
+    const btnPenalty = document.getElementById('typePenaltyBtn');
+
+    if (!btnAchievement || !btnPenalty) return;
+
+    if (type === 'achievement') {
+        btnAchievement.className = "py-2.5 rounded-xl border border-emerald-500 bg-emerald-500/10 text-emerald-400 font-medium text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+        btnPenalty.className = "py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+    } else {
+        btnAchievement.className = "py-2.5 rounded-xl border border-slate-800 bg-slate-900/40 text-slate-400 hover:text-slate-200 text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+        btnPenalty.className = "py-2.5 rounded-xl border border-rose-500 bg-rose-500/10 text-rose-400 font-medium text-xs flex items-center justify-center gap-1.5 transition-all w-full";
+    }
+};
+
+// =======================================================
+// 1. ATURAN SKOR & TIER BINTANG (KONFIGURASI UTAMA)
+// =======================================================
+const TIER_RULES = [
+    { name: 'KOSONG', min: 0, icon: 'fa-solid fa-star text-slate-600', textGlow: 'text-shadow-none', color: 'from-slate-800 to-slate-900' },
+    { name: 'CHROME TIER', min: 1, icon: 'fa-solid fa-star text-slate-400', textGlow: 'text-glow-chrome', color: 'from-slate-600 to-slate-500' },
+    { name: 'BRONZE TIER', min: 6, icon: 'fa-solid fa-star text-amber-600', textGlow: 'text-glow-bronze', color: 'from-amber-800 to-amber-700' },
+    { name: 'SILVER TIER', min: 11, icon: 'fa-solid fa-award text-slate-300', textGlow: 'text-glow-silver', color: 'from-slate-400 to-slate-300' },
+    { name: 'GOLD TIER', min: 21, icon: 'fa-solid fa-medal text-yellow-400', textGlow: 'text-glow-gold', color: 'from-yellow-600 to-yellow-400' },
+    { name: 'PLATINUM TIER', min: 31, icon: 'fa-solid fa-shield-halved text-teal-400', textGlow: 'text-glow-platinum', color: 'from-teal-600 to-teal-400' },
+    { name: 'DIAMOND TIER', min: 41, icon: 'fa-solid fa-gem text-purple-400', textGlow: 'text-glow-diamond', color: 'from-purple-600 to-indigo-500' },
+    { name: 'LEGEND TIER', min: 51, icon: 'fa-solid fa-bolt text-red-500 animate-pulse', textGlow: 'text-glow-legend', color: 'from-red-600 to-amber-500' }
 ];
 
-function getTier(stars) {
-  return TIERS.find(t => stars >= t.min) || TIERS[TIERS.length - 1];
-}
-
-// ON LOAD INITIALIZATION
-document.addEventListener('DOMContentLoaded', async () => {
-  updateDbStatus('Connecting...', 'yellow');
-  await ambilDanTampilkanRanking();
-  setupRealtimeSubscription();
-  
-  // Bind events ke window agar bisa diakses HTML inline
-  window.changeActiveUser = changeActiveUser;
-  window.viewUserDetail = viewUserDetail;
-  window.closeUserDetailModal = closeUserDetailModal;
-  window.openAddStudentModal = openAddStudentModal;
-  window.closeAddStudentModal = closeAddStudentModal;
-  window.handleAddStudent = handleAddStudent;
-  window.openTransactionModal = openTransactionModal;
-  window.closeTransactionModal = closeTransactionModal;
-  window.setTransactionType = setTransactionType;
-  window.deleteStudent = deleteStudent;
-});
-
-// STATUS INDIKATOR
-function updateDbStatus(text, colorClass) {
-  const indicator = document.getElementById('dbStatusIndicator');
-  const statusText = document.getElementById('dbStatusText');
-  if(!indicator || !statusText) return;
-  
-  indicator.className = `w-2 h-2 rounded-full bg-${colorClass}-500 animate-pulse`;
-  statusText.innerText = text;
-}
-
-// AMBIL DATA UTAMA DARI SUPABASE
-async function ambilDanTampilkanRanking() {
-  try {
-    const { data, error } = await _supabase
-      .from('students')
-      .select('*')
-      .order('stars', { ascending: false })
-      .order('name', { ascending: true });
-
-    if (error) throw error;
-
-    window.studentsData = data || [];
-    updateDbStatus('Connected', 'emerald');
-    
-    // Inisialisasi User Switcher pertama kali jika belum ada yang terpilih
-    if (!window.currentActiveUserId && window.studentsData.length > 0) {
-      window.currentActiveUserId = window.studentsData[0].id;
+function hitungTierSiswa(bintang) {
+    let tierAktif = TIER_RULES[0];
+    for (let i = 0; i < TIER_RULES.length; i++) {
+        if (bintang >= TIER_RULES[i].min) {
+            tierAktif = TIER_RULES[i];
+        }
     }
-
-    renderUserSelector();
-    renderPodiumAndCards();
-    renderLeaderboard();
-    renderAdminStudentManagementList();
-    updateHeaderAvatarDisplay();
-
-  } catch (err) {
-    console.error("Gagal mengambil data ranking:", err.message);
-    updateDbStatus('Error Sync', 'rose');
-  }
+    return tierAktif;
 }
 
-// REALTIME SUBSCRIPTION
-function setupRealtimeSubscription() {
-  _supabase
-    .channel('schema-db-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => {
-      ambilDanTampilkanRanking();
-    })
-    .subscribe();
-}
+// =======================================================
+// 2. AMBIL DATA DARI SUPABASE DAN TAMPILKAN KE UI
+// =======================================================
+window.ambilDanTampilkanRanking = async function() {
+    try {
+        updateIndikatorKoneksi('Connecting...', 'yellow');
 
-// RENDER USER SELECTOR (SWITCHER MODE SISWA)
-function renderUserSelector() {
-  const selector = document.getElementById('currentUserSelector');
-  if(!selector) return;
-  
-  selector.innerHTML = window.studentsData.map(st => 
-    `<option value="${st.id}" ${st.id === window.currentActiveUserId ? 'selected' : ''}>${st.name}</option>`
-  ).join('');
-}
+        const { data, error } = await supabase
+            .from('students')
+            .select('*')
+            .order('stars', { ascending: false })
+            .order('name', { ascending: true });
 
-function changeActiveUser(id) {
-  window.currentActiveUserId = parseInt(id) || id;
-  updateHeaderAvatarDisplay();
-}
+        if (error) throw error;
 
-function updateHeaderAvatarDisplay() {
-  const activeUser = window.studentsData.find(st => st.id === window.currentActiveUserId);
-  const avatarImg = document.getElementById('currentActiveAvatar');
-  const cameraLabel = document.getElementById('headerPhotoUploadLabel');
+        localStudentsData = data || [];
+        updateIndikatorKoneksi('Connected', 'emerald');
 
-  if (activeUser && avatarImg) {
-    avatarImg.src = activeUser.avatar_url || `https://picsum.photos/seed/${activeUser.id}/100/100`;
-  }
-  
-  // Kamera hanya muncul di mode siswa
-  if (cameraLabel) {
-    if (window.currentRole === 'user') {
-      cameraLabel.classList.remove('hidden');
-    } else {
-      cameraLabel.classList.add('hidden');
+        // Jika user aktif belum dipilih, pilih data pertama
+        if (!window.currentSelectedStudentId && localStudentsData.length > 0) {
+            window.currentSelectedStudentId = localStudentsData[0].id;
+        }
+
+        renderUserSwitcherDropdown();
+        renderTopPodium();
+        renderLeaderboard();
+        renderAdminPanelList();
+        updateTampilanAvatarHeader();
+
+    } catch (error) {
+        console.error("Gagal mengambil data ranking:", error.message);
+        updateIndikatorKoneksi('Error Sync', 'rose');
     }
-  }
-}
-
-// RENDER PODIUM UTAMA TOP 1-3 & HIGHLIGHT CARD 4-5
-function renderPodiumAndCards() {
-  const top1 = window.studentsData[0];
-  const top2 = window.studentsData[1];
-  const top3 = window.studentsData[2];
-  const rank4 = window.studentsData[3];
-  const rank5 = window.studentsData[4];
-
-  // Top 1
-  if (top1) {
-    document.getElementById('p1-name').innerText = top1.name;
-    document.getElementById('p1-stars').innerText = top1.stars;
-    document.getElementById('p1-avatar').src = top1.avatar_url || `https://picsum.photos/seed/${top1.id}/150/150`;
-    document.getElementById('podium-1').style.opacity = '1';
-  } else {
-    document.getElementById('podium-1').style.opacity = '0';
-  }
-
-  // Top 2
-  if (top2) {
-    document.getElementById('p2-name').innerText = top2.name;
-    document.getElementById('p2-stars').innerText = top2.stars;
-    document.getElementById('p2-avatar').src = top2.avatar_url || `https://picsum.photos/seed/${top2.id}/150/150`;
-    document.getElementById('podium-2').style.opacity = '1';
-  } else {
-    document.getElementById('podium-2').style.opacity = '0';
-  }
-
-  // Top 3
-  if (top3) {
-    document.getElementById('p3-name').innerText = top3.name;
-    document.getElementById('p3-stars').innerText = top3.stars;
-    document.getElementById('p3-avatar').src = top3.avatar_url || `https://picsum.photos/seed/${top3.id}/150/150`;
-    document.getElementById('podium-3').style.opacity = '1';
-  } else {
-    document.getElementById('podium-3').style.opacity = '0';
-  }
-
-  // Card Rank 4
-  const c4 = document.getElementById('card-rank-4');
-  if (rank4 && c4) {
-    c4.style.display = 'block';
-    document.getElementById('p4-name').innerText = rank4.name;
-    document.getElementById('p4-stars').innerText = rank4.stars;
-    document.getElementById('p4-avatar').src = rank4.avatar_url || `https://picsum.photos/seed/${rank4.id}/100/100`;
-  } else if(c4) {
-    c4.style.display = 'none';
-  }
-
-  // Card Rank 5
-  const c5 = document.getElementById('card-rank-5');
-  if (rank5 && c5) {
-    c5.style.display = 'block';
-    document.getElementById('p5-name').innerText = rank5.name;
-    document.getElementById('p5-stars').innerText = rank5.stars;
-    document.getElementById('p5-avatar').src = rank5.avatar_url || `https://picsum.photos/seed/${rank5.id}/100/100`;
-  } else if(c5) {
-    c5.style.display = 'none';
-  }
-}
-
-// RENDER KLASEMEN UMUM (RANK 6+) DENGAN FITUR SEARCH
-window.renderLeaderboard = function() {
-  const listContainer = document.getElementById('leaderboardList');
-  if (!listContainer) return;
-
-  const searchQuery = (document.getElementById('studentSearch')?.value || '').toLowerCase();
-  
-  // Filter berdasarkan search pencarian nama
-  const filtered = window.studentsData.filter(st => st.name.toLowerCase().includes(searchQuery));
-
-  if (filtered.length === 0) {
-    listContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">Siswa tidak ditemukan.</p>`;
-    return;
-  }
-
-  listContainer.innerHTML = filtered.map((st) => {
-    // Cari index asli global untuk menentukan peringkat
-    const originalRank = window.studentsData.findIndex(s => s.id === st.id) + 1;
-    const tier = getTier(st.stars);
-    
-    // Highlight jika baris ini milik user yang sedang aktif login/pilihan
-    const isMe = st.id === window.currentActiveUserId;
-
-    return `
-      <div onclick="viewUserDetailByStudentId(${st.id})" class="leaderboard-item flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-brand-950/30 border ${isMe ? 'border-brand-500 bg-brand-950/20' : 'border-slate-900'} hover:border-purple-900/40 cursor-pointer transition-all">
-        <div class="flex items-center gap-3">
-          <span class="heading-font text-xs font-black text-slate-500 w-5 text-center">#${originalRank}</span>
-          <img src="${st.avatar_url || `https://picsum.photos/seed/${st.id}/80/80`}" class="w-8 h-8 rounded-full object-cover border border-slate-800">
-          <div>
-            <h4 class="text-xs font-bold ${isMe ? 'text-brand-300' : 'text-slate-200'} line-clamp-1">${st.name}</h4>
-            <p class="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
-              <i class="${tier.icon}"></i> ${tier.name}
-            </p>
-          </div>
-        </div>
-        <div class="text-yellow-400 font-bold text-xs flex items-center gap-1">
-          <i class="fa-solid fa-star ${tier.textGlow}"></i> ${st.stars}
-        </div>
-      </div>
-    `;
-  }).join('');
 };
 
-// RENDER ADMIN LIST MANAGEMENT (DASHBOARD KECIL ADMIN)
-function renderAdminStudentManagementList() {
-  const container = document.getElementById('adminStudentList');
-  if(!container) return;
-  
-  container.innerHTML = window.studentsData.map(st => `
-    <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2 overflow-hidden">
-        <img src="${st.avatar_url || `https://picsum.photos/seed/${st.id}/50/50`}" class="w-7 h-7 rounded-full object-cover flex-shrink-0">
-        <span class="text-xs font-bold text-slate-300 truncate">${st.name}</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <span class="text-[10px] bg-purple-900/40 text-purple-300 px-1.5 py-0.5 rounded font-extrabold"><i class="fa-solid fa-star text-yellow-500"></i> ${st.stars}</span>
-        <button onclick="viewUserDetailByStudentId(${st.id})" class="text-[10px] bg-slate-800 hover:bg-brand-600 text-white p-1 rounded transition-colors" title="Edit/Kelola"><i class="fa-solid fa-pen-to-square"></i></button>
-      </div>
-    </div>
-  `).join('');
+function updateIndikatorKoneksi(teks, warnaClass) {
+    const indicator = document.getElementById('dbStatusIndicator');
+    const statusText = document.getElementById('dbStatusText');
+    if (indicator) indicator.className = `w-2 h-2 rounded-full bg-${warnaClass}-500 animate-pulse`;
+    if (statusText) statusText.innerText = teks;
 }
 
-// POPUP VIEW DETAIL USER (BERDASARKAN POSISI RANK 1-5 DI PODIUM)
-function viewUserDetail(podiumRank) {
-  const student = window.studentsData[podiumRank - 1];
-  if (student) bukaModalDetailSiswa(student, podiumRank);
+// =======================================================
+// 3. LOGIKA UNTUK DROPDOWN SWITCHER (MASUK SEBAGAI)
+// =======================================================
+function renderUserSwitcherDropdown() {
+    const selector = document.getElementById('currentUserSelector');
+    if (!selector) return;
+
+    selector.innerHTML = localStudentsData.map(siswa => 
+        `<option value="${siswa.id}" ${siswa.id === window.currentSelectedStudentId ? 'selected' : ''}>${siswa.name}</option>`
+    ).join('');
 }
 
-// POPUP VIEW DETAIL USER (BERDASARKAN ID SISWA DI LIST KLASEMEN)
-function viewUserDetailByStudentId(id) {
-  const index = window.studentsData.findIndex(s => s.id === id);
-  if (index !== -1) {
-    bukaModalDetailSiswa(window.studentsData[index], index + 1);
-  }
-}
+window.changeActiveUser = function(id) {
+    window.currentSelectedStudentId = isNaN(id) ? id : parseInt(id);
+    updateTampilanAvatarHeader();
+};
 
-// LOGIKA OPEN MODAL & LOAD TRANSACTION HISTORY
-async function bukaModalDetailSiswa(student, rank) {
-  window.currentSelectedUserForModal = student;
-  
-  const tier = getTier(student.stars);
-  
-  // Terapkan data ke modal DOM
-  document.getElementById('modalName').innerText = student.name;
-  document.getElementById('modalRankLabel').innerText = `#${rank}`;
-  document.getElementById('modalTierName').innerHTML = `<i class="${tier.icon}"></i> Tier ${tier.name}`;
-  document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> ${student.stars} Bintang`;
-  
-  const avatarElement = document.getElementById('modalAvatar');
-  avatarElement.src = student.avatar_url || `https://picsum.photos/seed/${student.id}/150/150`;
+function updateTampilanAvatarHeader() {
+    const siswaAktif = localStudentsData.find(s => s.id === window.currentSelectedStudentId);
+    const avatarImg = document.getElementById('currentActiveAvatar');
+    const uploadLabel = document.getElementById('headerPhotoUploadLabel');
 
-  // Tampilkan/Sembunyikan tombol upload khusus admin di dalam modal
-  const adminPhotoUploadLabel = document.getElementById('modalPhotoUploadLabel');
-  if (adminPhotoUploadLabel) {
-    if (window.currentRole === 'admin') {
-      adminPhotoUploadLabel.classList.remove('hidden');
-    } else {
-      adminPhotoUploadLabel.classList.add('hidden');
+    if (siswaAktif && avatarImg) {
+        avatarImg.src = siswaAktif.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${siswaAktif.id}`;
     }
-  }
 
-  // Render visual bintang mini
-  const starIconsContainer = document.getElementById('modalStarIcons');
-  starIconsContainer.innerHTML = '';
-  const starLimit = Math.min(student.stars, 15); // Maksimal render 15 icon bintang agar rapi
-  for (let i = 0; i < starLimit; i++) {
-    starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-float" style="animation-delay: ${i * 0.1}s"></i>`;
-  }
-  if (student.stars > 15) {
-    starIconsContainer.innerHTML += `<span class="text-xs font-bold text-yellow-500 ml-1">+${student.stars - 15}</span>`;
-  }
-
-  // Tampilkan / Sembunyikan Tombol Hapus Siswa berdasarkan role admin
-  const deleteBtnContainer = document.getElementById('modalAdminDeleteBtnContainer');
-  if(deleteBtnContainer) {
-    if (window.currentRole === 'admin') {
-      deleteBtnContainer.classList.remove('hidden');
-      document.getElementById('btnDeleteStudent').onclick = () => deleteStudent(student.id);
-    } else {
-      deleteBtnContainer.classList.add('hidden');
+    if (uploadLabel) {
+        if (window.currentRole === 'user') {
+            uploadLabel.classList.remove('hidden');
+        } else {
+            uploadLabel.classList.add('hidden');
+        }
     }
-  }
+}
 
-  // Tampilkan modal
-  document.getElementById('UserDetailModal').classList.remove('hidden');
+// =======================================================
+// 4. RENDER TOP PODIUM (RANK 1, 2, 3) & HIGHLIGHT CARD (4 & 5)
+// =======================================================
+function renderTopPodium() {
+    const r1 = localStudentsData[0];
+    const r2 = localStudentsData[1];
+    const r3 = localStudentsData[2];
+    const r4 = localStudentsData[3];
+    const r5 = localStudentsData[4];
 
-  // Ambil data histori dari database table 'star_logs'
-  const historyContainer = document.getElementById('modalHistoryContainer');
-  historyContainer.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-2">Memuat riwayat...</p>`;
+    // Podium 1
+    const p1 = document.getElementById('podium-1');
+    if (r1 && p1) {
+        p1.style.opacity = '1';
+        document.getElementById('p1-name').innerText = r1.name;
+        document.getElementById('p1-stars').innerText = r1.stars;
+        document.getElementById('p1-avatar').src = r1.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${r1.id}`;
+    } else if (p1) { p1.style.opacity = '0'; }
 
-  try {
-    const { data: logs, error } = await _supabase
-      .from('star_logs')
-      .select('*')
-      .eq('student_id', student.id)
-      .order('created_at', { ascending: false });
+    // Podium 2
+    const p2 = document.getElementById('podium-2');
+    if (r2 && p2) {
+        p2.style.opacity = '1';
+        document.getElementById('p2-name').innerText = r2.name;
+        document.getElementById('p2-stars').innerText = r2.stars;
+        document.getElementById('p2-avatar').src = r2.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${r2.id}`;
+    } else if (p2) { p2.style.opacity = '0'; }
 
-    if (error) throw error;
+    // Podium 3
+    const p3 = document.getElementById('podium-3');
+    if (r3 && p3) {
+        p3.style.opacity = '1';
+        document.getElementById('p3-name').innerText = r3.name;
+        document.getElementById('p3-stars').innerText = r3.stars;
+        document.getElementById('p3-avatar').src = r3.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${r3.id}`;
+    } else if (p3) { p3.style.opacity = '0'; }
 
-    if (!logs || logs.length === 0) {
-      historyContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat catatan.</p>`;
-    } else {
-      historyContainer.innerHTML = logs.map(log => {
-        const isAchievement = log.type === 'achievement';
-        const iconLog = isAchievement ? 'fa-solid fa-circle-plus text-emerald-400' : 'fa-solid fa-circle-minus text-rose-400';
-        const badgeColor = isAchievement ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30' : 'bg-rose-950/40 text-rose-400 border-rose-900/30';
-        const tgl = new Date(log.created_at).toLocaleDateString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+    // Card Rank 4
+    const c4 = document.getElementById('card-rank-4');
+    if (r4 && c4) {
+        c4.style.display = 'block';
+        document.getElementById('p4-name').innerText = r4.name;
+        document.getElementById('p4-stars').innerText = r4.stars;
+        document.getElementById('p4-avatar').src = r4.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${r4.id}`;
+    } else if (c4) { c4.style.display = 'none'; }
+
+    // Card Rank 5
+    const c5 = document.getElementById('card-rank-5');
+    if (r5 && c5) {
+        c5.style.display = 'block';
+        document.getElementById('p5-name').innerText = r5.name;
+        document.getElementById('p5-stars').innerText = r5.stars;
+        document.getElementById('p5-avatar').src = r5.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${r5.id}`;
+    } else if (c5) { c5.style.display = 'none'; }
+}
+
+// =======================================================
+// 5. RENDER DAFTAR KLASEMEN UTAMA & PENCARIAN
+// =======================================================
+window.renderLeaderboard = function() {
+    const container = document.getElementById('leaderboardList');
+    if (!container) return;
+
+    const kataKunci = (document.getElementById('studentSearch')?.value || '').toLowerCase();
+    const dataFilter = localStudentsData.filter(s => s.name.toLowerCase().includes(kataKunci));
+
+    if (dataFilter.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 text-center py-8">Siswa tidak ditemukan.</p>`;
+        return;
+    }
+
+    container.innerHTML = dataFilter.map(siswa => {
+        const urutanAsli = localStudentsData.findIndex(s => s.id === siswa.id) + 1;
+        const infoTier = hitungTierSiswa(siswa.stars);
+        const apakahSaya = siswa.id === window.currentSelectedStudentId;
 
         return `
-          <div class="p-2 rounded-xl border ${badgeColor} flex items-start justify-between gap-2 text-[11px]">
-            <div class="flex gap-2 items-start">
-              <i class="${iconLog} mt-0.5 flex-shrink-0"></i>
-              <div>
-                <p class="font-bold text-slate-200">${log.description}</p>
-                <p class="text-[9px] text-slate-500 mt-0.5">${tgl}</p>
-              </div>
+            <div onclick="window.viewUserDetailByStudentId(${siswa.id})" class="leaderboard-item flex items-center justify-between p-3 rounded-xl bg-slate-900/40 hover:bg-brand-950/30 border ${apakahSaya ? 'border-brand-500 bg-brand-950/20' : 'border-slate-900'} hover:border-purple-900/40 cursor-pointer transition-all">
+                <div class="flex items-center gap-3">
+                    <span class="heading-font text-xs font-black text-slate-500 w-5 text-center">#${urutanAsli}</span>
+                    <img src="${siswa.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${siswa.id}`}" class="w-8 h-8 rounded-full object-cover border border-slate-800">
+                    <div>
+                        <h4 class="text-xs font-bold ${apakahSaya ? 'text-brand-300' : 'text-slate-200'} line-clamp-1">${siswa.name}</h4>
+                        <p class="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                            <i class="${infoTier.icon}"></i> ${infoTier.name}
+                        </p>
+                    </div>
+                </div>
+                <div class="text-yellow-400 font-bold text-xs flex items-center gap-1">
+                    <i class="fa-solid fa-star ${infoTier.textGlow}"></i> ${siswa.stars}
+                </div>
             </div>
-            <span class="font-black">${isAchievement ? '+' : '-'}${log.amount} ⭐</span>
-          </div>
         `;
-      }).join('');
+    }).join('');
+};
+
+// =======================================================
+// 6. RENDER DAFTAR SISWA DI PANEL KENDALI ADMIN
+// =======================================================
+function renderAdminPanelList() {
+    const container = document.getElementById('adminStudentList');
+    if (!container) return;
+
+    container.innerHTML = localStudentsData.map(siswa => `
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <img src="${siswa.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${siswa.id}`}" class="w-7 h-7 rounded-full object-cover flex-shrink-0">
+                <span class="text-xs font-bold text-slate-300 truncate">${siswa.name}</span>
+            </div>
+            <div class="flex items-center gap-1">
+                <span class="text-[10px] bg-purple-900/40 text-purple-300 px-1.5 py-0.5 rounded font-extrabold"><i class="fa-solid fa-star text-yellow-500"></i> ${siswa.stars}</span>
+                <button onclick="window.viewUserDetailByStudentId(${siswa.id})" class="text-[10px] bg-slate-800 hover:bg-brand-600 text-white p-1 rounded transition-colors" title="Edit/Kelola"><i class="fa-solid fa-pen-to-square"></i></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// =======================================================
+// 7. POPUP MODAL DETAIL DATA SISWA & LOG HISTORI
+// =======================================================
+window.viewUserDetail = function(podiumRank) {
+    const dataSiswa = localStudentsData[podiumRank - 1];
+    if (dataSiswa) bukaModalDetailSiswa(dataSiswa, podiumRank);
+};
+
+window.viewUserDetailByStudentId = function(id) {
+    const index = localStudentsData.findIndex(s => s.id === id);
+    if (index !== -1) {
+        bukaModalDetailSiswa(localStudentsData[index], index + 1);
     }
-  } catch(e) {
-    historyContainer.innerHTML = `<p class="text-[11px] text-rose-400 text-center py-2">Gagal memuat riwayat.</p>`;
-  }
+};
+
+// Objek penampung data siswa yang sedang dibuka di modal detail
+window.currentSelectedUserForModal = null;
+
+async function bukaModalDetailSiswa(siswa, rank) {
+    window.currentSelectedUserForModal = siswa;
+    const infoTier = hitungTierSiswa(siswa.stars);
+
+    document.getElementById('modalName').innerText = siswa.name;
+    document.getElementById('modalRankLabel').innerText = `#${rank}`;
+    document.getElementById('modalTierName').innerHTML = `<i class="${infoTier.icon}"></i> ${infoTier.name}`;
+    document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> ${siswa.stars} Bintang`;
+    
+    const imgAvatar = document.getElementById('modalAvatar');
+    if (imgAvatar) imgAvatar.src = siswa.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${siswa.id}`;
+
+    // Menampilkan ikon upload berdasarkan role
+    const lblUploadAdmin = document.getElementById('modalPhotoUploadLabel');
+    if (lblUploadAdmin) {
+        if (window.currentRole === 'admin') {
+            lblUploadAdmin.classList.remove('hidden');
+        } else {
+            lblUploadAdmin.classList.add('hidden');
+        }
+    }
+
+    // Render Bintang Animasi
+    const boxBintang = document.getElementById('modalStarIcons');
+    if (boxBintang) {
+        boxBintang.innerHTML = '';
+        const limitRender = Math.min(siswa.stars, 15);
+        for (let i = 0; i < limitRender; i++) {
+            boxBintang.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-float" style="animation-delay: ${i * 0.1}s"></i>`;
+        }
+        if (siswa.stars > 15) {
+            boxBintang.innerHTML += `<span class="text-xs font-bold text-yellow-500 ml-1">+${siswa.stars - 15}</span>`;
+        }
+    }
+
+    // Tombol Hapus khusus admin
+    const boxTombolHapus = document.getElementById('modalAdminDeleteBtnContainer');
+    if (boxTombolHapus) {
+        if (window.currentRole === 'admin') {
+            boxTombolHapus.classList.remove('hidden');
+            document.getElementById('btnDeleteStudent').onclick = () => window.hapusSiswaDariDatabase(siswa.id);
+        } else {
+            boxTombolHapus.classList.add('hidden');
+        }
+    }
+
+    document.getElementById('UserDetailModal').classList.remove('hidden');
+
+    // Load Log Catatan Histori Bintang
+    const boxHistori = document.getElementById('modalHistoryContainer');
+    if (!boxHistori) return;
+    boxHistori.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-2">Memuat riwayat...</p>`;
+
+    try {
+        const { data: logs, error } = await supabase
+            .from('star_logs')
+            .select('*')
+            .eq('student_id', siswa.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!logs || logs.length === 0) {
+            boxHistori.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat catatan.</p>`;
+        } else {
+            boxHistori.innerHTML = logs.map(log => {
+                const isPlus = log.type === 'achievement';
+                const iconClass = isPlus ? 'fa-solid fa-circle-plus text-emerald-400' : 'fa-solid fa-circle-minus text-rose-400';
+                const badgeColor = isPlus ? 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30' : 'bg-rose-950/40 text-rose-400 border-rose-900/30';
+                const formatTgl = new Date(log.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div class="p-2 rounded-xl border ${badgeColor} flex items-start justify-between gap-2 text-[11px]">
+                        <div class="flex gap-2 items-start">
+                            <i class="${iconClass} mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <p class="font-bold text-slate-200">${log.description}</p>
+                                <p class="text-[9px] text-slate-500 mt-0.5">${formatTgl}</p>
+                            </div>
+                        </div>
+                        <span class="font-black">${isPlus ? '+' : '-'}${log.amount} ⭐</span>
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch (e) {
+        boxHistori.innerHTML = `<p class="text-[11px] text-rose-400 text-center py-2">Gagal memuat riwayat.</p>`;
+    }
 }
 
-function closeUserDetailModal() {
-  document.getElementById('UserDetailModal').classList.add('hidden');
-  window.currentSelectedUserForModal = null;
-}
+window.closeUserDetailModal = function() {
+    document.getElementById('UserDetailModal').classList.add('hidden');
+    window.currentSelectedUserForModal = null;
+};
 
-// MODE ADMIN: TAMBAH SISWA BARU BARU
-function openAddStudentModal() { document.getElementById('addStudentModal').classList.remove('hidden'); }
-function closeAddStudentModal() { document.getElementById('addStudentModal').classList.add('hidden'); document.getElementById('addStudentForm').reset(); }
+// =======================================================
+// 8. PANEL INPUT DATA SISWA BARU (ADMIN MODE)
+// =======================================================
+window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); };
+window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); document.getElementById('addStudentForm').reset(); };
 
-async function handleAddStudent(e) {
-  e.preventDefault();
-  showLoading();
+window.handleAddStudent = async function(e) {
+    e.preventDefault();
+    tampilkanScreenLoading(true);
 
-  const name = document.getElementById('newStudentName').value;
-  let avatarUrl = document.getElementById('newStudentAvatar').value.trim();
-  const stars = parseInt(document.getElementById('newStudentStars').value) || 0;
+    const namaSiswa = document.getElementById('newStudentName').value;
+    const inputAvatar = document.getElementById('newStudentAvatar').value.trim();
+    const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
 
-  if(!avatarUrl) {
-    avatarUrl = `https://picsum.photos/seed/${encodeURIComponent(name)}/150/150`;
-  }
+    const urlAvatarFinal = inputAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(namaSiswa)}`;
 
-  try {
-    const { data, error } = await _supabase
-      .from('students')
-      .insert([{ name, avatar_url: avatarUrl, stars }])
-      .select();
+    try {
+        const { error } = await supabase
+            .from('students')
+            .insert([{ name: namaSiswa, avatar_url: urlAvatarFinal, stars: bintangAwal }]);
 
-    if (error) throw error;
+        if (error) throw error;
 
-    alert(`✅ Berhasil menambahkan siswa baru: ${name}`);
-    closeAddStudentModal();
-    await ambilDanTampilkanRanking();
+        alert(`✅ Berhasil menambahkan siswa baru: ${namaSiswa}`);
+        window.closeAddStudentModal();
+        await window.ambilDanTampilkanRanking();
+    } catch (err) {
+        alert("❌ Gagal menambah siswa: " + err.message);
+    } finally {
+        tampilkanScreenLoading(false);
+    }
+};
 
-  } catch (error) {
-    alert("❌ Gagal menambah siswa: " + error.message);
-  } finally {
-    hideLoading();
-  }
-}
+// =======================================================
+// 9. PANEL INPUT TRANSAKSI CATATAN BINTANG (ADMIN MODE)
+// =======================================================
+window.openTransactionModal = function() {
+    const select = document.getElementById('transactionStudentSelect');
+    if (!select) return;
 
-// MODE ADMIN: KELOLA PRESTASI / PENALTI (TRANSAKSI BINTANG)
-function openTransactionModal() {
-  const select = document.getElementById('transactionStudentSelect');
-  if(!select) return;
+    select.innerHTML = '<option value="">-- Pilih Siswa --</option>' + localStudentsData.map(siswa => 
+        `<option value="${siswa.id}">${siswa.name} (Sekarang: ${siswa.stars} ⭐)</option>`
+    ).join('');
 
-  select.innerHTML = '<option value="">-- Pilih Siswa --</option>' + window.studentsData.map(st => 
-    `<option value="${st.id}">${st.name} (Sekarang: ${st.stars} ⭐)</option>`
-  ).join('');
+    document.getElementById('TransactionModal').classList.remove('hidden');
+};
 
-  document.getElementById('TransactionModal').classList.remove('hidden');
-}
-
-function closeTransactionModal() {
-  document.getElementById('TransactionModal').classList.add('hidden');
-  document.getElementById('transactionForm').reset();
-  setTransactionType('achievement');
-}
-
-function setTransactionType(type) {
-  activeTransactionType = type;
-  const actBtn = document.getElementById('typeAchievementBtn');
-  const penBtn = document.getElementById('typePenaltyBtn');
-
-  if (type === 'achievement') {
-    actBtn.className = "py-2.5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1";
-    penBtn.className = "py-2.5 rounded-xl border border-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center gap-1";
-  } else {
-    penBtn.className = "py-2.5 rounded-xl border border-rose-500/30 bg-rose-950/20 text-rose-400 text-xs font-bold flex items-center justify-center gap-1";
-    actBtn.className = "py-2.5 rounded-xl border border-slate-800 text-slate-400 text-xs font-bold flex items-center justify-center gap-1";
-  }
-}
+window.closeTransactionModal = function() {
+    document.getElementById('TransactionModal').classList.add('hidden');
+    document.getElementById('transactionForm').reset();
+    window.setTransactionType('achievement');
+};
 
 window.handleTransaction = async function(e) {
-  e.preventDefault();
-  showLoading();
+    e.preventDefault();
+    tampilkanScreenLoading(true);
 
-  const studentId = parseInt(document.getElementById('transactionStudentSelect').value);
-  const amount = parseInt(document.getElementById('transactionStars').value) || 1;
-  const description = document.getElementById('transactionDescription').value;
+    const idSiswa = parseInt(document.getElementById('transactionStudentSelect').value);
+    const nominalBintang = parseInt(document.getElementById('transactionStars').value) || 1;
+    const ketCatatan = document.getElementById('transactionDescription').value;
 
-  const targetStudent = window.studentsData.find(s => s.id === studentId);
-  if (!targetStudent) {
-    alert("❌ Siswa tidak ditemukan!");
-    hideLoading();
-    return;
-  }
+    const dataTargetSiswa = localStudentsData.find(s => s.id === idSiswa);
+    if (!dataTargetSiswa) {
+        alert("❌ Siswa tidak ditemukan!");
+        tampilkanScreenLoading(false);
+        return;
+    }
 
-  // Hitung jumlah kalkulasi bintang baru
-  let newStarsValue = targetStudent.stars;
-  if (activeTransactionType === 'achievement') {
-    newStarsValue += amount;
-  } else {
-    newStarsValue = Math.max(0, newStarsValue - amount); // Cegah nilai minus di bawah nol
-  }
+    let hitungBintangBaru = dataTargetSiswa.stars;
+    if (window.currentTransactionType === 'achievement') {
+        hitungBintangBaru += nominalBintang;
+    } else {
+        hitungBintangBaru = Math.max(0, hitungBintangBaru - nominalBintang);
+    }
 
-  try {
-    // 1. Update total nilai bintang siswa
-    const { error: updateError } = await _supabase
-      .from('students')
-      .update({ stars: newStarsValue })
-      .eq('id', studentId);
+    try {
+        const { error: errorUpdate } = await supabase
+            .from('students')
+            .update({ stars: hitungBintangBaru })
+            .eq('id', idSiswa);
 
-    if (updateError) throw updateError;
+        if (errorUpdate) throw errorUpdate;
 
-    // 2. Catat histori ke logs
-    const { error: logError } = await _supabase
-      .from('star_logs')
-      .insert([{
-        student_id: studentId,
-        type: activeTransactionType,
-        amount: amount,
-        description: description
-      }]);
+        const { error: errorLog } = await supabase
+            .from('star_logs')
+            .insert([{
+                student_id: idSiswa,
+                type: window.currentTransactionType,
+                amount: nominalBintang,
+                description: ketCatatan
+            }]);
 
-    if (logError) throw logError;
+        if (errorLog) throw errorLog;
 
-    alert("✅ Berhasil memproses data transaksi bintang!");
-    closeTransactionModal();
-    await ambilDanTampilkanRanking();
+        alert("✅ Catatan transaksi bintang berhasil diproses!");
+        window.closeTransactionModal();
+        await window.ambilDanTampilkanRanking();
 
-  } catch (error) {
-    alert("❌ Terjadi kesalahan sistem: " + error.message);
-  } finally {
-    hideLoading();
-  }
+    } catch (err) {
+        alert("❌ Terjadi kesalahan sistem: " + err.message);
+    } finally {
+        tampilkanScreenLoading(false);
+    }
 };
 
-// MODE ADMIN: HAPUS SISWA DARI SYSTEM TERMINAL
-async function deleteStudent(id) {
-  const target = window.studentsData.find(s => s.id === id);
-  if (!target) return;
+// =======================================================
+// 10. SYSTEM HAPUS SISWA PERMANEN (ADMIN MODE)
+// =======================================================
+window.hapusSiswaDariDatabase = async function(id) {
+    const target = localStudentsData.find(s => s.id === id);
+    if (!target) return;
 
-  if (!confirm(`⚠️ Apakah Anda YAKIN akan menghapus siswa "${target.name}" secara permanen dari sistem database? Semua log histori bintang akan terhapus!`)) {
-    return;
-  }
+    if (!confirm(`⚠️ Apakah Anda YAKIN menghapus "${target.name}"? Semua data dan log bintangnya akan hilang!`)) {
+        return;
+    }
 
-  showLoading();
-  try {
-    // Hapus relasi log terlebih dahulu
-    await _supabase.from('star_logs').delete().eq('student_id', id);
+    tampilkanScreenLoading(true);
+    try {
+        await supabase.from('star_logs').delete().eq('student_id', id);
+        const { error } = await supabase.from('students').delete().eq('id', id);
 
-    // Hapus data utama siswa
-    const { error } = await _supabase.from('students').delete().eq('id', id);
-    if (error) throw error;
+        if (error) throw error;
 
-    alert("🗑️ Data siswa telah berhasil dihapus dari database.");
-    closeUserDetailModal();
-    await ambilDanTampilkanRanking();
+        alert("🗑️ Data siswa telah sukses dihapus.");
+        window.closeUserDetailModal();
+        await window.ambilDanTampilkanRanking();
+    } catch (err) {
+        alert("❌ Gagal menghapus data: " + err.message);
+    } finally {
+        tampilkanScreenLoading(false);
+    }
+};
 
-  } catch(err) {
-    alert("❌ Gagal menghapus data: " + err.message);
-  } finally {
-    hideLoading();
-  }
-}
+// =======================================================
+// 11. FIX BAGIAN ERROR: LOGIKA PROSES UPLOAD FOTO PROFIL
+// =======================================================
 
-// ==========================================
-// LOGIKA UTAMA: PERBAIKAN FUNGSI UPLOAD FOTO
-// ==========================================
-
-// 1. HANDLER SISWA (Upload di Header)
+// A. Handler Upload Foto Mandiri (Siswa dari Header)
 window.handleSelfPhotoUpload = async function(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-  if (!window.currentActiveUserId) {
-    alert("❌ Gagal: Tidak ada identitas siswa aktif terpilih.");
-    return;
-  }
+    if (!window.currentSelectedStudentId) {
+        alert("❌ Gagal: Identitas siswa aktif belum dipilih.");
+        return;
+    }
 
-  showLoading();
-  try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_student.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    tampilkanScreenLoading(true);
+    try {
+        const ekstensi = file.name.split('.').pop();
+        const namaFileAcak = `${Date.now()}_siswa.${ekstensi}`;
+        const pathFile = `avatars/${namaFileAcak}`;
 
-    const { data: uploadData, error: uploadError } = await _supabase.storage
-      .from('avatars')
-      .upload(filePath, file);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(pathFile, file);
 
-    if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-    const { data: urlData } = _supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath);
+        const { data: urlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(pathFile);
 
-    const publicUrl = urlData.publicUrl;
+        const linkPublicUrl = urlData.publicUrl;
 
-    const { error: updateError } = await _supabase
-      .from('students')
-      .update({ avatar_url: publicUrl })
-      .eq('id', window.currentActiveUserId);
+        const { error: updateError } = await supabase
+            .from('students')
+            .update({ avatar_url: linkPublicUrl })
+            .eq('id', window.currentSelectedStudentId);
 
-    if (updateError) throw updateError;
+        if (updateError) throw updateError;
 
-    document.getElementById('currentActiveAvatar').src = publicUrl;
+        document.getElementById('currentActiveAvatar').src = linkPublicUrl;
+        alert("✅ Foto profil Anda berhasil diperbarui!");
+        await window.ambilDanTampilkanRanking();
 
-    alert("✅ Foto profil berhasil diperbarui!");
-    await ambilDanTampilkanRanking();
-
-  } catch (error) {
-    console.error("Error upload foto siswa:", error);
-    alert("❌ Gagal mengunggah foto profil: " + error.message);
-  } finally {
-    hideLoading();
-  }
+    } catch (err) {
+        console.error("Error upload foto siswa:", err);
+        alert("❌ Gagal mengunggah foto: " + err.message);
+    } finally {
+        tampilkanScreenLoading(false);
+    }
 };
 
-// 2. HANDLER DETEKSI KLIK FOTO MODAL DETAIL (OLEH ADMIN)
+// B. Pemicu Klik dari Admin ke Modal Foto Detail
 window.ubahFotoSiswaAdmin = function() {
-  if (window.currentRole !== 'admin') {
-    alert("🔒 Akses ditolak. Hanya Mode Admin yang dapat mengubah foto siswa.");
-    return;
-  }
-  
-  const fileInput = document.getElementById('modalPhotoUploadInput');
-  if (fileInput) {
-    fileInput.click();
-  }
+    if (window.currentRole !== 'admin') {
+        alert("🔒 Akses ditolak. Hanya Admin yang dapat mengubah foto siswa.");
+        return;
+    }
+    const fileInput = document.getElementById('modalPhotoUploadInput');
+    if (fileInput) fileInput.click();
 };
 
-// 3. HANDLER INPUT FILE DI DALAM MODAL DETAIL (EKSEKUSI UPLOAD ADMIN)
+// C. Handler Input File di dalam Modal Detail (Eksekusi Upload oleh Admin)
 window.handleModalPhotoUpload = async function(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-  if (!window.currentSelectedUserForModal) {
-    alert("❌ Gagal: Tidak ada siswa terpilih di modal.");
-    return;
-  }
+    if (!window.currentSelectedUserForModal) {
+        alert("❌ Gagal: Tidak ada siswa terpilih di modal detail.");
+        return;
+    }
 
-  showLoading();
-  try {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_admin.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    tampilkanScreenLoading(true);
+    try {
+        const ekstensi = file.name.split('.').pop();
+        const namaFileAcak = `${Date.now()}_admin.${ekstensi}`;
+        const pathFile = `avatars/${namaFileAcak}`;
 
-    const { data: uploadData, error: uploadError } = await _supabase.storage
-      .from('avatars')
-      .upload(filePath, file);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(pathFile, file);
 
-    if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-    const { data: urlData } = _supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath);
+        const { data: urlData } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(pathFile);
 
-    const publicUrl = urlData.publicUrl;
+        const linkPublicUrl = urlData.publicUrl;
+        const idSiswaModal = window.currentSelectedUserForModal.id;
 
-    const studentIdForUpdate = window.currentSelectedUserForModal.id;
-    const { error: updateError } = await _supabase
-      .from('students')
-      .update({ avatar_url: publicUrl })
-      .eq('id', studentIdForUpdate);
+        const { error: updateError } = await supabase
+            .from('students')
+            .update({ avatar_url: linkPublicUrl })
+            .eq('id', idSiswaModal);
 
-    if (updateError) throw updateError;
+        if (updateError) throw updateError;
 
-    document.getElementById('modalAvatar').src = publicUrl;
-    window.currentSelectedUserForModal.avatar_url = publicUrl;
+        // Perbarui tampilan gambar modal secara realtime
+        document.getElementById('modalAvatar').src = linkPublicUrl;
+        window.currentSelectedUserForModal.avatar_url = linkPublicUrl;
 
-    alert("✅ Foto profil siswa berhasil diperbarui oleh Admin!");
-    await ambilDanTampilkanRanking();
+        alert("✅ Foto profil siswa berhasil diperbarui oleh Admin!");
+        await window.ambilDanTampilkanRanking();
 
-  } catch (error) {
-    console.error("Error admin upload foto:", error);
-    alert("❌ Gagal memperbarui foto profil siswa: " + error.message);
-  } finally {
-    hideLoading();
-  }
+    } catch (err) {
+        console.error("Error admin upload foto:", err);
+        alert("❌ Gagal memperbarui foto siswa: " + err.message);
+    } finally {
+        tampilkanScreenLoading(false);
+    }
 };
 
-// GLOBAL UTILITY LOADING ANIMATION SCREEN
-function showLoading() {
-  let loader = document.getElementById('global-loader');
-  if(!loader){
-    loader = document.createElement('div');
-    loader.id = 'global-loader';
-    loader.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center';
-    loader.innerHTML = `
-      <div class="loading-spinner mb-3 w-10 h-10 border-4 animate-spin rounded-full border-t-purple-500 border-slate-800"></div>
-      <p class="text-xs font-bold text-purple-300 tracking-wider uppercase animate-pulse">Memproses Data ke Supabase...</p>
-    `;
-    document.body.appendChild(loader);
-  }
-  loader.style.display = 'flex';
+// =======================================================
+// 12. ELEMEN VISUAL UTILITY: ANIMASI LAYAR LOADING
+// =======================================================
+function tampilkanScreenLoading(show) {
+    let loader = document.getElementById('global-loader');
+    if (!loader && show) {
+        loader = document.createElement('div');
+        loader.id = 'global-loader';
+        loader.className = 'fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center';
+        loader.innerHTML = `
+            <div class="w-10 h-10 border-4 animate-spin rounded-full border-t-purple-500 border-slate-800 mb-3"></div>
+            <p class="text-xs font-bold text-purple-300 tracking-wider uppercase animate-pulse">Memproses ke Supabase...</p>
+        `;
+        document.body.appendChild(loader);
+    }
+    if (loader) loader.style.display = show ? 'flex' : 'none';
 }
 
-function hideLoading() {
-  const loader = document.getElementById('global-loader');
-  if(loader) loader.style.display = 'none';
-}
-
-// IMPORT / EXCEL TEMPLATE MANAGEMENT
+// =======================================================
+// 13. FITUR EXCEL IMPORT / EXPORT TEMPLATE
+// =======================================================
 window.downloadExcelTemplate = function() {
-  const worksheetData = [
-    ["name", "stars", "avatar_url"],
-    ["Ahmad Dhani", 10, ""],
-    ["Siti Nurhaliza", 25, "https://picsum.photos/200"],
-    ["Budi Doremi", 0, ""]
-  ];
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(worksheetData);
-  XLSX.utils.book_append_sheet(wb, ws, "Template Siswa");
-  XLSX.writeFile(wb, "template_siswa_staracademy.xlsx");
+    const templateData = [
+        ["nama", "bintang_awal", "avatar_url"],
+        ["Siswa Contoh A", 10, ""],
+        ["Siswa Contoh B", 5, "https://api.dicebear.com/7.x/bottts/svg?seed=example"]
+    ];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    XLSX.utils.book_append_sheet(wb, ws, "Template Siswa");
+    XLSX.writeFile(wb, "template_siswa_megabond.xlsx");
 };
 
 window.handleExcelImport = function(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-  showLoading();
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    tampilkanScreenLoading(true);
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
-      if (jsonData.length === 0) {
-        alert("❌ File excel kosong atau tidak valid!");
-        hideLoading();
-        return;
-      }
+            let jumlahSukses = 0;
+            const bulkDataInput = [];
 
-      const firstRow = jsonData[0];
-      if (!firstRow.hasOwnProperty('name')) {
-        alert("❌ Format kolom Excel salah! Wajib memiliki kolom minimal 'name'.");
-        hideLoading();
-        return;
-      }
+            sheetData.forEach(row => {
+                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
+                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
+                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
 
-      const cleanStudents = jsonData.map(row => ({
-        name: String(row.name || '').trim(),
-        stars: parseInt(row.stars) || 0,
-        avatar_url: row.avatar_url ? String(row.avatar_url).trim() : `https://picsum.photos/seed/${encodeURIComponent(row.name)}/150/150`
-      })).filter(r => r.name !== '');
+                if (namaSiswa !== '') {
+                    bulkDataInput.push({
+                        name: namaSiswa,
+                        avatar_url: avatarSiswa || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(namaSiswa)}`,
+                        stars: bintangAwal
+                    });
+                    jumlahSukses++;
+                }
+            });
 
-      const { error } = await _supabase.from('students').insert(cleanStudents);
-      if (error) throw error;
+            if (bulkDataInput.length > 0) {
+                const { error } = await supabase.from('students').insert(bulkDataInput);
+                if (error) throw error;
+            }
 
-      alert(`✅ Berhasil mengimpor ${cleanStudents.length} data siswa baru dari Excel!`);
-      await ambilDanTampilkanRanking();
+            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
+            await window.ambilDanTampilkanRanking();
 
-    } catch (err) {
-      alert("❌ Gagal membaca file Excel: " + err.message);
-    } finally {
-      document.getElementById('excelFileInput').value = ''; 
-      hideLoading();
-    }
-  };
-  reader.readAsArrayBuffer(file);
+        } catch (error) {
+            console.error("Eror saat import excel:", error);
+            alert("❌ Gagal membaca file Excel!");
+        } finally {
+            event.target.value = '';
+            tampilkanScreenLoading(false);
+        }
+    };
+    reader.readAsArrayBuffer(file);
 };
+
+// INITIAL LOAD RUNNING
+document.addEventListener('DOMContentLoaded', () => {
+    window.ambilDanTampilkanRanking();
+});
