@@ -6,6 +6,8 @@ let currentRole = 'user';
 let localStudentsData = [];
 // Menyimpan tipe transaksi yang aktif saat admin memilih kategori catatan
 window.currentTransactionType = 'achievement'; 
+// Flag untuk mencegah multiple call viewUserDetail
+window._isLoadingUserDetail = false;
 
 // =======================================================
 // 0. LOGIKA ATUR TIPE TRANSAKSI (ACHIEVEMENT / PENALTY)
@@ -429,104 +431,120 @@ window.handleTransaction = async function(event) {
 // 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI (PERBAIKAN SINKRONISASI)
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
-    // 1. Ambil data langsung dari indeks array (Rank 1 berarti indeks 0)
-    const index = parseInt(rankNumber) - 1;
-    const dataSiswa = localStudentsData[index];
-
-    if (!dataSiswa) {
-        console.error("Siswa pada peringkat ini tidak ditemukan!");
+    // PERBAIKAN: Cegah multiple call
+    if (window._isLoadingUserDetail) {
+        console.log("Masih memproses permintaan sebelumnya...");
         return;
     }
+    window._isLoadingUserDetail = true;
 
-    const infoTier = hitungTierDanBintang(dataSiswa.stars);
+    try {
+        // 1. Ambil data langsung dari indeks array (Rank 1 berarti indeks 0)
+        const index = parseInt(rankNumber) - 1;
+        const dataSiswa = localStudentsData[index];
 
-    // 2. Isi konten teks ke dalam modal
-    if (document.getElementById('modalName')) {
-        document.getElementById('modalName').innerText = dataSiswa.name;
-    }
-    if (document.getElementById('modalRankLabel')) {
-        document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
-    }
-    if (document.getElementById('modalTotalStarsText')) {
-        document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
-    }
-    if (document.getElementById('modalTierName')) {
-        document.getElementById('modalTierName').innerText = infoTier.tierName;
-    }
-    
-    // 3. PERBAIKAN: Gunakan avatar_url
-    const modalAvatar = document.getElementById('modalAvatar');
-    if (modalAvatar) {
-        modalAvatar.src = dataSiswa.avatar_url || 'https://picsum.photos/seed/' + encodeURIComponent(dataSiswa.name) + '/150/150';
-    }
-
-    // 4. Render Bintang pada modal
-    const starIconsContainer = document.getElementById('modalStarIcons');
-    if (starIconsContainer) {
-        starIconsContainer.innerHTML = '';
-        for (let i = 0; i < infoTier.starsInTier; i++) {
-            starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
+        if (!dataSiswa) {
+            console.error("Siswa pada peringkat ini tidak ditemukan!");
+            window._isLoadingUserDetail = false;
+            return;
         }
-        if (infoTier.tierName !== "Rising Star") {
-            const sisaSlotKosong = 5 - infoTier.starsInTier;
-            for (let i = 0; i < sisaSlotKosong; i++) {
-                starIconsContainer.innerHTML += `<i class="fa-regular fa-star text-slate-700 text-xs opacity-60"></i>`;
-            }
+
+        const infoTier = hitungTierDanBintang(dataSiswa.stars);
+
+        // 2. Isi konten teks ke dalam modal
+        if (document.getElementById('modalName')) {
+            document.getElementById('modalName').innerText = dataSiswa.name;
         }
-    }
-
-    // 5. Tampilkan Modal
-    const detailModal = document.getElementById('userDetailModal') || document.getElementById('UserDetailModal');
-    if (detailModal) {
-        detailModal.classList.remove('hidden');
-    }
-
-    // 6. Muat riwayat transaksi siswa
-    const riwayatContainer = document.getElementById('modalHistoryContainer') || 
-                             (detailModal ? detailModal.querySelector('div.mt-4 div') : null);
-
-    if (riwayatContainer) {
-        riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
+        if (document.getElementById('modalRankLabel')) {
+            document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
+        }
+        if (document.getElementById('modalTotalStarsText')) {
+            document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
+        }
+        if (document.getElementById('modalTierName')) {
+            document.getElementById('modalTierName').innerText = infoTier.tierName;
+        }
         
-        try {
-            const { data: logs, error: logsError } = await supabase
-                .from('transactions')
-                .select('*')
-                .eq('student_id', dataSiswa.id)
-                .order('created_at', { ascending: false });
-
-            if (logsError) throw logsError;
-
-            if (!logs || logs.length === 0) {
-                riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
-            } else {
-                riwayatContainer.innerHTML = '';
-                
-                logs.forEach(log => {
-                    const itemLog = document.createElement('div');
-                    itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
-                    
-                    const isPenalty = log.type === 'penalti' || log.type === 'penalty' || log.type === 'minus';
-                    const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
-                    const sign = isPenalty ? '-' : '+';
-                    const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
-                    
-                    const isiCatatan = log.description || 'Tanpa keterangan';
-                    const jumlahBintang = log.stars || 0;
-                    
-                    itemLog.innerHTML = `
-                        <div class="flex items-center gap-2">
-                            ${icon}
-                            <span class="text-slate-300 font-medium">${isiCatatan}</span>
-                        </div>
-                        <span class="font-bold ${textClass}">${sign}${jumlahBintang} Bintang</span>
-                    `;
-                    riwayatContainer.appendChild(itemLog);
-                });
-            }
-        } catch (err) {
-            riwayatContainer.innerHTML = `<p class="text-[11px] text-rose-400 text-center py-2">Gagal memuat riwayat.</p>`;
+        // 3. PERBAIKAN: Gunakan avatar_url
+        const modalAvatar = document.getElementById('modalAvatar');
+        if (modalAvatar) {
+            modalAvatar.src = dataSiswa.avatar_url || 'https://picsum.photos/seed/' + encodeURIComponent(dataSiswa.name) + '/150/150';
         }
+
+        // 4. Render Bintang pada modal
+        const starIconsContainer = document.getElementById('modalStarIcons');
+        if (starIconsContainer) {
+            starIconsContainer.innerHTML = '';
+            for (let i = 0; i < infoTier.starsInTier; i++) {
+                starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
+            }
+            if (infoTier.tierName !== "Rising Star") {
+                const sisaSlotKosong = 5 - infoTier.starsInTier;
+                for (let i = 0; i < sisaSlotKosong; i++) {
+                    starIconsContainer.innerHTML += `<i class="fa-regular fa-star text-slate-700 text-xs opacity-60"></i>`;
+                }
+            }
+        }
+
+        // 5. Tampilkan Modal
+        const detailModal = document.getElementById('userDetailModal') || document.getElementById('UserDetailModal');
+        if (detailModal) {
+            detailModal.classList.remove('hidden');
+        }
+
+        // 6. Muat riwayat transaksi siswa
+        const riwayatContainer = document.getElementById('modalHistoryContainer') || 
+                                 (detailModal ? detailModal.querySelector('div.mt-4 div') : null);
+
+        if (riwayatContainer) {
+            riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
+            
+            try {
+                const { data: logs, error: logsError } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .eq('student_id', dataSiswa.id)
+                    .order('created_at', { ascending: false })
+                    .limit(50); // PERBAIKAN: Batasi jumlah riwayat yang ditampilkan
+
+                if (logsError) throw logsError;
+
+                if (!logs || logs.length === 0) {
+                    riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
+                } else {
+                    riwayatContainer.innerHTML = '';
+                    
+                    logs.forEach(log => {
+                        const itemLog = document.createElement('div');
+                        itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
+                        
+                        const isPenalty = log.type === 'penalti' || log.type === 'penalty' || log.type === 'minus';
+                        const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
+                        const sign = isPenalty ? '-' : '+';
+                        const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
+                        
+                        const isiCatatan = log.description || 'Tanpa keterangan';
+                        const jumlahBintang = log.stars || 0;
+                        
+                        itemLog.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                ${icon}
+                                <span class="text-slate-300 font-medium">${isiCatatan}</span>
+                            </div>
+                            <span class="font-bold ${textClass}">${sign}${jumlahBintang} Bintang</span>
+                        `;
+                        riwayatContainer.appendChild(itemLog);
+                    });
+                }
+            } catch (err) {
+                riwayatContainer.innerHTML = `<p class="text-[11px] text-rose-400 text-center py-2">Gagal memuat riwayat.</p>`;
+            }
+        }
+    } catch (error) {
+        console.error("Error di viewUserDetail:", error);
+    } finally {
+        // PERBAIKAN: Reset flag setelah selesai
+        window._isLoadingUserDetail = false;
     }
 }
 
@@ -641,21 +659,15 @@ window.ubahFotoSiswaAdmin = async function() {
 
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        // PERBAIKAN: Tutup modal dan refresh data
+        // PERBAIKAN: Tutup modal
         const modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
         // Refresh data dari database
         await ambilDanTampilkanRanking();
         
-        // Buka kembali modal dengan data baru (opsional)
-        const updatedIndex = localStudentsData.findIndex(s => s.id === dataSiswa.id);
-        if (updatedIndex !== -1) {
-            // Tunggu sebentar agar data selesai di-render, lalu buka modal lagi
-            setTimeout(() => {
-                window.viewUserDetail(updatedIndex + 1);
-            }, 300);
-        }
+        // PERBAIKAN: HAPUS panggilan viewUserDetail() otomatis
+        // Biarkan user membuka modal manual jika ingin melihat hasilnya
 
     } catch (err) {
         alert("Gagal memperbarui foto: " + err.message);
@@ -737,13 +749,8 @@ window.handleModalPhotoUpload = async function(event) {
         const modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
-        // Buka kembali modal dengan data baru
-        const updatedIndex = localStudentsData.findIndex(s => s.id === dataSiswa.id);
-        if (updatedIndex !== -1) {
-            setTimeout(() => {
-                window.viewUserDetail(updatedIndex + 1);
-            }, 300);
-        }
+        // PERBAIKAN: HAPUS panggilan viewUserDetail() otomatis
+        // Biarkan user membuka modal manual
 
     } catch (err) {
         console.error('Upload error:', err);
@@ -905,11 +912,5 @@ window.downloadExcelTemplate = function() {
         alert("❌ Gagal membuat template Excel! Periksa log console.");
     }
 };
-
-// =======================================================
-// 13. FITUR IMPORT SISWA DARI TEMPLATE EXCEL (.XLS / .XLSX) - DUPLIKAT?
-// =======================================================
-// Perbaikan: Hapus duplikat fungsi handleExcelImport yang kedua
-// Fungsi ini sudah didefinisikan di atas, jadi kita hapus yang duplikat
 
 console.log("✅ app.js berhasil dimuat dengan perbaikan avatar_url!");
