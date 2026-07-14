@@ -949,14 +949,31 @@ window.closeAddStudentModal = function() {
 };
 
 // =======================================================
-// 13. FITUR IMPORT SISWA DARI TEMPLATE EXCEL
+// 13. FITUR IMPORT SISWA DARI TEMPLATE EXCEL (PERBAIKAN)
 // =======================================================
-window.handleExcelImport = function(event) {
+window.handleExcelImport = async function(event) {
     const file = event.target.files[0];
-    if (!file) return;
+    if (!file) {
+        alert("❌ Pilih file terlebih dahulu!");
+        return;
+    }
+
+    // Cek ekstensi file
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx', 'xls'].includes(fileExt)) {
+        alert("❌ Format file harus .xlsx atau .xls!");
+        return;
+    }
+
+    // Cek apakah user adalah admin
+    const isAdmin = window.currentRole === 'admin';
+    if (!isAdmin) {
+        alert("❌ Hanya admin yang bisa import data!");
+        return;
+    }
 
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
         try {
             const data = new Uint8Array(e.target.result);
             const workbook = XLSX.read(data, { type: 'array' });
@@ -965,55 +982,123 @@ window.handleExcelImport = function(event) {
             const worksheet = workbook.Sheets[firstSheetName];
             const jsonRows = XLSX.utils.sheet_to_json(worksheet);
             
+            console.log("📊 Data Excel terbaca:", jsonRows);
+            
             if (jsonRows.length === 0) {
                 alert("❌ File Excel kosong atau format tidak sesuai!");
                 return;
             }
 
+            // Validasi format: kolom 'nama' wajib ada
             const rowSampel = jsonRows[0];
             if (!rowSampel.hasOwnProperty('nama')) {
-                alert("❌ Format Excel salah! Pastikan kolom header paling atas ada tulisan 'nama' (huruf kecil semua).");
+                alert("❌ Format Excel salah! Pastikan kolom header ada 'nama' (huruf kecil).\n\n" +
+                      "Kolom yang ditemukan: " + Object.keys(rowSampel).join(', '));
                 return;
             }
 
             let jumlahSukses = 0;
+            let jumlahGagal = 0;
+            let daftarGagal = [];
 
-            jsonRows.forEach(row => {
+            // Loop setiap baris
+            for (const row of jsonRows) {
                 const namaSiswa = row.nama ? row.nama.toString().trim() : '';
                 const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
                 const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
 
-                if (namaSiswa !== '') {
-                    if (typeof window.tambahSiswaKeDatabase === 'function') {
-                        window.tambahSiswaKeDatabase(namaSiswa, avatarSiswa, bintangAwal);
-                    } else if (typeof window.handleAddStudentSubmit === 'function') {
-                        window.handleAddStudentSubmit(namaSiswa, avatarSiswa, bintangAwal);
-                    } else if (window.globalStudents) {
-                        window.globalStudents.push({
-                            id: Date.now() + Math.random(),
-                            name: namaSiswa,
-                            avatar_url: avatarSiswa,
-                            stars: bintangAwal,
-                            logs: []
-                        });
-                    }
-                    jumlahSukses++;
+                if (namaSiswa === '') {
+                    jumlahGagal++;
+                    daftarGagal.push('(Nama kosong)');
+                    continue;
                 }
-            });
 
-            alert(`✅ Berhasil mengimpor ${jumlahSukses} siswa dari Excel!`);
-            event.target.value = '';
+                try {
+                    // Cek apakah siswa sudah ada
+                    const { data: existingStudent, error: checkError } = await supabase
+                        .from('students')
+                        .select('id')
+                        .eq('name', namaSiswa)
+                        .maybeSingle();
 
-            if (typeof window.ambilDanTampilkanRanking === 'function') {
-                window.ambilDanTampilkanRanking();
-            } else if (typeof window.renderLeaderboard === 'function') {
-                window.renderLeaderboard();
+                    if (checkError) {
+                        console.error('Error cek siswa:', checkError);
+                        jumlahGagal++;
+                        daftarGagal.push(namaSiswa + ' (Error cek data)');
+                        continue;
+                    }
+
+                    let result;
+                    if (existingStudent) {
+                        // Jika siswa sudah ada, UPDATE
+                        console.log(`📝 Mengupdate siswa: ${namaSiswa}`);
+                        result = await supabase
+                            .from('students')
+                            .update({ 
+                                stars: bintangAwal,
+                                avatar_url: avatarSiswa || existingStudent.avatar_url
+                            })
+                            .eq('id', existingStudent.id);
+                    } else {
+                        // Jika siswa baru, INSERT
+                        console.log(`➕ Menambah siswa baru: ${namaSiswa}`);
+                        const payload = { 
+                            name: namaSiswa, 
+                            stars: bintangAwal 
+                        };
+                        if (avatarSiswa) payload.avatar_url = avatarSiswa;
+                        
+                        result = await supabase
+                            .from('students')
+                            .insert([payload]);
+                    }
+
+                    if (result.error) {
+                        console.error('Error:', result.error);
+                        jumlahGagal++;
+                        daftarGagal.push(namaSiswa + ' (' + result.error.message + ')');
+                    } else {
+                        jumlahSukses++;
+                    }
+
+                } catch (err) {
+                    console.error('Error proses:', err);
+                    jumlahGagal++;
+                    daftarGagal.push(namaSiswa + ' (' + err.message + ')');
+                }
             }
 
+            // Tampilkan hasil
+            let pesan = `✅ IMPORT SELESAI!\n\n`;
+            pesan += `✅ Berhasil: ${jumlahSukses} siswa\n`;
+            pesan += `❌ Gagal: ${jumlahGagal} siswa\n`;
+            
+            if (daftarGagal.length > 0) {
+                pesan += `\n📋 Detail gagal:\n`;
+                daftarGagal.slice(0, 10).forEach(item => {
+                    pesan += `  - ${item}\n`;
+                });
+                if (daftarGagal.length > 10) {
+                    pesan += `  ... dan ${daftarGagal.length - 10} lainnya`;
+                }
+            }
+
+            alert(pesan);
+            
+            // Reset input file
+            event.target.value = '';
+
+            // Refresh data
+            await ambilDanTampilkanRanking();
+
         } catch (error) {
-            console.error(error);
-            alert("❌ Gagal membaca file Excel. Pastikan file tidak rusak!");
+            console.error('❌ Error import:', error);
+            alert("❌ Gagal membaca file Excel: " + error.message);
         }
+    };
+    
+    reader.onerror = function() {
+        alert("❌ Gagal membaca file!");
     };
     
     reader.readAsArrayBuffer(file);
