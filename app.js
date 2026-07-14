@@ -531,13 +531,20 @@ window.viewUserDetail = async function(rankNumber) {
         // 6. TAMPILKAN/SEMBUNYIKAN TOMBOL EDIT NAMA
         // ==========================================
         const btnEditNama = document.getElementById('btnEditNama');
-        if (btnEditNama) {
-            if (window.currentRole === 'admin') {
-                btnEditNama.classList.remove('hidden');
-            } else {
-                btnEditNama.classList.add('hidden');
-            }
-        }
+if (btnEditNama) {
+    console.log("🔍 Current Role:", window.currentRole); // Debug
+    if (window.currentRole === 'admin') {
+        btnEditNama.classList.remove('hidden');
+        btnEditNama.style.display = 'inline-flex'; // Paksa tampil
+        console.log("✅ Tombol edit nama ditampilkan");
+    } else {
+        btnEditNama.classList.add('hidden');
+        btnEditNama.style.display = 'none';
+        console.log("❌ Tombol edit nama disembunyikan");
+    }
+} else {
+    console.warn("⚠️ Tombol btnEditNama tidak ditemukan di DOM!");
+}
 
         // ==========================================
         // 7. MUAT RIWAYAT TRANSAKSI SISWA
