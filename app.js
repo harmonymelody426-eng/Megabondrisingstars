@@ -662,6 +662,90 @@ window.ubahFotoSiswaAdmin = async function() {
 };
 
 // =======================================================
+// 7.5. FITUR EDIT NAMA SISWA (TAMBAHAN)
+// =======================================================
+window.editNamaSiswa = async function() {
+    // Cek apakah user adalah admin
+    const isAdmin = window.currentRole === 'admin';
+    if (!isAdmin) {
+        alert("❌ Hanya admin yang bisa mengedit nama siswa!");
+        return;
+    }
+
+    // Ambil nama siswa yang sedang aktif di modal
+    const namaLama = document.getElementById('modalName').innerText;
+    const dataSiswa = localStudentsData.find(s => s.name === namaLama);
+    
+    if (!dataSiswa) {
+        alert("❌ Gagal mendeteksi data siswa!");
+        return;
+    }
+
+    // Prompt untuk input nama baru
+    const namaBaru = prompt(
+        "✏️ Edit Nama Siswa\n\n" +
+        "Nama lama: " + namaLama + "\n\n" +
+        "Masukkan nama baru:",
+        namaLama
+    );
+
+    // Jika user klik Cancel atau nama kosong
+    if (namaBaru === null) return;
+    if (namaBaru.trim() === "") {
+        alert("❌ Nama tidak boleh kosong!");
+        return;
+    }
+
+    // Jika nama sama dengan nama lama, tidak perlu update
+    if (namaBaru.trim() === namaLama) {
+        alert("ℹ️ Nama tidak berubah.");
+        return;
+    }
+
+    // Cek apakah nama sudah digunakan oleh siswa lain
+    const namaSudahAda = localStudentsData.some(s => 
+        s.name.toLowerCase() === namaBaru.trim().toLowerCase() && 
+        s.id !== dataSiswa.id
+    );
+
+    if (namaSudahAda) {
+        alert("❌ Nama '" + namaBaru.trim() + "' sudah digunakan oleh siswa lain!");
+        return;
+    }
+
+    try {
+        // Update nama di database
+        const { error } = await supabase
+            .from('students')
+            .update({ name: namaBaru.trim() })
+            .eq('id', dataSiswa.id);
+
+        if (error) throw error;
+
+        alert("✅ Nama siswa berhasil diubah menjadi: " + namaBaru.trim());
+        
+        // Tutup modal
+        const modalDetail = document.getElementById('UserDetailModal');
+        if (modalDetail) modalDetail.classList.add('hidden');
+        
+        // Refresh data
+        await ambilDanTampilkanRanking();
+        
+        // Buka kembali modal dengan data baru (opsional)
+        const updatedIndex = localStudentsData.findIndex(s => s.id === dataSiswa.id);
+        if (updatedIndex !== -1) {
+            setTimeout(() => {
+                window.viewUserDetail(updatedIndex + 1);
+            }, 300);
+        }
+
+    } catch (err) {
+        console.error('❌ Error edit nama:', err);
+        alert("❌ Gagal mengubah nama: " + err.message);
+    }
+};
+
+// =======================================================
 // 8. FUNGSI UPLOAD FOTO DARI FILE (DENGAN AUTO-DELETE)
 // =======================================================
 window.handleModalPhotoUpload = async function(event) {
