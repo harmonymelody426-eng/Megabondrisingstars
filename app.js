@@ -431,73 +431,124 @@ window.handleTransaction = async function(event) {
 // 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
 // =======================================================
 window.viewUserDetail = async function(rankNumber) {
-    // PERBAIKAN: Cegah multiple call
+    // Cegah multiple call (loading berlapis)
     if (window._isLoadingUserDetail) {
-        console.log("Masih memproses permintaan sebelumnya...");
+        console.log("⏳ Masih memproses permintaan sebelumnya...");
         return;
     }
     window._isLoadingUserDetail = true;
 
     try {
-        // 1. Ambil data langsung dari indeks array (Rank 1 berarti indeks 0)
+        // ==========================================
+        // 1. AMBIL DATA SISWA DARI LOCAL STORAGE
+        // ==========================================
         const index = parseInt(rankNumber) - 1;
         const dataSiswa = localStudentsData[index];
 
         if (!dataSiswa) {
-            console.error("Siswa pada peringkat ini tidak ditemukan!");
+            console.error("❌ Siswa pada peringkat ini tidak ditemukan!");
             window._isLoadingUserDetail = false;
             return;
         }
 
+        console.log(`📊 Menampilkan detail: ${dataSiswa.name} (Rank #${rankNumber})`);
+
         const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
-        // 2. Isi konten teks ke dalam modal
-        if (document.getElementById('modalName')) {
-            document.getElementById('modalName').innerText = dataSiswa.name;
-        }
-        if (document.getElementById('modalRankLabel')) {
-            document.getElementById('modalRankLabel').innerText = `#${rankNumber}`;
-        }
-        if (document.getElementById('modalTotalStarsText')) {
-            document.getElementById('modalTotalStarsText').innerHTML = `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
-        }
-        if (document.getElementById('modalTierName')) {
-            document.getElementById('modalTierName').innerText = infoTier.tierName;
-        }
-        
-        // 3. PERBAIKAN: Gunakan avatar_url
-        const modalAvatar = document.getElementById('modalAvatar');
-        if (modalAvatar) {
-            modalAvatar.src = dataSiswa.avatar_url || 'https://picsum.photos/seed/' + encodeURIComponent(dataSiswa.name) + '/150/150';
+        // ==========================================
+        // 2. ISI KONTEN TEKS KE MODAL
+        // ==========================================
+        const elements = {
+            modalName: document.getElementById('modalName'),
+            modalRankLabel: document.getElementById('modalRankLabel'),
+            modalTotalStarsText: document.getElementById('modalTotalStarsText'),
+            modalTierName: document.getElementById('modalTierName'),
+            modalAvatar: document.getElementById('modalAvatar'),
+            modalStarIcons: document.getElementById('modalStarIcons'),
+            detailModal: document.getElementById('userDetailModal') || document.getElementById('UserDetailModal')
+        };
+
+        // Isi nama
+        if (elements.modalName) {
+            elements.modalName.innerText = dataSiswa.name;
         }
 
-        // 4. Render Bintang pada modal
-        const starIconsContainer = document.getElementById('modalStarIcons');
-        if (starIconsContainer) {
-            starIconsContainer.innerHTML = '';
+        // Isi rank
+        if (elements.modalRankLabel) {
+            elements.modalRankLabel.innerText = `#${rankNumber}`;
+        }
+
+        // Isi total bintang
+        if (elements.modalTotalStarsText) {
+            elements.modalTotalStarsText.innerHTML = 
+                `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
+        }
+
+        // Isi tier name
+        if (elements.modalTierName) {
+            elements.modalTierName.innerText = infoTier.tierName;
+        }
+
+        // ==========================================
+        // 3. SET AVATAR
+        // ==========================================
+        if (elements.modalAvatar) {
+            const defaultAvatar = 'https://picsum.photos/seed/' + 
+                encodeURIComponent(dataSiswa.name) + '/150/150';
+            elements.modalAvatar.src = dataSiswa.avatar_url || defaultAvatar;
+        }
+
+        // ==========================================
+        // 4. RENDER BINTANG DI MODAL
+        // ==========================================
+        if (elements.modalStarIcons) {
+            elements.modalStarIcons.innerHTML = '';
+            
+            // Tampilkan bintang yang terisi (warna kuning)
             for (let i = 0; i < infoTier.starsInTier; i++) {
-                starIconsContainer.innerHTML += `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
+                elements.modalStarIcons.innerHTML += 
+                    `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
             }
+            
+            // Tampilkan bintang kosong (jika bukan Rising Star)
             if (infoTier.tierName !== "Rising Star") {
                 const sisaSlotKosong = 5 - infoTier.starsInTier;
                 for (let i = 0; i < sisaSlotKosong; i++) {
-                    starIconsContainer.innerHTML += `<i class="fa-regular fa-star text-slate-700 text-xs opacity-60"></i>`;
+                    elements.modalStarIcons.innerHTML += 
+                        `<i class="fa-regular fa-star text-slate-700 text-xs opacity-60"></i>`;
                 }
             }
         }
 
-        // 5. Tampilkan Modal
-        const detailModal = document.getElementById('userDetailModal') || document.getElementById('UserDetailModal');
-        if (detailModal) {
-            detailModal.classList.remove('hidden');
+        // ==========================================
+        // 5. TAMPILKAN MODAL
+        // ==========================================
+        if (elements.detailModal) {
+            elements.detailModal.classList.remove('hidden');
         }
 
-        // 6. Muat riwayat transaksi siswa
+        // ==========================================
+        // 6. TAMPILKAN/SEMBUNYIKAN TOMBOL EDIT NAMA
+        // ==========================================
+        const btnEditNama = document.getElementById('btnEditNama');
+        if (btnEditNama) {
+            if (window.currentRole === 'admin') {
+                btnEditNama.classList.remove('hidden');
+            } else {
+                btnEditNama.classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // 7. MUAT RIWAYAT TRANSAKSI SISWA
+        // ==========================================
         const riwayatContainer = document.getElementById('modalHistoryContainer') || 
-                                 (detailModal ? detailModal.querySelector('div.mt-4 div') : null);
+            (elements.detailModal ? elements.detailModal.querySelector('div.mt-4 div') : null);
 
         if (riwayatContainer) {
-            riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">Memuat riwayat...</p>`;
+            // Tampilkan loading
+            riwayatContainer.innerHTML = 
+                `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">⏳ Memuat riwayat...</p>`;
             
             try {
                 const { data: logs, error: logsError } = await supabase
@@ -509,43 +560,52 @@ window.viewUserDetail = async function(rankNumber) {
 
                 if (logsError) throw logsError;
 
+                // Jika tidak ada riwayat
                 if (!logs || logs.length === 0) {
-                    riwayatContainer.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">Tidak ada riwayat.</p>`;
-                } else {
-                    riwayatContainer.innerHTML = '';
-                    
-                    logs.forEach(log => {
-                        const itemLog = document.createElement('div');
-                        itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
-                        
-                        const isPenalty = log.type === 'penalti' || log.type === 'penalty' || log.type === 'minus';
-                        const icon = isPenalty ? '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : '<i class="fa-solid fa-award text-emerald-400"></i>';
-                        const sign = isPenalty ? '-' : '+';
-                        const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
-                        
-                        const isiCatatan = log.description || 'Tanpa keterangan';
-                        const jumlahBintang = log.stars || 0;
-                        
-                        itemLog.innerHTML = `
-                            <div class="flex items-center gap-2">
-                                ${icon}
-                                <span class="text-slate-300 font-medium">${isiCatatan}</span>
-                            </div>
-                            <span class="font-bold ${textClass}">${sign}${jumlahBintang} Bintang</span>
-                        `;
-                        riwayatContainer.appendChild(itemLog);
-                    });
+                    riwayatContainer.innerHTML = 
+                        `<p class="text-[11px] text-slate-500 text-center py-2">📭 Tidak ada riwayat.</p>`;
+                    return;
                 }
+
+                // Render riwayat
+                riwayatContainer.innerHTML = '';
+                
+                logs.forEach(log => {
+                    const isPenalty = ['penalti', 'penalty', 'minus'].includes(log.type);
+                    const icon = isPenalty ? 
+                        '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : 
+                        '<i class="fa-solid fa-award text-emerald-400"></i>';
+                    const sign = isPenalty ? '-' : '+';
+                    const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
+                    const isiCatatan = log.description || 'Tanpa keterangan';
+                    const jumlahBintang = log.stars || 0;
+                    
+                    const itemLog = document.createElement('div');
+                    itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
+                    itemLog.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            ${icon}
+                            <span class="text-slate-300 font-medium">${isiCatatan}</span>
+                        </div>
+                        <span class="font-bold ${textClass}">${sign}${jumlahBintang} Bintang</span>
+                    `;
+                    riwayatContainer.appendChild(itemLog);
+                });
+
             } catch (err) {
-                riwayatContainer.innerHTML = `<p class="text-[11px] text-rose-400 text-center py-2">Gagal memuat riwayat.</p>`;
+                console.error('❌ Error ambil riwayat:', err);
+                riwayatContainer.innerHTML = 
+                    `<p class="text-[11px] text-rose-400 text-center py-2">❌ Gagal memuat riwayat.</p>`;
             }
         }
+
     } catch (error) {
-        console.error("Error di viewUserDetail:", error);
+        console.error("❌ Error di viewUserDetail:", error);
     } finally {
+        // Reset flag setelah selesai
         window._isLoadingUserDetail = false;
     }
-}
+};
 
 // =======================================================
 // 5. PENGATUR MODE (USER / ADMIN)
