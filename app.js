@@ -722,7 +722,7 @@ window.ubahFotoSiswaAdmin = async function() {
 };
 
 // =======================================================
-// 7.5. FITUR EDIT NAMA SISWA (TAMBAHAN)
+// 7.5. FITUR EDIT NAMA SISWA (DARI MODAL DETAIL)
 // =======================================================
 window.editNamaSiswa = async function() {
     // Cek apakah user adalah admin
@@ -798,6 +798,119 @@ window.editNamaSiswa = async function() {
                 window.viewUserDetail(updatedIndex + 1);
             }, 300);
         }
+
+    } catch (err) {
+        console.error('❌ Error edit nama:', err);
+        alert("❌ Gagal mengubah nama: " + err.message);
+    }
+};
+
+// =======================================================
+// 7.6. FUNGSI BUKA EDIT NAMA DARI PANEL ADMIN
+// =======================================================
+window.bukaEditNama = function() {
+    // Cek apakah user adalah admin
+    const isAdmin = window.currentRole === 'admin';
+    if (!isAdmin) {
+        alert("❌ Hanya admin yang bisa mengedit nama siswa!");
+        return;
+    }
+
+    // Cek apakah ada data siswa
+    if (!localStudentsData || localStudentsData.length === 0) {
+        alert("❌ Belum ada data siswa!");
+        return;
+    }
+
+    // Buat daftar pilihan siswa
+    let daftarSiswa = "📋 PILIH SISWA YANG INGIN DIEDIT:\n\n";
+    daftarSiswa += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    
+    localStudentsData.forEach((s, i) => {
+        const rank = i + 1;
+        const bintang = s.stars || 0;
+        const starIcon = bintang >= 15 ? '⭐⭐⭐' : bintang >= 10 ? '⭐⭐' : bintang >= 5 ? '⭐' : '☆';
+        daftarSiswa += `${rank}. ${s.name} ${starIcon} (${bintang} bintang)\n`;
+    });
+    
+    daftarSiswa += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    daftarSiswa += "\nMasukkan NOMOR URUT siswa (1-" + localStudentsData.length + "):";
+
+    // Prompt untuk memilih siswa
+    const pilihan = prompt(daftarSiswa);
+    if (pilihan === null) return;
+
+    // Validasi input
+    const index = parseInt(pilihan) - 1;
+    if (isNaN(index) || index < 0 || index >= localStudentsData.length) {
+        alert("❌ Pilihan tidak valid! Masukkan angka antara 1 - " + localStudentsData.length);
+        return;
+    }
+
+    const dataSiswa = localStudentsData[index];
+    
+    // Prompt untuk input nama baru
+    const namaBaru = prompt(
+        "✏️ EDIT NAMA SISWA\n\n" +
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "Nama lama: " + dataSiswa.name + "\n" +
+        "Ranking: #" + (index + 1) + "\n" +
+        "Bintang: " + dataSiswa.stars + " ⭐\n" +
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
+        "Masukkan NAMA BARU:",
+        dataSiswa.name
+    );
+
+    // Jika user klik Cancel atau nama kosong
+    if (namaBaru === null) return;
+    
+    if (namaBaru.trim() === "") {
+        alert("❌ Nama tidak boleh kosong!");
+        return;
+    }
+
+    // Jika nama sama dengan nama lama
+    if (namaBaru.trim() === dataSiswa.name) {
+        alert("ℹ️ Nama tidak berubah.");
+        return;
+    }
+
+    // Cek apakah nama sudah digunakan oleh siswa lain
+    const namaSudahAda = localStudentsData.some(s => 
+        s.name.toLowerCase() === namaBaru.trim().toLowerCase() && 
+        s.id !== dataSiswa.id
+    );
+
+    if (namaSudahAda) {
+        alert("❌ Nama '" + namaBaru.trim() + "' sudah digunakan oleh siswa lain!");
+        return;
+    }
+
+    // Konfirmasi perubahan
+    const konfirmasi = confirm(
+        "⚠️ KONFIRMASI PERUBAHAN NAMA\n\n" +
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
+        "Nama lama: " + dataSiswa.name + "\n" +
+        "Nama baru: " + namaBaru.trim() + "\n" +
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n" +
+        "Apakah Anda yakin ingin mengubah nama siswa ini?"
+    );
+
+    if (!konfirmasi) return;
+
+    // Proses update nama di database
+    try {
+        const { error } = await supabase
+            .from('students')
+            .update({ name: namaBaru.trim() })
+            .eq('id', dataSiswa.id);
+
+        if (error) throw error;
+
+        alert("✅ Nama siswa berhasil diubah menjadi: " + namaBaru.trim());
+        
+        // Refresh data
+        ambilDanTampilkanRanking();
 
     } catch (err) {
         console.error('❌ Error edit nama:', err);
@@ -1186,31 +1299,50 @@ window.handleExcelImport = async function(event) {
                 }
 
                 try {
-                    // INSERT langsung ke database
-                    const payload = { 
-                        name: namaSiswa, 
-                        stars: bintangAwal 
-                    };
-                    
-                    if (avatarSiswa && avatarSiswa !== '') {
-                        payload.avatar_url = avatarSiswa;
+                    // Cek apakah siswa sudah ada
+                    const { data: existingStudent, error: checkError } = await supabase
+                        .from('students')
+                        .select('id')
+                        .eq('name', namaSiswa)
+                        .maybeSingle();
+
+                    if (checkError) {
+                        console.error('Error cek siswa:', checkError);
+                        jumlahGagal++;
+                        daftarGagal.push(`${namaSiswa}: Error cek data`);
+                        continue;
                     }
 
-                    console.log(`📤 Mengirim data:`, payload);
-
-                    const { data: resultData, error } = await supabase
-                        .from('students')
-                        .insert([payload])
-                        .select();
-
-                    if (error) {
-                        console.error(`❌ Gagal insert ${namaSiswa}:`, error);
-                        jumlahGagal++;
-                        daftarGagal.push(`${namaSiswa}: ${error.message}`);
+                    let result;
+                    if (existingStudent) {
+                        // UPDATE jika sudah ada
+                        console.log(`📝 Mengupdate siswa: ${namaSiswa}`);
+                        const updatePayload = { stars: bintangAwal };
+                        if (avatarSiswa && avatarSiswa !== '') {
+                            updatePayload.avatar_url = avatarSiswa;
+                        }
+                        result = await supabase
+                            .from('students')
+                            .update(updatePayload)
+                            .eq('id', existingStudent.id);
                     } else {
-                        console.log(`✅ Berhasil insert ${namaSiswa}:`, resultData);
+                        // INSERT jika baru
+                        console.log(`➕ Menambah siswa baru: ${namaSiswa}`);
+                        const payload = { name: namaSiswa, stars: bintangAwal };
+                        if (avatarSiswa && avatarSiswa !== '') {
+                            payload.avatar_url = avatarSiswa;
+                        }
+                        result = await supabase.from('students').insert([payload]);
+                    }
+
+                    if (result.error) {
+                        console.error(`❌ Gagal ${existingStudent ? 'update' : 'insert'} ${namaSiswa}:`, result.error);
+                        jumlahGagal++;
+                        daftarGagal.push(`${namaSiswa}: ${result.error.message}`);
+                    } else {
+                        console.log(`✅ Berhasil ${existingStudent ? 'update' : 'insert'} ${namaSiswa}`);
                         jumlahSukses++;
-                        daftarSukses.push(namaSiswa);
+                        daftarSukses.push(namaSiswa + (existingStudent ? ' (update)' : ' (baru)'));
                     }
 
                 } catch (err) {
@@ -1232,7 +1364,7 @@ window.handleExcelImport = async function(event) {
                     pesan += `  ✅ ${item}\n`;
                 });
             } else if (daftarSukses.length > 10) {
-                pesan += `📋 ${daftarSukses.length} siswa berhasil ditambahkan\n`;
+                pesan += `📋 ${daftarSukses.length} siswa berhasil diproses\n`;
             }
             
             if (daftarGagal.length > 0) {
