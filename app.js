@@ -949,7 +949,7 @@ window.closeAddStudentModal = function() {
 };
 
 // =======================================================
-// 13. FITUR IMPORT SISWA DARI TEMPLATE EXCEL (PERBAIKAN)
+// 13. FITUR IMPORT SISWA DARI TEMPLATE EXCEL (VERSI TERBARU)
 // =======================================================
 window.handleExcelImport = async function(event) {
     const file = event.target.files[0];
@@ -972,6 +972,21 @@ window.handleExcelImport = async function(event) {
         return;
     }
 
+    // Konfirmasi sebelum import
+    const konfirmasi = confirm(
+        `⚠️ Anda akan mengimpor data dari file:\n\n` +
+        `${file.name}\n\n` +
+        `Pastikan format file sudah benar:\n` +
+        `- Kolom "nama" (WAJIB)\n` +
+        `- Kolom "avatar_url" (Opsional)\n` +
+        `- Kolom "bintang_awal" (Opsional)\n\n` +
+        `Lanjutkan?`
+    );
+    if (!konfirmasi) {
+        event.target.value = '';
+        return;
+    }
+
     const reader = new FileReader();
     reader.onload = async function(e) {
         try {
@@ -983,103 +998,106 @@ window.handleExcelImport = async function(event) {
             const jsonRows = XLSX.utils.sheet_to_json(worksheet);
             
             console.log("📊 Data Excel terbaca:", jsonRows);
+            console.log("📊 Jumlah baris:", jsonRows.length);
             
             if (jsonRows.length === 0) {
                 alert("❌ File Excel kosong atau format tidak sesuai!");
+                event.target.value = '';
                 return;
             }
 
             // Validasi format: kolom 'nama' wajib ada
             const rowSampel = jsonRows[0];
+            console.log("📊 Kolom yang ditemukan:", Object.keys(rowSampel));
+            
             if (!rowSampel.hasOwnProperty('nama')) {
-                alert("❌ Format Excel salah! Pastikan kolom header ada 'nama' (huruf kecil).\n\n" +
-                      "Kolom yang ditemukan: " + Object.keys(rowSampel).join(', '));
+                alert(
+                    "❌ Format Excel salah!\n\n" +
+                    "Kolom yang ditemukan: " + Object.keys(rowSampel).join(', ') + "\n\n" +
+                    "Pastikan kolom header ada 'nama' (huruf kecil semua).\n\n" +
+                    "Gunakan tombol 'Download Template' untuk contoh format yang benar."
+                );
+                event.target.value = '';
                 return;
             }
 
             let jumlahSukses = 0;
             let jumlahGagal = 0;
+            let daftarSukses = [];
             let daftarGagal = [];
 
             // Loop setiap baris
-            for (const row of jsonRows) {
+            for (let i = 0; i < jsonRows.length; i++) {
+                const row = jsonRows[i];
                 const namaSiswa = row.nama ? row.nama.toString().trim() : '';
                 const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
                 const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
 
+                console.log(`📝 Baris ${i+1}:`, { namaSiswa, avatarSiswa, bintangAwal });
+
                 if (namaSiswa === '') {
                     jumlahGagal++;
-                    daftarGagal.push('(Nama kosong)');
+                    daftarGagal.push(`Baris ${i+1}: Nama kosong`);
                     continue;
                 }
 
                 try {
-                    // Cek apakah siswa sudah ada
-                    const { data: existingStudent, error: checkError } = await supabase
+                    // INSERT langsung ke database
+                    const payload = { 
+                        name: namaSiswa, 
+                        stars: bintangAwal 
+                    };
+                    
+                    if (avatarSiswa && avatarSiswa !== '') {
+                        payload.avatar_url = avatarSiswa;
+                    }
+
+                    console.log(`📤 Mengirim data:`, payload);
+
+                    const { data: resultData, error } = await supabase
                         .from('students')
-                        .select('id')
-                        .eq('name', namaSiswa)
-                        .maybeSingle();
+                        .insert([payload])
+                        .select();
 
-                    if (checkError) {
-                        console.error('Error cek siswa:', checkError);
+                    if (error) {
+                        console.error(`❌ Gagal insert ${namaSiswa}:`, error);
                         jumlahGagal++;
-                        daftarGagal.push(namaSiswa + ' (Error cek data)');
-                        continue;
-                    }
-
-                    let result;
-                    if (existingStudent) {
-                        // Jika siswa sudah ada, UPDATE
-                        console.log(`📝 Mengupdate siswa: ${namaSiswa}`);
-                        result = await supabase
-                            .from('students')
-                            .update({ 
-                                stars: bintangAwal,
-                                avatar_url: avatarSiswa || existingStudent.avatar_url
-                            })
-                            .eq('id', existingStudent.id);
+                        daftarGagal.push(`${namaSiswa}: ${error.message}`);
                     } else {
-                        // Jika siswa baru, INSERT
-                        console.log(`➕ Menambah siswa baru: ${namaSiswa}`);
-                        const payload = { 
-                            name: namaSiswa, 
-                            stars: bintangAwal 
-                        };
-                        if (avatarSiswa) payload.avatar_url = avatarSiswa;
-                        
-                        result = await supabase
-                            .from('students')
-                            .insert([payload]);
-                    }
-
-                    if (result.error) {
-                        console.error('Error:', result.error);
-                        jumlahGagal++;
-                        daftarGagal.push(namaSiswa + ' (' + result.error.message + ')');
-                    } else {
+                        console.log(`✅ Berhasil insert ${namaSiswa}:`, resultData);
                         jumlahSukses++;
+                        daftarSukses.push(namaSiswa);
                     }
 
                 } catch (err) {
-                    console.error('Error proses:', err);
+                    console.error(`❌ Error proses ${namaSiswa}:`, err);
                     jumlahGagal++;
-                    daftarGagal.push(namaSiswa + ' (' + err.message + ')');
+                    daftarGagal.push(`${namaSiswa}: ${err.message}`);
                 }
             }
 
             // Tampilkan hasil
             let pesan = `✅ IMPORT SELESAI!\n\n`;
+            pesan += `📊 Total data: ${jsonRows.length} baris\n`;
             pesan += `✅ Berhasil: ${jumlahSukses} siswa\n`;
-            pesan += `❌ Gagal: ${jumlahGagal} siswa\n`;
+            pesan += `❌ Gagal: ${jumlahGagal} siswa\n\n`;
+            
+            if (daftarSukses.length > 0 && daftarSukses.length <= 10) {
+                pesan += `📋 Berhasil:\n`;
+                daftarSukses.forEach(item => {
+                    pesan += `  ✅ ${item}\n`;
+                });
+            } else if (daftarSukses.length > 10) {
+                pesan += `📋 ${daftarSukses.length} siswa berhasil ditambahkan\n`;
+            }
             
             if (daftarGagal.length > 0) {
-                pesan += `\n📋 Detail gagal:\n`;
-                daftarGagal.slice(0, 10).forEach(item => {
-                    pesan += `  - ${item}\n`;
+                pesan += `\n❌ Gagal:\n`;
+                daftarGagal.slice(0, 5).forEach(item => {
+                    pesan += `  ❌ ${item}\n`;
                 });
-                if (daftarGagal.length > 10) {
-                    pesan += `  ... dan ${daftarGagal.length - 10} lainnya`;
+                if (daftarGagal.length > 5) {
+                    pesan += `  ... dan ${daftarGagal.length - 5} lainnya`;
                 }
             }
 
@@ -1089,16 +1107,22 @@ window.handleExcelImport = async function(event) {
             event.target.value = '';
 
             // Refresh data
-            await ambilDanTampilkanRanking();
+            if (jumlahSukses > 0) {
+                console.log("🔄 Refresh data...");
+                await ambilDanTampilkanRanking();
+                console.log("✅ Refresh selesai!");
+            }
 
         } catch (error) {
             console.error('❌ Error import:', error);
             alert("❌ Gagal membaca file Excel: " + error.message);
+            event.target.value = '';
         }
     };
     
     reader.onerror = function() {
         alert("❌ Gagal membaca file!");
+        event.target.value = '';
     };
     
     reader.readAsArrayBuffer(file);
