@@ -255,7 +255,7 @@ async function ambilDanTampilkanRanking() {
                 const info = hitungTierDanBintang(itemSiswa.stars);
                 const row = document.createElement('div');
                 row.className = 'leaderboard-item flex justify-between items-center bg-slate-900/40 border border-slate-800/60 p-3 rounded-xl cursor-pointer hover:border-brand-500/40 transition-all';
-                row.onclick = () => window.viewUserDetail(index + 1);
+                row.onclick = function() { window.viewUserDetail(index + 1); };
                 
                 row.innerHTML = `
                     <div class="flex items-center gap-3">
@@ -407,7 +407,7 @@ window.handleTransaction = async function(event) {
         console.error(err);
         alert('Gagal memproses transaksi: ' + err.message);
     }
-}
+};
 
 // =======================================================
 // 4. FUNGSI DETAIL PROFIL + AMBIL RIWAYAT TRANSAKSI
@@ -429,7 +429,7 @@ window.viewUserDetail = async function(rankNumber) {
             return;
         }
 
-        console.log(`📊 Menampilkan detail: ${dataSiswa.name} (Rank #${rankNumber})`);
+        console.log('📊 Menampilkan detail: ' + dataSiswa.name + ' (Rank #' + rankNumber + ')');
 
         const infoTier = hitungTierDanBintang(dataSiswa.stars);
 
@@ -448,12 +448,12 @@ window.viewUserDetail = async function(rankNumber) {
         }
 
         if (elements.modalRankLabel) {
-            elements.modalRankLabel.innerText = `#${rankNumber}`;
+            elements.modalRankLabel.innerText = '#' + rankNumber;
         }
 
         if (elements.modalTotalStarsText) {
             elements.modalTotalStarsText.innerHTML = 
-                `<i class="fa-solid fa-star"></i> Total: ${dataSiswa.stars} Bintang`;
+                '<i class="fa-solid fa-star"></i> Total: ' + dataSiswa.stars + ' Bintang';
         }
 
         if (elements.modalTierName) {
@@ -461,22 +461,22 @@ window.viewUserDetail = async function(rankNumber) {
         }
 
         if (elements.modalAvatar) {
-            const defaultAvatar = 'https://picsum.photos/seed/' + 
+            var defaultAvatar = 'https://picsum.photos/seed/' + 
                 encodeURIComponent(dataSiswa.name) + '/150/150';
             elements.modalAvatar.src = dataSiswa.avatar_url || defaultAvatar;
         }
 
         if (elements.modalStarIcons) {
             elements.modalStarIcons.innerHTML = '';
-            for (let i = 0; i < infoTier.starsInTier; i++) {
+            for (var i = 0; i < infoTier.starsInTier; i++) {
                 elements.modalStarIcons.innerHTML += 
-                    `<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>`;
+                    '<i class="fa-solid fa-star text-yellow-400 text-xs animate-pulse"></i>';
             }
             if (infoTier.tierName !== "Rising Star") {
-                const sisaSlotKosong = 5 - infoTier.starsInTier;
-                for (let i = 0; i < sisaSlotKosong; i++) {
+                var sisaSlotKosong = 5 - infoTier.starsInTier;
+                for (var j = 0; j < sisaSlotKosong; j++) {
                     elements.modalStarIcons.innerHTML += 
-                        `<i class="fa-regular fa-star text-slate-700 text-xs opacity-60"></i>`;
+                        '<i class="fa-regular fa-star text-slate-700 text-xs opacity-60"></i>';
                 }
             }
         }
@@ -486,7 +486,7 @@ window.viewUserDetail = async function(rankNumber) {
         }
 
         // TAMPILKAN TOMBOL EDIT NAMA
-        const btnEditNama = document.getElementById('btnEditNama');
+        var btnEditNama = document.getElementById('btnEditNama');
         if (btnEditNama) {
             console.log("🔍 Current Role:", window.currentRole);
             if (window.currentRole === 'admin') {
@@ -503,15 +503,15 @@ window.viewUserDetail = async function(rankNumber) {
         }
 
         // RIWAYAT TRANSAKSI
-        const riwayatContainer = document.getElementById('modalHistoryContainer') || 
+        var riwayatContainer = document.getElementById('modalHistoryContainer') || 
             (elements.detailModal ? elements.detailModal.querySelector('div.mt-4 div') : null);
 
         if (riwayatContainer) {
             riwayatContainer.innerHTML = 
-                `<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">⏳ Memuat riwayat...</p>`;
+                '<p class="text-[11px] text-slate-500 text-center py-2 animate-pulse">⏳ Memuat riwayat...</p>';
             
             try {
-                const { data: logs, error: logsError } = await supabase
+                var { data: logs, error: logsError } = await supabase
                     .from('transactions')
                     .select('*')
                     .eq('student_id', dataSiswa.id)
@@ -522,38 +522,37 @@ window.viewUserDetail = async function(rankNumber) {
 
                 if (!logs || logs.length === 0) {
                     riwayatContainer.innerHTML = 
-                        `<p class="text-[11px] text-slate-500 text-center py-2">📭 Tidak ada riwayat.</p>`;
+                        '<p class="text-[11px] text-slate-500 text-center py-2">📭 Tidak ada riwayat.</p>';
                     return;
                 }
 
                 riwayatContainer.innerHTML = '';
                 
-                logs.forEach(log => {
-                    const isPenalty = ['penalti', 'penalty', 'minus'].includes(log.type);
-                    const icon = isPenalty ? 
+                logs.forEach(function(log) {
+                    var isPenalty = ['penalti', 'penalty', 'minus'].includes(log.type);
+                    var icon = isPenalty ? 
                         '<i class="fa-solid fa-circle-minus text-rose-400"></i>' : 
                         '<i class="fa-solid fa-award text-emerald-400"></i>';
-                    const sign = isPenalty ? '-' : '+';
-                    const textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
-                    const isiCatatan = log.description || 'Tanpa keterangan';
-                    const jumlahBintang = log.stars || 0;
+                    var sign = isPenalty ? '-' : '+';
+                    var textClass = isPenalty ? 'text-rose-400' : 'text-emerald-400';
+                    var isiCatatan = log.description || 'Tanpa keterangan';
+                    var jumlahBintang = log.stars || 0;
                     
-                    const itemLog = document.createElement('div');
+                    var itemLog = document.createElement('div');
                     itemLog.className = 'flex justify-between items-center bg-slate-950/60 p-2 rounded-lg border border-slate-800/40 mb-1.5 text-[11px]';
-                    itemLog.innerHTML = `
-                        <div class="flex items-center gap-2">
-                            ${icon}
-                            <span class="text-slate-300 font-medium">${isiCatatan}</span>
-                        </div>
-                        <span class="font-bold ${textClass}">${sign} ${jumlahBintang} Bintang</span>
-                    `;
+                    itemLog.innerHTML = 
+                        '<div class="flex items-center gap-2">' +
+                            icon +
+                            '<span class="text-slate-300 font-medium">' + isiCatatan + '</span>' +
+                        '</div>' +
+                        '<span class="font-bold ' + textClass + '">' + sign + ' ' + jumlahBintang + ' Bintang</span>';
                     riwayatContainer.appendChild(itemLog);
                 });
 
             } catch (err) {
                 console.error('❌ Error ambil riwayat:', err);
                 riwayatContainer.innerHTML = 
-                    `<p class="text-[11px] text-rose-400 text-center py-2">❌ Gagal memuat riwayat.</p>`;
+                    '<p class="text-[11px] text-rose-400 text-center py-2">❌ Gagal memuat riwayat.</p>';
             }
         }
 
@@ -568,13 +567,13 @@ window.viewUserDetail = async function(rankNumber) {
 // 5. PENGATUR MODE (USER / ADMIN)
 // =======================================================
 window.setRole = function(role) {
-    const adminPanel = document.getElementById('adminPanel');
-    const btnUser = document.getElementById('btnRoleUser');
-    const btnAdmin = document.getElementById('btnRoleAdmin');
+    var adminPanel = document.getElementById('adminPanel');
+    var btnUser = document.getElementById('btnRoleUser');
+    var btnAdmin = document.getElementById('btnRoleAdmin');
 
     if (role === 'admin') {
-        const passwordBenar = "min3bondowoso"; 
-        const inputPassword = prompt("Masukkan Password Khusus Admin:");
+        var passwordBenar = "min3bondowoso"; 
+        var inputPassword = prompt("Masukkan Password Khusus Admin:");
 
         if (inputPassword === null) return;
         if (inputPassword !== passwordBenar) {
@@ -606,51 +605,51 @@ window.setRole = function(role) {
 // =======================================================
 // 6. FUNGSI MODAL & PROSES SIMPAN SISWA
 // =======================================================
-window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); }
-window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); }
-window.openTransactionModal = function() { document.getElementById('TransactionModal').classList.remove('hidden'); }
-window.closeTransactionModal = function() { document.getElementById('TransactionModal').classList.add('hidden'); }
+window.openAddStudentModal = function() { document.getElementById('addStudentModal').classList.remove('hidden'); };
+window.closeAddStudentModal = function() { document.getElementById('addStudentModal').classList.add('hidden'); };
+window.openTransactionModal = function() { document.getElementById('TransactionModal').classList.remove('hidden'); };
+window.closeTransactionModal = function() { document.getElementById('TransactionModal').classList.add('hidden'); };
 
 window.handleAddStudent = async function(event) {
     event.preventDefault();
-    const namaSiswa = document.getElementById('newStudentName').value;
-    const linkAvatar = document.getElementById('newStudentAvatar').value.trim();
-    const bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
+    var namaSiswa = document.getElementById('newStudentName').value;
+    var linkAvatar = document.getElementById('newStudentAvatar').value.trim();
+    var bintangAwal = parseInt(document.getElementById('newStudentStars').value) || 0;
 
-    const studentPayload = { name: namaSiswa, stars: bintangAwal };
+    var studentPayload = { name: namaSiswa, stars: bintangAwal };
     if (linkAvatar !== "") studentPayload.avatar_url = linkAvatar;
 
     try {
-        const { error } = await supabase.from('students').insert([studentPayload]);
+        var { error } = await supabase.from('students').insert([studentPayload]);
         if (error) throw error;
         
-        alert(`Siswa ${namaSiswa} berhasil ditambahkan!`);
+        alert('Siswa ' + namaSiswa + ' berhasil ditambahkan!');
         document.getElementById('addStudentForm').reset();
         closeAddStudentModal();
         ambilDanTampilkanRanking();
     } catch (err) {
         alert('Gagal menambah siswa: ' + err.message);
     }
-}
+};
 
 // =======================================================
 // 7. EDIT FOTO SISWA VIA LINK URL
 // =======================================================
 window.ubahFotoSiswaAdmin = async function() {
-    const adminPanel = document.getElementById('adminPanel');
-    const isPanelAdminTerbuka = adminPanel && !adminPanel.classList.contains('hidden');
-    const isAdminVariabel = typeof window.currentRole !== 'undefined' && window.currentRole === 'admin';
+    var adminPanel = document.getElementById('adminPanel');
+    var isPanelAdminTerbuka = adminPanel && !adminPanel.classList.contains('hidden');
+    var isAdminVariabel = typeof window.currentRole !== 'undefined' && window.currentRole === 'admin';
 
     if (!isPanelAdminTerbuka && !isAdminVariabel) {
         alert("Akses ditolak! Fitur ganti foto ini hanya untuk Mode Admin.");
         return;
     }
 
-    const namaSiswaAktif = document.getElementById('modalName').innerText;
-    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
+    var namaSiswaAktif = document.getElementById('modalName').innerText;
+    var dataSiswa = localStudentsData.find(function(s) { return s.name === namaSiswaAktif; });
     if (!dataSiswa) return alert("Gagal mendeteksi data siswa!");
 
-    const urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar_url || "");
+    var urlBaru = prompt("Masukkan Link URL Foto baru untuk " + namaSiswaAktif + ":", dataSiswa.avatar_url || "");
     if (urlBaru === null) return; 
 
     if (urlBaru.trim() === "") {
@@ -659,7 +658,7 @@ window.ubahFotoSiswaAdmin = async function() {
     }
 
     try {
-        const { error } = await supabase
+        var { error } = await supabase
             .from('students')
             .update({ avatar_url: urlBaru.trim() })
             .eq('id', dataSiswa.id);
@@ -668,7 +667,7 @@ window.ubahFotoSiswaAdmin = async function() {
 
         alert("Foto profil " + namaSiswaAktif + " berhasil diperbarui!");
         
-        const modalDetail = document.getElementById('UserDetailModal');
+        var modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
         await ambilDanTampilkanRanking();
@@ -682,21 +681,21 @@ window.ubahFotoSiswaAdmin = async function() {
 // 7.5. EDIT NAMA SISWA (DARI MODAL DETAIL)
 // =======================================================
 window.editNamaSiswa = async function() {
-    const isAdmin = window.currentRole === 'admin';
+    var isAdmin = window.currentRole === 'admin';
     if (!isAdmin) {
         alert("❌ Hanya admin yang bisa mengedit nama siswa!");
         return;
     }
 
-    const namaLama = document.getElementById('modalName').innerText;
-    const dataSiswa = localStudentsData.find(s => s.name === namaLama);
+    var namaLama = document.getElementById('modalName').innerText;
+    var dataSiswa = localStudentsData.find(function(s) { return s.name === namaLama; });
     
     if (!dataSiswa) {
         alert("❌ Gagal mendeteksi data siswa!");
         return;
     }
 
-    const namaBaru = prompt(
+    var namaBaru = prompt(
         "✏️ Edit Nama Siswa\n\n" +
         "Nama lama: " + namaLama + "\n\n" +
         "Masukkan nama baru:",
@@ -714,10 +713,9 @@ window.editNamaSiswa = async function() {
         return;
     }
 
-    const namaSudahAda = localStudentsData.some(s => 
-        s.name.toLowerCase() === namaBaru.trim().toLowerCase() && 
-        s.id !== dataSiswa.id
-    );
+    var namaSudahAda = localStudentsData.some(function(s) {
+        return s.name.toLowerCase() === namaBaru.trim().toLowerCase() && s.id !== dataSiswa.id;
+    });
 
     if (namaSudahAda) {
         alert("❌ Nama '" + namaBaru.trim() + "' sudah digunakan oleh siswa lain!");
@@ -725,7 +723,7 @@ window.editNamaSiswa = async function() {
     }
 
     try {
-        const { error } = await supabase
+        var { error } = await supabase
             .from('students')
             .update({ name: namaBaru.trim() })
             .eq('id', dataSiswa.id);
@@ -734,14 +732,14 @@ window.editNamaSiswa = async function() {
 
         alert("✅ Nama siswa berhasil diubah menjadi: " + namaBaru.trim());
         
-        const modalDetail = document.getElementById('UserDetailModal');
+        var modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
         
         await ambilDanTampilkanRanking();
         
-        const updatedIndex = localStudentsData.findIndex(s => s.id === dataSiswa.id);
+        var updatedIndex = localStudentsData.findIndex(function(s) { return s.id === dataSiswa.id; });
         if (updatedIndex !== -1) {
-            setTimeout(() => {
+            setTimeout(function() {
                 window.viewUserDetail(updatedIndex + 1);
             }, 300);
         }
@@ -756,7 +754,7 @@ window.editNamaSiswa = async function() {
 // 7.6. BUKA EDIT NAMA DARI PANEL ADMIN
 // =======================================================
 window.bukaEditNama = function() {
-    const isAdmin = window.currentRole === 'admin';
+    var isAdmin = window.currentRole === 'admin';
     if (!isAdmin) {
         alert("❌ Hanya admin yang bisa mengedit nama siswa!");
         return;
@@ -767,31 +765,31 @@ window.bukaEditNama = function() {
         return;
     }
 
-    let daftarSiswa = "📋 PILIH SISWA YANG INGIN DIEDIT:\n\n";
+    var daftarSiswa = "📋 PILIH SISWA YANG INGIN DIEDIT:\n\n";
     daftarSiswa += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
     
-    localStudentsData.forEach((s, i) => {
-        const rank = i + 1;
-        const bintang = s.stars || 0;
-        const starIcon = bintang >= 15 ? '⭐⭐⭐' : bintang >= 10 ? '⭐⭐' : bintang >= 5 ? '⭐' : '☆';
-        daftarSiswa += `${rank}. ${s.name} ${starIcon} (${bintang} bintang)\n`;
+    localStudentsData.forEach(function(s, i) {
+        var rank = i + 1;
+        var bintang = s.stars || 0;
+        var starIcon = bintang >= 15 ? '⭐⭐⭐' : bintang >= 10 ? '⭐⭐' : bintang >= 5 ? '⭐' : '☆';
+        daftarSiswa += rank + '. ' + s.name + ' ' + starIcon + ' (' + bintang + ' bintang)\n';
     });
     
     daftarSiswa += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
     daftarSiswa += "\nMasukkan NOMOR URUT siswa (1-" + localStudentsData.length + "):";
 
-    const pilihan = prompt(daftarSiswa);
+    var pilihan = prompt(daftarSiswa);
     if (pilihan === null) return;
 
-    const index = parseInt(pilihan) - 1;
+    var index = parseInt(pilihan) - 1;
     if (isNaN(index) || index < 0 || index >= localStudentsData.length) {
         alert("❌ Pilihan tidak valid! Masukkan angka antara 1 - " + localStudentsData.length);
         return;
     }
 
-    const dataSiswa = localStudentsData[index];
+    var dataSiswa = localStudentsData[index];
     
-    const namaBaru = prompt(
+    var namaBaru = prompt(
         "✏️ EDIT NAMA SISWA\n\n" +
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
         "Nama lama: " + dataSiswa.name + "\n" +
@@ -813,17 +811,16 @@ window.bukaEditNama = function() {
         return;
     }
 
-    const namaSudahAda = localStudentsData.some(s => 
-        s.name.toLowerCase() === namaBaru.trim().toLowerCase() && 
-        s.id !== dataSiswa.id
-    );
+    var namaSudahAda = localStudentsData.some(function(s) {
+        return s.name.toLowerCase() === namaBaru.trim().toLowerCase() && s.id !== dataSiswa.id;
+    });
 
     if (namaSudahAda) {
         alert("❌ Nama '" + namaBaru.trim() + "' sudah digunakan oleh siswa lain!");
         return;
     }
 
-    const konfirmasi = confirm(
+    var konfirmasi = confirm(
         "⚠️ KONFIRMASI PERUBAHAN NAMA\n\n" +
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" +
         "Nama lama: " + dataSiswa.name + "\n" +
@@ -835,7 +832,7 @@ window.bukaEditNama = function() {
     if (!konfirmasi) return;
 
     try {
-        const { error } = await supabase
+        var { error } = await supabase
             .from('students')
             .update({ name: namaBaru.trim() })
             .eq('id', dataSiswa.id);
@@ -855,7 +852,7 @@ window.bukaEditNama = function() {
 // 8. UPLOAD FOTO DARI FILE (AUTO-DELETE)
 // =======================================================
 window.handleModalPhotoUpload = async function(event) {
-    const file = event.target.files[0];
+    var file = event.target.files[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -868,24 +865,24 @@ window.handleModalPhotoUpload = async function(event) {
         return;
     }
 
-    const isAdmin = window.currentRole === 'admin';
+    var isAdmin = window.currentRole === 'admin';
     if (!isAdmin) {
         alert("❌ Hanya admin yang bisa mengganti foto!");
         return;
     }
 
-    const namaSiswaAktif = document.getElementById('modalName').innerText;
-    let dataSiswa = localStudentsData.find(s => s.name === namaSiswaAktif);
+    var namaSiswaAktif = document.getElementById('modalName').innerText;
+    var dataSiswa = localStudentsData.find(function(s) { return s.name === namaSiswaAktif; });
     if (!dataSiswa) return alert("❌ Gagal mendeteksi data siswa!");
 
     try {
         if (dataSiswa.avatar_url) {
-            const oldFilePath = dataSiswa.avatar_url.split('/').pop();
+            var oldFilePath = dataSiswa.avatar_url.split('/').pop();
             if (oldFilePath) {
-                const oldPath = `avatars/${oldFilePath}`;
+                var oldPath = 'avatars/' + oldFilePath;
                 console.log('Menghapus foto lama:', oldPath);
                 
-                const { error: deleteError } = await supabase.storage
+                var { error: deleteError } = await supabase.storage
                     .from('student-avatars')
                     .remove([oldPath]);
                 
@@ -897,11 +894,11 @@ window.handleModalPhotoUpload = async function(event) {
             }
         }
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `avatar_${dataSiswa.id}_${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
+        var fileExt = file.name.split('.').pop();
+        var fileName = 'avatar_' + dataSiswa.id + '_' + Date.now() + '.' + fileExt;
+        var filePath = 'avatars/' + fileName;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        var { data: uploadData, error: uploadError } = await supabase.storage
             .from('student-avatars')
             .upload(filePath, file, {
                 cacheControl: '3600',
@@ -915,13 +912,13 @@ window.handleModalPhotoUpload = async function(event) {
             throw uploadError;
         }
 
-        const { data: urlData } = supabase.storage
+        var { data: urlData } = supabase.storage
             .from('student-avatars')
             .getPublicUrl(filePath);
 
-        const publicUrl = urlData.publicUrl;
+        var publicUrl = urlData.publicUrl;
 
-        const { error: updateError } = await supabase
+        var { error: updateError } = await supabase
             .from('students')
             .update({ avatar_url: publicUrl })
             .eq('id', dataSiswa.id);
@@ -932,7 +929,7 @@ window.handleModalPhotoUpload = async function(event) {
         
         await ambilDanTampilkanRanking();
         
-        const modalDetail = document.getElementById('UserDetailModal');
+        var modalDetail = document.getElementById('UserDetailModal');
         if (modalDetail) modalDetail.classList.add('hidden');
 
     } catch (err) {
@@ -947,7 +944,7 @@ window.handleModalPhotoUpload = async function(event) {
 // 9. CLEANUP UNUSED AVATARS
 // =======================================================
 window.cleanupUnusedAvatars = async function() {
-    const konfirmasi = confirm(
+    var konfirmasi = confirm(
         "⚠️ PERINGATAN!\n\n" +
         "Fungsi ini akan menghapus semua file foto di storage\n" +
         "yang TIDAK TERPAKAI oleh siswa di database.\n\n" +
@@ -958,7 +955,7 @@ window.cleanupUnusedAvatars = async function() {
 
     try {
         console.log("📁 Mengambil daftar file dari storage...");
-        const { data: files, error: listError } = await supabase.storage
+        var { data: files, error: listError } = await supabase.storage
             .from('student-avatars')
             .list('avatars/');
 
@@ -969,29 +966,30 @@ window.cleanupUnusedAvatars = async function() {
             return;
         }
 
-        console.log(`📁 Ditemukan ${files.length} file di storage`);
+        console.log('📁 Ditemukan ' + files.length + ' file di storage');
 
         console.log("📊 Mengambil data siswa dari database...");
-        const { data: students, error: studentError } = await supabase
+        var { data: students, error: studentError } = await supabase
             .from('students')
             .select('avatar_url');
 
         if (studentError) throw studentError;
 
-        const usedFileNames = new Set();
-        students.forEach(s => {
+        var usedFileNames = new Set();
+        students.forEach(function(s) {
             if (s.avatar_url) {
-                const fileName = s.avatar_url.split('/').pop();
+                var fileName = s.avatar_url.split('/').pop();
                 if (fileName) {
                     usedFileNames.add(fileName);
                 }
             }
         });
 
-        console.log(`📊 ${usedFileNames.size} file terpakai oleh siswa`);
+        console.log('📊 ' + usedFileNames.size + ' file terpakai oleh siswa');
 
-        const unusedFiles = [];
-        for (const file of files) {
+        var unusedFiles = [];
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
             if (!usedFileNames.has(file.name)) {
                 unusedFiles.push(file);
             }
@@ -1002,44 +1000,45 @@ window.cleanupUnusedAvatars = async function() {
             return;
         }
 
-        console.log(`🗑️ Menemukan ${unusedFiles.length} file tidak terpakai`);
+        console.log('🗑️ Menemukan ' + unusedFiles.length + ' file tidak terpakai');
 
-        const konfirmasiHapus = confirm(
-            `📊 Ringkasan:\n\n` +
-            `📁 Total file di storage: ${files.length}\n` +
-            `✅ File terpakai: ${usedFileNames.size}\n` +
-            `🗑️ File tidak terpakai: ${unusedFiles.length}\n\n` +
-            `Apakah Anda yakin ingin menghapus ${unusedFiles.length} file tidak terpakai?`
+        var konfirmasiHapus = confirm(
+            '📊 Ringkasan:\n\n' +
+            '📁 Total file di storage: ' + files.length + '\n' +
+            '✅ File terpakai: ' + usedFileNames.size + '\n' +
+            '🗑️ File tidak terpakai: ' + unusedFiles.length + '\n\n' +
+            'Apakah Anda yakin ingin menghapus ' + unusedFiles.length + ' file tidak terpakai?'
         );
 
         if (!konfirmasiHapus) return;
 
-        let deletedCount = 0;
-        let failedCount = 0;
+        var deletedCount = 0;
+        var failedCount = 0;
 
-        for (const file of unusedFiles) {
-            const filePath = `avatars/${file.name}`;
-            const { error: deleteError } = await supabase.storage
+        for (var j = 0; j < unusedFiles.length; j++) {
+            var file = unusedFiles[j];
+            var filePath = 'avatars/' + file.name;
+            var { error: deleteError } = await supabase.storage
                 .from('student-avatars')
                 .remove([filePath]);
 
             if (deleteError) {
-                console.error(`❌ Gagal hapus ${file.name}:`, deleteError.message);
+                console.error('❌ Gagal hapus ' + file.name + ':', deleteError.message);
                 failedCount++;
             } else {
                 deletedCount++;
-                console.log(`✅ Berhasil hapus: ${file.name}`);
+                console.log('✅ Berhasil hapus: ' + file.name);
             }
         }
 
         alert(
-            `✅ CLEANUP SELESAI!\n\n` +
-            `🗑️ Berhasil dihapus: ${deletedCount} file\n` +
-            `❌ Gagal dihapus: ${failedCount} file\n` +
-            `📁 Sisa file di storage: ${files.length - deletedCount} file`
+            '✅ CLEANUP SELESAI!\n\n' +
+            '🗑️ Berhasil dihapus: ' + deletedCount + ' file\n' +
+            '❌ Gagal dihapus: ' + failedCount + ' file\n' +
+            '📁 Sisa file di storage: ' + (files.length - deletedCount) + ' file'
         );
 
-        console.log(`✅ Cleanup selesai! Terhapus: ${deletedCount}, Gagal: ${failedCount}`);
+        console.log('✅ Cleanup selesai! Terhapus: ' + deletedCount + ', Gagal: ' + failedCount);
 
     } catch (err) {
         console.error('❌ Error cleanup:', err);
@@ -1052,29 +1051,29 @@ window.cleanupUnusedAvatars = async function() {
 // =======================================================
 window.checkStorageUsage = async function() {
     try {
-        const { data: files, error } = await supabase.storage
+        var { data: files, error } = await supabase.storage
             .from('student-avatars')
             .list('avatars/');
 
         if (error) throw error;
 
-        let totalSize = 0;
+        var totalSize = 0;
         if (files && files.length > 0) {
-            files.forEach(file => {
+            files.forEach(function(file) {
                 totalSize += file.metadata?.size || 0;
             });
         }
 
-        const sizeInMB = (totalSize / 1024 / 1024).toFixed(2);
-        const fileCount = files?.length || 0;
+        var sizeInMB = (totalSize / 1024 / 1024).toFixed(2);
+        var fileCount = files?.length || 0;
 
         alert(
-            `📊 STATUS STORAGE\n\n` +
-            `📁 Total File: ${fileCount} foto\n` +
-            `💾 Total Ukuran: ${sizeInMB} MB\n` +
-            `📌 Rata-rata: ${fileCount > 0 ? (totalSize / fileCount / 1024).toFixed(0) : 0} KB/foto\n\n` +
-            `🆓 Free Tier Supabase: 1 GB\n` +
-            `📊 Terpakai: ${((totalSize / 1024 / 1024 / 1024) * 100).toFixed(2)}% dari 1 GB`
+            '📊 STATUS STORAGE\n\n' +
+            '📁 Total File: ' + fileCount + ' foto\n' +
+            '💾 Total Ukuran: ' + sizeInMB + ' MB\n' +
+            '📌 Rata-rata: ' + (fileCount > 0 ? (totalSize / fileCount / 1024).toFixed(0) : 0) + ' KB/foto\n\n' +
+            '🆓 Free Tier Supabase: 1 GB\n' +
+            '📊 Terpakai: ' + ((totalSize / 1024 / 1024 / 1024) * 100).toFixed(2) + '% dari 1 GB'
         );
 
     } catch (err) {
@@ -1112,21 +1111,21 @@ ambilDanTampilkanRanking();
 // 13. FUNGSI PENYELAMAT UNTUK MENUTUP MODAL
 // =======================================================
 window.closeUserDetailModal = function() {
-    const modal = document.getElementById('UserDetailModal');
+    var modal = document.getElementById('UserDetailModal');
     if (modal) {
         modal.classList.add('hidden');
     }
 };
 
 window.closeTransactionModal = function() {
-    const modal = document.getElementById('TransactionModal');
+    var modal = document.getElementById('TransactionModal');
     if (modal) {
         modal.classList.add('hidden');
     }
 };
 
 window.closeAddStudentModal = function() {
-    const modal = document.getElementById('addStudentModal');
+    var modal = document.getElementById('addStudentModal');
     if (modal) {
         modal.classList.add('hidden');
     }
@@ -1136,47 +1135,47 @@ window.closeAddStudentModal = function() {
 // 14. IMPORT EXCEL
 // =======================================================
 window.handleExcelImport = async function(event) {
-    const file = event.target.files[0];
+    var file = event.target.files[0];
     if (!file) {
         alert("❌ Pilih file terlebih dahulu!");
         return;
     }
 
-    const fileExt = file.name.split('.').pop().toLowerCase();
+    var fileExt = file.name.split('.').pop().toLowerCase();
     if (!['xlsx', 'xls'].includes(fileExt)) {
         alert("❌ Format file harus .xlsx atau .xls!");
         return;
     }
 
-    const isAdmin = window.currentRole === 'admin';
+    var isAdmin = window.currentRole === 'admin';
     if (!isAdmin) {
         alert("❌ Hanya admin yang bisa import data!");
         return;
     }
 
-    const konfirmasi = confirm(
-        `⚠️ Anda akan mengimpor data dari file:\n\n` +
-        `${file.name}\n\n` +
-        `Pastikan format file sudah benar:\n` +
-        `- Kolom "nama" (WAJIB)\n` +
-        `- Kolom "avatar_url" (Opsional)\n` +
-        `- Kolom "bintang_awal" (Opsional)\n\n` +
-        `Lanjutkan?`
+    var konfirmasi = confirm(
+        '⚠️ Anda akan mengimpor data dari file:\n\n' +
+        file.name + '\n\n' +
+        'Pastikan format file sudah benar:\n' +
+        '- Kolom "nama" (WAJIB)\n' +
+        '- Kolom "avatar_url" (Opsional)\n' +
+        '- Kolom "bintang_awal" (Opsional)\n\n' +
+        'Lanjutkan?'
     );
     if (!konfirmasi) {
         event.target.value = '';
         return;
     }
 
-    const reader = new FileReader();
+    var reader = new FileReader();
     reader.onload = async function(e) {
         try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
+            var data = new Uint8Array(e.target.result);
+            var workbook = XLSX.read(data, { type: 'array' });
             
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonRows = XLSX.utils.sheet_to_json(worksheet);
+            var firstSheetName = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[firstSheetName];
+            var jsonRows = XLSX.utils.sheet_to_json(worksheet);
             
             console.log("📊 Data Excel terbaca:", jsonRows);
             console.log("📊 Jumlah baris:", jsonRows.length);
@@ -1187,7 +1186,7 @@ window.handleExcelImport = async function(event) {
                 return;
             }
 
-            const rowSampel = jsonRows[0];
+            var rowSampel = jsonRows[0];
             console.log("📊 Kolom yang ditemukan:", Object.keys(rowSampel));
             
             if (!rowSampel.hasOwnProperty('nama')) {
@@ -1201,27 +1200,27 @@ window.handleExcelImport = async function(event) {
                 return;
             }
 
-            let jumlahSukses = 0;
-            let jumlahGagal = 0;
-            let daftarSukses = [];
-            let daftarGagal = [];
+            var jumlahSukses = 0;
+            var jumlahGagal = 0;
+            var daftarSukses = [];
+            var daftarGagal = [];
 
-            for (let i = 0; i < jsonRows.length; i++) {
-                const row = jsonRows[i];
-                const namaSiswa = row.nama ? row.nama.toString().trim() : '';
-                const avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
-                const bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
+            for (var i = 0; i < jsonRows.length; i++) {
+                var row = jsonRows[i];
+                var namaSiswa = row.nama ? row.nama.toString().trim() : '';
+                var avatarSiswa = row.avatar_url ? row.avatar_url.toString().trim() : '';
+                var bintangAwal = row.bintang_awal ? parseInt(row.bintang_awal) : 0;
 
-                console.log(`📝 Baris ${i+1}:`, { namaSiswa, avatarSiswa, bintangAwal });
+                console.log('📝 Baris ' + (i+1) + ':', { namaSiswa: namaSiswa, avatarSiswa: avatarSiswa, bintangAwal: bintangAwal });
 
                 if (namaSiswa === '') {
                     jumlahGagal++;
-                    daftarGagal.push(`Baris ${i+1}: Nama kosong`);
+                    daftarGagal.push('Baris ' + (i+1) + ': Nama kosong');
                     continue;
                 }
 
                 try {
-                    const { data: existingStudent, error: checkError } = await supabase
+                    var { data: existingStudent, error: checkError } = await supabase
                         .from('students')
                         .select('id')
                         .eq('name', namaSiswa)
@@ -1230,14 +1229,14 @@ window.handleExcelImport = async function(event) {
                     if (checkError) {
                         console.error('Error cek siswa:', checkError);
                         jumlahGagal++;
-                        daftarGagal.push(`${namaSiswa}: Error cek data`);
+                        daftarGagal.push(namaSiswa + ': Error cek data');
                         continue;
                     }
 
-                    let result;
+                    var result;
                     if (existingStudent) {
-                        console.log(`📝 Mengupdate siswa: ${namaSiswa}`);
-                        const updatePayload = { stars: bintangAwal };
+                        console.log('📝 Mengupdate siswa: ' + namaSiswa);
+                        var updatePayload = { stars: bintangAwal };
                         if (avatarSiswa && avatarSiswa !== '') {
                             updatePayload.avatar_url = avatarSiswa;
                         }
@@ -1246,8 +1245,8 @@ window.handleExcelImport = async function(event) {
                             .update(updatePayload)
                             .eq('id', existingStudent.id);
                     } else {
-                        console.log(`➕ Menambah siswa baru: ${namaSiswa}`);
-                        const payload = { name: namaSiswa, stars: bintangAwal };
+                        console.log('➕ Menambah siswa baru: ' + namaSiswa);
+                        var payload = { name: namaSiswa, stars: bintangAwal };
                         if (avatarSiswa && avatarSiswa !== '') {
                             payload.avatar_url = avatarSiswa;
                         }
@@ -1255,43 +1254,43 @@ window.handleExcelImport = async function(event) {
                     }
 
                     if (result.error) {
-                        console.error(`❌ Gagal ${existingStudent ? 'update' : 'insert'} ${namaSiswa}:`, result.error);
+                        console.error('❌ Gagal ' + (existingStudent ? 'update' : 'insert') + ' ' + namaSiswa + ':', result.error);
                         jumlahGagal++;
-                        daftarGagal.push(`${namaSiswa}: ${result.error.message}`);
+                        daftarGagal.push(namaSiswa + ': ' + result.error.message);
                     } else {
-                        console.log(`✅ Berhasil ${existingStudent ? 'update' : 'insert'} ${namaSiswa}`);
+                        console.log('✅ Berhasil ' + (existingStudent ? 'update' : 'insert') + ' ' + namaSiswa);
                         jumlahSukses++;
                         daftarSukses.push(namaSiswa + (existingStudent ? ' (update)' : ' (baru)'));
                     }
 
                 } catch (err) {
-                    console.error(`❌ Error proses ${namaSiswa}:`, err);
+                    console.error('❌ Error proses ' + namaSiswa + ':', err);
                     jumlahGagal++;
-                    daftarGagal.push(`${namaSiswa}: ${err.message}`);
+                    daftarGagal.push(namaSiswa + ': ' + err.message);
                 }
             }
 
-            let pesan = `✅ IMPORT SELESAI!\n\n`;
-            pesan += `📊 Total data: ${jsonRows.length} baris\n`;
-            pesan += `✅ Berhasil: ${jumlahSukses} siswa\n`;
-            pesan += `❌ Gagal: ${jumlahGagal} siswa\n\n`;
+            var pesan = '✅ IMPORT SELESAI!\n\n';
+            pesan += '📊 Total data: ' + jsonRows.length + ' baris\n';
+            pesan += '✅ Berhasil: ' + jumlahSukses + ' siswa\n';
+            pesan += '❌ Gagal: ' + jumlahGagal + ' siswa\n\n';
             
             if (daftarSukses.length > 0 && daftarSukses.length <= 10) {
-                pesan += `📋 Berhasil:\n`;
-                daftarSukses.forEach(item => {
-                    pesan += `  ✅ ${item}\n`;
+                pesan += '📋 Berhasil:\n';
+                daftarSukses.forEach(function(item) {
+                    pesan += '  ✅ ' + item + '\n';
                 });
             } else if (daftarSukses.length > 10) {
-                pesan += `📋 ${daftarSukses.length} siswa berhasil diproses\n`;
+                pesan += '📋 ' + daftarSukses.length + ' siswa berhasil diproses\n';
             }
             
             if (daftarGagal.length > 0) {
-                pesan += `\n❌ Gagal:\n`;
-                daftarGagal.slice(0, 5).forEach(item => {
-                    pesan += `  ❌ ${item}\n`;
+                pesan += '\n❌ Gagal:\n';
+                daftarGagal.slice(0, 5).forEach(function(item) {
+                    pesan += '  ❌ ' + item + '\n';
                 });
                 if (daftarGagal.length > 5) {
-                    pesan += `  ... dan ${daftarGagal.length - 5} lainnya`;
+                    pesan += '  ... dan ' + (daftarGagal.length - 5) + ' lainnya';
                 }
             }
 
@@ -1332,7 +1331,7 @@ window.downloadExcelTemplate = function() {
             return;
         }
 
-        const templateData = [
+        var templateData = [
             {
                 "nama": "Contoh Nama Siswa",
                 "avatar_url": "https://picsum.photos/seed/siswa/150/150",
@@ -1340,8 +1339,8 @@ window.downloadExcelTemplate = function() {
             }
         ];
 
-        const worksheet = XLSX.utils.json_to_sheet(templateData);
-        const workbook = XLSX.utils.book_new();
+        var worksheet = XLSX.utils.json_to_sheet(templateData);
+        var workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Template Siswa");
 
         XLSX.writeFile(workbook, "Template_Import_Siswa_Megabond.xlsx");
