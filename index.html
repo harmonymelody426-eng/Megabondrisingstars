@@ -431,7 +431,7 @@
   </main>
 
   <!-- ================================================== -->
-  <!-- USER DETAIL MODAL (SATU - SUDAH DIPERBAIKI)       -->
+  <!-- USER DETAIL MODAL (DENGAN TOMBOL EDIT NAMA)       -->
   <!-- ================================================== -->
   <div id="UserDetailModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-purple-900/40 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative">
@@ -452,8 +452,9 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
+              <!-- NAMA SISWA -->
               <h3 id="modalName" class="heading-font text-lg sm:text-xl font-bold text-white">Student Name</h3>
-              <!-- TOMBOL EDIT NAMA -->
+              <!-- TOMBOL EDIT NAMA - SUDAH DITAMBAHKAN -->
               <button onclick="window.editNamaSiswa()" 
                       id="btnEditNama"
                       class="hidden bg-blue-600 hover:bg-blue-500 text-white p-1.5 rounded-lg transition-all text-xs" 
@@ -589,13 +590,13 @@
   <script>
     // Kita bajak fungsi setRole bawaan template agar melewati filter password dulu
     window.setRole = function(role) {
-      const adminPanel = document.getElementById('adminPanel');
-      const btnUser = document.getElementById('btnRoleUser');
-      const btnAdmin = document.getElementById('btnRoleAdmin');
+      var adminPanel = document.getElementById('adminPanel');
+      var btnUser = document.getElementById('btnRoleUser');
+      var btnAdmin = document.getElementById('btnRoleAdmin');
 
       if (role === 'admin') {
-        const passwordBenar = "min3bondowoso"; 
-        const inputPassword = prompt("Masukkan Password Khusus Admin:");
+        var passwordBenar = "min3bondowoso"; 
+        var inputPassword = prompt("Masukkan Password Khusus Admin:");
 
         if (inputPassword === null) return;
         if (inputPassword !== passwordBenar) {
